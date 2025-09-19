@@ -152,14 +152,14 @@ const TeamPage = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center">
-                      <span className="text-sky-600 font-semibold">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                      <span className="text-white font-semibold">
                         {member.name.split(' ').map(n => n[0]).join('')}
                       </span>
                     </div>
                     <div
-                      className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                        member.status === 'online' ? 'bg-green-400' : 'bg-gray-400'
+                      className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-lg ${
+                        member.status === 'online' ? 'bg-gradient-to-br from-green-400 to-emerald-500' : 'bg-gradient-to-br from-gray-400 to-gray-500'
                       }`}
                     ></div>
                   </div>
@@ -187,13 +187,13 @@ const TeamPage = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors">
+                    <button className="p-2 text-white bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg transition-all duration-300 hover:shadow-lg">
                       <Mail className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors">
+                    <button className="p-2 text-white bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg transition-all duration-300 hover:shadow-lg">
                       <Phone className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors">
+                    <button className="p-2 text-white bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg transition-all duration-300 hover:shadow-lg">
                       <MoreVertical className="w-4 h-4" />
                     </button>
                   </div>

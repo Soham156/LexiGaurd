@@ -58,23 +58,39 @@ const DocumentsPage = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'reviewed':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return (
+          <div className="p-1 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg">
+            <CheckCircle className="w-4 h-4 text-white" />
+          </div>
+        );
       case 'pending':
-        return <Clock className="w-5 h-5 text-yellow-500" />;
+        return (
+          <div className="p-1 rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg">
+            <Clock className="w-4 h-4 text-white" />
+          </div>
+        );
       case 'in_review':
-        return <AlertTriangle className="w-5 h-5 text-orange-500" />;
+        return (
+          <div className="p-1 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 shadow-lg">
+            <AlertTriangle className="w-4 h-4 text-white" />
+          </div>
+        );
       default:
-        return <FileText className="w-5 h-5 text-gray-500" />;
+        return (
+          <div className="p-1 rounded-lg bg-gradient-to-br from-gray-400 to-gray-500 shadow-lg">
+            <FileText className="w-4 h-4 text-white" />
+          </div>
+        );
     }
   };
 
   const getRiskBadge = (riskLevel) => {
     const colors = {
-      low: 'bg-green-100 text-green-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      high: 'bg-red-100 text-red-800',
+      low: 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg',
+      medium: 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-lg',
+      high: 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-lg',
     };
-    return `px-2 py-1 rounded-full text-xs font-medium ${colors[riskLevel]}`;
+    return `px-3 py-1 rounded-full text-xs font-semibold ${colors[riskLevel]} hover:shadow-xl transition-all duration-300`;
   };
 
   return (

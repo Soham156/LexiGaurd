@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Search, Shield, ArrowRight } from 'lucide-react';
+import { Shield, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
@@ -9,20 +9,20 @@ const LandingPage = () => {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
 
   return (
-    <div className="min-h-screen bg-sky-50 dark:bg-gray-900 flex items-center justify-center p-4 overflow-hidden transition-colors">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-sky-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-gray-900 flex items-center justify-center p-4 overflow-hidden transition-all duration-500">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-6xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden relative transition-colors"
+        className="w-full max-w-6xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden relative border border-white/20"
       >
         {/* Animated background shapes */}
         <motion.div
-          className="absolute top-0 right-0 w-2/3 h-full bg-sky-50 dark:bg-gray-700 rounded-l-full z-0"
+          className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-pink-100/50 via-purple-100/30 to-transparent dark:from-gray-700/50 dark:via-purple-800/30 rounded-l-full z-0"
           style={{ y: backgroundY }}
         />
         <motion.div
-          className="absolute bottom-0 right-0 w-96 h-96 bg-sky-100 dark:bg-gray-600 rounded-full z-0"
+          className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-orange-200/60 via-pink-200/40 to-purple-200/60 dark:from-orange-800/30 dark:via-pink-800/20 dark:to-purple-800/30 rounded-full z-0"
           animate={{
             scale: [1, 1.1, 1],
             rotate: [0, 10, 0],
@@ -34,7 +34,7 @@ const LandingPage = () => {
           }}
         />
         <motion.div
-          className="absolute top-10 left-10 w-20 h-20 bg-sky-200 dark:bg-gray-600 rounded-full z-0"
+          className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-br from-yellow-300 to-orange-400 dark:from-yellow-600 dark:to-orange-600 rounded-full z-0 shadow-lg"
           animate={{
             y: [0, 20, 0],
             x: [0, 10, 0],
@@ -65,15 +65,7 @@ const LandingPage = () => {
               transition={{ delay: 0.3 }}
               className="flex items-center space-x-6"
             >
-              <NavLink href="#about">About Us</NavLink>
-              <NavLink href="#contact">Contact</NavLink>
-              <motion.button
-                className="p-2 hover:bg-sky-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                whileHover={{ scale: 1.1, rotate: 15 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Search className="h-5 w-5 text-sky-600 dark:text-sky-400" />
-              </motion.button>
+              {/* Navigation items removed as requested */}
             </motion.div>
           </nav>
 
@@ -86,15 +78,17 @@ const LandingPage = () => {
               className="md:w-1/2 mb-8 md:mb-0"
             >
               <motion.h1
-                className="text-4xl md:text-5xl font-bold text-sky-800 dark:text-white mb-4"
+                className="text-4xl md:text-5xl font-bold mb-4"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
               >
-                Understand Contracts.
+                <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 dark:from-purple-400 dark:via-pink-400 dark:to-blue-400 bg-clip-text text-transparent">
+                  Understand Contracts.
+                </span>
                 <br />
                 <motion.span
-                  className="text-sky-600 dark:text-sky-400"
+                  className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 dark:from-orange-400 dark:via-red-400 dark:to-pink-400 bg-clip-text text-transparent"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.7, duration: 0.5 }}
@@ -121,7 +115,7 @@ const LandingPage = () => {
                   onClick={() => navigate('/upload')}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-6 py-2 bg-sky-600 text-white rounded-full font-medium hover:bg-sky-700 transition-colors flex items-center space-x-2"
+                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2"
                 >
                   <span>Get Started</span>
                   <motion.div
@@ -133,8 +127,8 @@ const LandingPage = () => {
                 </motion.button>
                 <motion.button
                   onClick={() => navigate('/upload')}
-                  className="text-sky-600 dark:text-sky-400 font-medium hover:text-sky-700 dark:hover:text-sky-300 transition-colors"
-                  whileHover={{ scale: 1.1 }}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
                 >
                   Try Demo
                 </motion.button>

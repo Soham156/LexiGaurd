@@ -26,8 +26,8 @@ const NotificationsPage = () => {
       time: '5 minutes ago',
       read: false,
       icon: FileText,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg',
     },
     {
       id: 2,
@@ -37,8 +37,8 @@ const NotificationsPage = () => {
       time: '12 minutes ago',
       read: false,
       icon: AlertCircle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-red-400 to-pink-500 shadow-lg',
     },
     {
       id: 3,
@@ -48,8 +48,8 @@ const NotificationsPage = () => {
       time: '1 hour ago',
       read: true,
       icon: User,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-blue-400 to-cyan-500 shadow-lg',
     },
     {
       id: 4,
@@ -59,8 +59,8 @@ const NotificationsPage = () => {
       time: '2 hours ago',
       read: true,
       icon: FileText,
-      color: 'text-sky-600',
-      bgColor: 'bg-sky-50',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-purple-400 to-indigo-500 shadow-lg',
     },
     {
       id: 5,
@@ -70,8 +70,8 @@ const NotificationsPage = () => {
       time: '1 day ago',
       read: true,
       icon: CheckCircle,
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-50',
+      color: 'text-white',
+      bgColor: 'bg-gradient-to-br from-gray-400 to-gray-600 shadow-lg',
     },
   ];
 

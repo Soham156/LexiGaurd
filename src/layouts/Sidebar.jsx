@@ -34,15 +34,31 @@ const Sidebar = () => {
   const NavItem = ({ icon: Icon, label, path }) => {
     const isActive = location.pathname === path;
     
+    // Define color schemes for each nav item
+    const getItemColors = (path) => {
+      switch (path) {
+        case '/dashboard':
+          return isActive ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/50 dark:hover:to-pink-900/50 hover:text-purple-700 dark:hover:text-purple-300';
+        case '/dashboard/documents':
+          return isActive ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 dark:hover:from-blue-900/50 dark:hover:to-cyan-900/50 hover:text-blue-700 dark:hover:text-blue-300';
+        case '/dashboard/chat':
+          return isActive ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/50 dark:hover:to-emerald-900/50 hover:text-green-700 dark:hover:text-green-300';
+        case '/dashboard/team':
+          return isActive ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-orange-100 hover:to-red-100 dark:hover:from-orange-900/50 dark:hover:to-red-900/50 hover:text-orange-700 dark:hover:text-orange-300';
+        case '/dashboard/notifications':
+          return isActive ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-yellow-100 hover:to-amber-100 dark:hover:from-yellow-900/50 dark:hover:to-amber-900/50 hover:text-yellow-700 dark:hover:text-yellow-300';
+        case '/dashboard/settings':
+          return isActive ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/50 dark:hover:to-purple-900/50 hover:text-indigo-700 dark:hover:text-indigo-300';
+        default:
+          return isActive ? 'bg-sky-600 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-gray-800';
+      }
+    };
+    
     return (
       <Link to={path}>
         <motion.div
-          className={`flex items-center px-4 py-3 my-1 rounded-lg transition-colors ${
-            isActive
-              ? 'bg-sky-600 text-white'
-              : 'text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-gray-800'
-          }`}
-          whileHover={{ scale: 1.02 }}
+          className={`flex items-center px-4 py-3 my-2 rounded-xl transition-all duration-300 ${getItemColors(path)}`}
+          whileHover={{ scale: 1.02, x: 5 }}
           whileTap={{ scale: 0.98 }}
         >
           <Icon className="w-5 h-5" />
@@ -69,9 +85,11 @@ const Sidebar = () => {
           className="flex items-center"
           whileHover={{ scale: 1.05 }}
         >
-          <Shield className="h-8 w-8 text-sky-600" />
+          <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
+            <Shield className="h-6 w-6 text-white" />
+          </div>
           {!isCollapsed && (
-            <span className="ml-3 text-xl font-bold text-sky-800 dark:text-sky-200">
+            <span className="ml-3 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-pink-400">
               LexiGuard
             </span>
           )}
