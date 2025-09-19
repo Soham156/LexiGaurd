@@ -41,7 +41,7 @@ function App() {
         </button>
         <p className="mt-4 text-gray-300 text-sm">
           Edit <code className="text-yellow-300">src/App.jsx</code> and save to
-          test HMR
+          test HMRbgjgdrgje
         </p>
       </div>
 
