@@ -8,19 +8,18 @@ import {
   Calendar,
   CheckCircle,
 } from 'lucide-react';
-import DashboardLayout from '../layouts/DashboardLayout';
 
 const StatCard = ({ icon: Icon, label, value, trend, color }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     whileHover={{ y: -5 }}
-    className="bg-white p-6 rounded-xl shadow-md"
+    className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-colors"
   >
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm text-sky-600 mb-1">{label}</p>
-        <h3 className="text-2xl font-bold text-sky-900">{value}</h3>
+        <p className="text-sm text-sky-600 dark:text-sky-400 mb-1">{label}</p>
+        <h3 className="text-2xl font-bold text-sky-900 dark:text-white">{value}</h3>
         {trend && (
           <p className={`text-sm mt-1 ${color}`}>
             <TrendingUp className="w-4 h-4 inline mr-1" />
@@ -28,8 +27,8 @@ const StatCard = ({ icon: Icon, label, value, trend, color }) => (
           </p>
         )}
       </div>
-      <div className={`p-4 rounded-full bg-sky-50`}>
-        <Icon className="w-6 h-6 text-sky-600" />
+      <div className={`p-4 rounded-full bg-sky-50 dark:bg-sky-900/50`}>
+        <Icon className="w-6 h-6 text-sky-600 dark:text-sky-400" />
       </div>
     </div>
   </motion.div>
@@ -39,9 +38,9 @@ const RecentActivity = () => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-white p-6 rounded-xl shadow-md"
+    className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-colors"
   >
-    <h3 className="text-lg font-semibold text-sky-900 mb-4">Recent Activity</h3>
+    <h3 className="text-lg font-semibold text-sky-900 dark:text-white mb-4">Recent Activity</h3>
     <div className="space-y-4">
       {[
         {
@@ -70,13 +69,13 @@ const RecentActivity = () => (
           transition={{ delay: index * 0.1 }}
           className="flex items-start space-x-4"
         >
-          <div className="p-2 rounded-full bg-sky-50">
-            <item.icon className="w-5 h-5 text-sky-600" />
+          <div className="p-2 rounded-full bg-sky-50 dark:bg-sky-900/50">
+            <item.icon className="w-5 h-5 text-sky-600 dark:text-sky-400" />
           </div>
           <div>
-            <p className="font-medium text-sky-900">{item.title}</p>
-            <p className="text-sm text-sky-600">{item.time}</p>
-            <p className="text-sm text-sky-700 mt-1">{item.description}</p>
+            <p className="font-medium text-sky-900 dark:text-white">{item.title}</p>
+            <p className="text-sm text-sky-600 dark:text-sky-400">{item.time}</p>
+            <p className="text-sm text-sky-700 dark:text-gray-300 mt-1">{item.description}</p>
           </div>
         </motion.div>
       ))}
@@ -86,12 +85,12 @@ const RecentActivity = () => (
 
 const Dashboard = () => {
   return (
-    <DashboardLayout>
+    <div className="space-y-8">
       <div className="mb-8">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-sky-900"
+          className="text-3xl font-bold text-sky-900 dark:text-white"
         >
           Welcome back, User
         </motion.h1>
@@ -160,7 +159,7 @@ const Dashboard = () => {
         </motion.div>
         <RecentActivity />
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

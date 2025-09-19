@@ -1,30 +1,40 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { DocumentContext } from '../context/DocumentContext';
-import ClauseList from '../components/dashboard/ClauseList';
-import ClauseDetail from '../components/dashboard/ClauseDetail';
-import ChatPanel from '../components/dashboard/ChatPanel';
+import DashboardLayout from '../layouts/DashboardLayout';
+import Dashboard from './Dashboard';
+import DocumentsPage from './DocumentsPage';
+import ChatPage from './ChatPage';
+import SettingsPage from './SettingsPage';
+import TeamPage from './TeamPage';
+import NotificationsPage from './NotificationsPage';
 
 export default function DashboardPage() {
-  const { clauses } = useContext(DocumentContext);
-  const [selectedId, setSelectedId] = useState(clauses?.[0]?.id ?? null);
-
-  const selected = clauses.find((c) => c.id === selectedId) || clauses[0] || null;
+  const location = useLocation();
+  
+  // Determine which component to render based on the current path
+  const renderDashboardContent = () => {
+    const path = location.pathname;
+    
+    if (path === '/dashboard/documents') {
+      return <DocumentsPage />;
+    } else if (path === '/dashboard/chat') {
+      return <ChatPage />;
+    } else if (path === '/dashboard/settings') {
+      return <SettingsPage />;
+    } else if (path === '/dashboard/team') {
+      return <TeamPage />;
+    } else if (path === '/dashboard/notifications') {
+      return <NotificationsPage />;
+    } else {
+      // Default dashboard view
+      return <Dashboard />;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <aside className="lg:col-span-3 bg-white rounded p-4 shadow">
-          <ClauseList clauses={clauses} selectedId={selectedId} onSelect={setSelectedId} />
-        </aside>
-
-        <main className="lg:col-span-6 bg-white rounded p-4 shadow">
-          <ClauseDetail clause={selected} />
-        </main>
-
-        <aside className="lg:col-span-3 bg-white rounded p-4 shadow">
-          <ChatPanel />
-        </aside>
-      </div>
-    </div>
+    <DashboardLayout>
+      {renderDashboardContent()}
+    </DashboardLayout>
   );
 }

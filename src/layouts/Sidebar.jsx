@@ -40,7 +40,7 @@ const Sidebar = () => {
           className={`flex items-center px-4 py-3 my-1 rounded-lg transition-colors ${
             isActive
               ? 'bg-sky-600 text-white'
-              : 'text-sky-700 hover:bg-sky-100'
+              : 'text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-gray-800'
           }`}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -56,7 +56,8 @@ const Sidebar = () => {
 
   return (
     <motion.div
-      className="h-screen bg-white border-r border-sky-100 py-6 shadow-lg relative"
+      className="bg-white dark:bg-gray-800 border-r border-sky-100 dark:border-gray-700 py-6 shadow-lg relative transition-colors"
+      style={{ height: 'calc(100vh - 80px)' }}
       initial="expanded"
       animate={isCollapsed ? 'collapsed' : 'expanded'}
       variants={sidebarVariants}
@@ -70,7 +71,7 @@ const Sidebar = () => {
         >
           <Shield className="h-8 w-8 text-sky-600" />
           {!isCollapsed && (
-            <span className="ml-3 text-xl font-bold text-sky-800">
+            <span className="ml-3 text-xl font-bold text-sky-800 dark:text-sky-200">
               LexiGuard
             </span>
           )}
@@ -86,7 +87,7 @@ const Sidebar = () => {
 
       {/* Collapse Button */}
       <motion.button
-        className="absolute -right-3 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full bg-white border border-sky-100 text-sky-600 hover:bg-sky-50"
+        className="absolute -right-3 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full bg-white dark:bg-gray-800 border border-sky-100 dark:border-gray-600 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-gray-700 transition-colors"
         onClick={() => setIsCollapsed(!isCollapsed)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}

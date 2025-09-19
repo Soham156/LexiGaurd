@@ -9,20 +9,20 @@ const LandingPage = () => {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
 
   return (
-    <div className="min-h-screen bg-sky-50 flex items-center justify-center p-4 overflow-hidden">
+    <div className="min-h-screen bg-sky-50 dark:bg-gray-900 flex items-center justify-center p-4 overflow-hidden transition-colors">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden relative"
+        className="w-full max-w-6xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden relative transition-colors"
       >
         {/* Animated background shapes */}
         <motion.div
-          className="absolute top-0 right-0 w-2/3 h-full bg-sky-50 rounded-l-full z-0"
+          className="absolute top-0 right-0 w-2/3 h-full bg-sky-50 dark:bg-gray-700 rounded-l-full z-0"
           style={{ y: backgroundY }}
         />
         <motion.div
-          className="absolute bottom-0 right-0 w-96 h-96 bg-sky-100 rounded-full z-0"
+          className="absolute bottom-0 right-0 w-96 h-96 bg-sky-100 dark:bg-gray-600 rounded-full z-0"
           animate={{
             scale: [1, 1.1, 1],
             rotate: [0, 10, 0],
@@ -34,7 +34,7 @@ const LandingPage = () => {
           }}
         />
         <motion.div
-          className="absolute top-10 left-10 w-20 h-20 bg-sky-200 rounded-full z-0"
+          className="absolute top-10 left-10 w-20 h-20 bg-sky-200 dark:bg-gray-600 rounded-full z-0"
           animate={{
             y: [0, 20, 0],
             x: [0, 10, 0],
@@ -57,7 +57,7 @@ const LandingPage = () => {
               className="flex items-center space-x-2"
             >
               <Shield className="h-8 w-8 text-sky-600" />
-              <span className="text-2xl font-bold text-sky-800">LexiGuard</span>
+              <span className="text-2xl font-bold text-sky-800 dark:text-white">LexiGuard</span>
             </motion.div>
             <motion.div
               initial={{ y: -10, opacity: 0 }}
@@ -68,11 +68,11 @@ const LandingPage = () => {
               <NavLink href="#about">About Us</NavLink>
               <NavLink href="#contact">Contact</NavLink>
               <motion.button
-                className="p-2 hover:bg-sky-100 rounded-full transition-colors"
+                className="p-2 hover:bg-sky-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 whileHover={{ scale: 1.1, rotate: 15 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <Search className="h-5 w-5 text-sky-600" />
+                <Search className="h-5 w-5 text-sky-600 dark:text-sky-400" />
               </motion.button>
             </motion.div>
           </nav>
@@ -86,7 +86,7 @@ const LandingPage = () => {
               className="md:w-1/2 mb-8 md:mb-0"
             >
               <motion.h1
-                className="text-4xl md:text-5xl font-bold text-sky-800 mb-4"
+                className="text-4xl md:text-5xl font-bold text-sky-800 dark:text-white mb-4"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
@@ -94,7 +94,7 @@ const LandingPage = () => {
                 Understand Contracts.
                 <br />
                 <motion.span
-                  className="text-sky-600"
+                  className="text-sky-600 dark:text-sky-400"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.7, duration: 0.5 }}
@@ -103,7 +103,7 @@ const LandingPage = () => {
                 </motion.span>
               </motion.h1>
               <motion.p
-                className="text-sky-700 mb-6 max-w-md"
+                className="text-sky-700 dark:text-gray-300 mb-6 max-w-md"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.9, duration: 0.5 }}
@@ -133,7 +133,7 @@ const LandingPage = () => {
                 </motion.button>
                 <motion.button
                   onClick={() => navigate('/upload')}
-                  className="text-sky-600 font-medium hover:text-sky-700 transition-colors"
+                  className="text-sky-600 dark:text-sky-400 font-medium hover:text-sky-700 dark:hover:text-sky-300 transition-colors"
                   whileHover={{ scale: 1.1 }}
                 >
                   Try Demo
@@ -145,28 +145,28 @@ const LandingPage = () => {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 1.3 }}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                  className="p-4 border dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
                 >
-                  <h4 className="font-semibold text-sky-800">Risk Visuals</h4>
-                  <p className="text-sm text-sky-600">Traffic-light style risk summaries for clauses.</p>
+                  <h4 className="font-semibold text-sky-800 dark:text-white">Risk Visuals</h4>
+                  <p className="text-sm text-sky-600 dark:text-gray-300">Traffic-light style risk summaries for clauses.</p>
                 </motion.div>
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 1.4 }}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                  className="p-4 border dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
                 >
-                  <h4 className="font-semibold text-sky-800">Role Advice</h4>
-                  <p className="text-sm text-sky-600">Advice tuned to your role.</p>
+                  <h4 className="font-semibold text-sky-800 dark:text-white">Role Advice</h4>
+                  <p className="text-sm text-sky-600 dark:text-gray-300">Advice tuned to your role.</p>
                 </motion.div>
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 1.5 }}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                  className="p-4 border dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
                 >
-                  <h4 className="font-semibold text-sky-800">Chat</h4>
-                  <p className="text-sm text-sky-600">Ask questions about the document.</p>
+                  <h4 className="font-semibold text-sky-800 dark:text-white">Chat</h4>
+                  <p className="text-sm text-sky-600 dark:text-gray-300">Ask questions about the document.</p>
                 </motion.div>
               </div>
             </motion.div>
@@ -195,13 +195,13 @@ const LandingPage = () => {
 const NavLink = ({ href, children }) => (
   <motion.a
     href={href}
-    className="text-sky-700 hover:text-sky-600 transition-colors relative"
+    className="text-sky-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors relative"
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
   >
     {children}
     <motion.span
-      className="absolute left-0 right-0 bottom-0 h-0.5 bg-sky-600"
+      className="absolute left-0 right-0 bottom-0 h-0.5 bg-sky-600 dark:bg-sky-400"
       initial={{ scaleX: 0 }}
       whileHover={{ scaleX: 1 }}
       transition={{ duration: 0.3 }}
