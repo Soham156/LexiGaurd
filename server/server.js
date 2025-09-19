@@ -26,7 +26,12 @@ app.use(helmet());
 app.use(morgan("combined"));
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: [
+      process.env.CLIENT_URL || "http://localhost:5173",
+      "http://localhost:5173", // Vite default port
+      "http://localhost:5174", // Alternative Vite port
+      "http://localhost:3000", // Create React App default port
+    ],
     credentials: true,
   })
 );

@@ -10,9 +10,20 @@ class Document {
     this.status = documentData.status || "uploaded";
     this.analysis = documentData.analysis || {
       summary: "",
+      documentType: "",
       keyPoints: [],
       riskLevel: "medium",
+      riskFactors: [],
       clauses: [],
+      recommendations: [],
+      missingClauses: [],
+      overallScore: 70,
+      compliance: {
+        issues: [],
+        suggestions: [],
+      },
+      analyzedAt: null,
+      aiProvider: "gemini",
     };
     this.tags = documentData.tags || [];
     this.isShared = documentData.isShared || false;
@@ -108,6 +119,53 @@ class Document {
     this.sharedWith = this.sharedWith.filter((share) => share.user !== userId);
     this.isShared = this.sharedWith.length > 0;
     this.updateTimestamp();
+  }
+
+  // Update analysis results
+  updateAnalysis(analysisData) {
+    this.analysis = {
+      ...this.analysis,
+      ...analysisData,
+      analyzedAt: new Date(),
+    };
+    this.updateTimestamp();
+  }
+
+  // Get risk score based on analysis
+  getRiskScore() {
+    const riskLevelMap = {
+      low: 30,
+      medium: 60,
+      high: 90,
+    };
+    return riskLevelMap[this.analysis.riskLevel] || 60;
+  }
+
+  // Check if document needs re-analysis (e.g., if it's been modified)
+  needsReanalysis() {
+    if (!this.analysis.analyzedAt || this.status === "failed") {
+      return true;
+    }
+
+    // If document was updated after analysis
+    return new Date(this.updatedAt) > new Date(this.analysis.analyzedAt);
+  }
+
+  // Get analysis summary for display
+  getAnalysisSummary() {
+    if (!this.analysis || this.status !== "analyzed") {
+      return null;
+    }
+
+    return {
+      summary: this.analysis.summary,
+      riskLevel: this.analysis.riskLevel,
+      overallScore: this.analysis.overallScore,
+      keyPointsCount: this.analysis.keyPoints.length,
+      clausesCount: this.analysis.clauses.length,
+      recommendationsCount: this.analysis.recommendations.length,
+      analyzedAt: this.analysis.analyzedAt,
+    };
   }
 }
 
