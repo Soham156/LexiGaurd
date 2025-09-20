@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'r
 import './index.css';
 import { DocumentProvider } from './context/DocumentContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider, useAuth } from './context/authContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
 import UploadPage from './pages/UploadPage';
 import DashboardPage from './pages/DashboardPage';
@@ -11,8 +11,6 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import AuthTest from './components/AuthTest';
-import FirestoreDebug from './components/FirestoreDebug';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -145,8 +143,6 @@ function Layout() {
               </PublicRoute>
             } 
           />
-          <Route path="/auth-test" element={<AuthTest />} />
-          <Route path="/firestore-debug" element={<FirestoreDebug />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
