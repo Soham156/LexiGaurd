@@ -1,6 +1,7 @@
-import React, { useContext, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DocumentContext } from '../context/DocumentContext';
+import { documentService } from '../services/firebaseApi';
 import {
   FileText,
   Upload,
@@ -14,46 +15,44 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
+  ExternalLink,
+  FolderOpen,
 } from 'lucide-react';
 
 const DocumentsPage = () => {
-  const { clauses, document } = useContext(DocumentContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock documents data
-  const documents = [
-    {
-      id: 1,
-      name: 'Employment Agreement - John Doe',
-      status: 'reviewed',
-      uploadDate: '2025-01-15',
-      lastModified: '2025-01-16',
-      riskLevel: 'low',
-      clauses: 12,
-      size: '2.4 MB',
-    },
-    {
-      id: 2,
-      name: 'Lease Agreement - Apartment 4B',
-      status: 'pending',
-      uploadDate: '2025-01-14',
-      lastModified: '2025-01-14',
-      riskLevel: 'high',
-      clauses: 8,
-      size: '1.8 MB',
-    },
-    {
-      id: 3,
-      name: 'Service Contract - ABC Corp',
-      status: 'in_review',
-      uploadDate: '2025-01-13',
-      lastModified: '2025-01-15',
-      riskLevel: 'medium',
-      clauses: 15,
-      size: '3.1 MB',
-    },
-  ];
+  // Load documents from Firestore
+  useEffect(() => {
+    const loadDocuments = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        console.log('Loading documents from Firestore...');
+        const result = await documentService.getAll();
+        console.log('Documents loaded:', result);
+        setDocuments(result.documents || []);
+      } catch (err) {
+        console.error('Error loading documents:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDocuments();
+  }, []);
+
+  // Filter documents based on search and status
+  const filteredDocuments = documents.filter(doc => {
+    const matchesSearch = doc.fileName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || doc.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -85,12 +84,14 @@ const DocumentsPage = () => {
   };
 
   const getRiskBadge = (riskLevel) => {
+    const normalizedRisk = (riskLevel || 'unknown').toLowerCase();
     const colors = {
       low: 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg',
       medium: 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-lg',
       high: 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-lg',
+      unknown: 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg',
     };
-    return `px-3 py-1 rounded-full text-xs font-semibold ${colors[riskLevel]} hover:shadow-xl transition-all duration-300`;
+    return `px-3 py-1 rounded-full text-xs font-semibold ${colors[normalizedRisk] || colors.unknown} hover:shadow-xl transition-all duration-300`;
   };
 
   return (
@@ -147,56 +148,101 @@ const DocumentsPage = () => {
       </motion.div>
 
       {/* Documents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {documents.map((doc, index) => (
-          <motion.div
-            key={doc.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 * (index + 2) }}
-            whileHover={{ y: -5 }}
-            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-sky-50 rounded-lg">
-                  <FileText className="w-6 h-6 text-sky-600" />
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-600 mx-auto"></div>
+          <p className="mt-4 text-sky-600">Loading your documents...</p>
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-700">{error}</p>
+        </div>
+      ) : filteredDocuments.length === 0 ? (
+        <div className="text-center py-12">
+          <FileText className="w-16 h-16 text-sky-300 mx-auto mb-4" />
+          <p className="text-sky-600 text-lg mb-2">No documents found</p>
+          <p className="text-sky-500">Upload your first document to get started</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredDocuments.map((doc, index) => (
+            <motion.div
+              key={doc.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 * (index + 2) }}
+              whileHover={{ y: -5 }}
+              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-sky-50 rounded-lg">
+                    <FileText className="w-6 h-6 text-sky-600" />
+                  </div>
+                  <div>
+                    {getStatusIcon(doc.analysisCompleted ? 'reviewed' : 'pending')}
+                  </div>
                 </div>
-                <div>
-                  {getStatusIcon(doc.status)}
+                <div className="relative">
+                  <button className="p-1 hover:bg-sky-50 rounded">
+                    <MoreVertical className="w-4 h-4 text-sky-600" />
+                  </button>
                 </div>
               </div>
-              <div className="relative">
-                <button className="p-1 hover:bg-sky-50 rounded">
-                  <MoreVertical className="w-4 h-4 text-sky-600" />
-                </button>
-              </div>
-            </div>
 
-            <h3 className="font-semibold text-sky-900 mb-2 line-clamp-2">
-              {doc.name}
-            </h3>
+              <h3 className="font-semibold text-sky-900 mb-2 line-clamp-2">
+                {doc.fileName}
+              </h3>
 
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-sky-600">Risk Level:</span>
-                <span className={getRiskBadge(doc.riskLevel)}>
-                  {doc.riskLevel.charAt(0).toUpperCase() + doc.riskLevel.slice(1)}
-                </span>
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-sky-600">Risk Level:</span>
+                  <span className={getRiskBadge(doc.analysis?.riskLevel || doc.riskLevel || 'unknown')}>
+                    {(doc.analysis?.riskLevel || doc.riskLevel || 'Unknown').charAt(0).toUpperCase() + 
+                     (doc.analysis?.riskLevel || doc.riskLevel || 'unknown').slice(1).toLowerCase()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-sky-600">Role:</span>
+                  <span className="text-sky-900 font-medium">{doc.selectedRole}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-sky-600">Size:</span>
+                  <span className="text-sky-900 font-medium">
+                    {doc.fileSize ? (doc.fileSize / 1024 / 1024).toFixed(1) + ' MB' : 'Unknown'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-sky-600">Uploaded:</span>
+                  <span className="text-sky-900 font-medium">
+                    {doc.uploadDate?.toLocaleDateString?.() || 'Unknown'}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-sky-600">Clauses:</span>
-                <span className="text-sky-900 font-medium">{doc.clauses}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-sky-600">Size:</span>
-                <span className="text-sky-900 font-medium">{doc.size}</span>
-              </div>
-            </div>
+
+              {/* Google Drive Link */}
+              {doc.googleDriveFileId && (
+                <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-700">Stored in Google Drive</span>
+                    </div>
+                    <a
+                      href={`https://drive.google.com/file/d/${doc.googleDriveFileId}/view`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-green-600 hover:text-green-700 transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              )}
 
             <div className="flex items-center gap-2 text-xs text-sky-500 mb-4">
               <Calendar className="w-4 h-4" />
-              <span>Modified {doc.lastModified}</span>
+              <span>Uploaded {doc.uploadDate?.toLocaleDateString?.() || 'Unknown'}</span>
             </div>
 
             <div className="flex gap-2">
@@ -208,13 +254,17 @@ const DocumentsPage = () => {
                 <Eye className="w-4 h-4" />
                 <span className="text-sm">View</span>
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
-              >
-                <Download className="w-4 h-4" />
-              </motion.button>
+              {doc.googleDriveFileId && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => window.open(`https://drive.google.com/file/d/${doc.googleDriveFileId}/view`, '_blank')}
+                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                  title="Open in Google Drive"
+                >
+                  <FolderOpen className="w-4 h-4" />
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -223,9 +273,10 @@ const DocumentsPage = () => {
                 <Trash2 className="w-4 h-4" />
               </motion.button>
             </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Statistics */}
       <motion.div

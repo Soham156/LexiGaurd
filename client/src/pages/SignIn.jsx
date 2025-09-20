@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Shield, Mail, Lock, EyeOff, Eye, Loader2 } from "lucide-react";
 import { doSignInWithEmailAndPassword, doSignInWithGoogle } from "../firebase/auth";
 
 const SignIn = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +15,6 @@ const SignIn = () => {
     password: "",
   });
 
-  const from = location.state?.from || "/dashboard";
   const redirectMessage = location.state?.message;
 
   const handleSubmit = async (e) => {
@@ -26,7 +24,8 @@ const SignIn = () => {
 
     try {
       await doSignInWithEmailAndPassword(formData.email, formData.password);
-      navigate("/dashboard", { replace: true });
+      // AuthContext will handle navigation automatically
+      console.log("Email sign-in successful");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -39,9 +38,13 @@ const SignIn = () => {
     setError(null);
 
     try {
-      await doSignInWithGoogle();
-      navigate("/dashboard", { replace: true });
+      const result = await doSignInWithGoogle();
+      if (result) {
+        console.log("Google sign-in successful:", result.user);
+        // AuthContext will handle navigation automatically
+      }
     } catch (err) {
+      console.error("Google sign-in error:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);

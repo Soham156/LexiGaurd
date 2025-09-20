@@ -152,6 +152,19 @@ Provide only the JSON response without any additional text or formatting.
       analysis.recommendations = analysis.recommendations || [];
       analysis.missingClauses = analysis.missingClauses || [];
 
+      // Ensure each clause has the required structure for the frontend
+      analysis.clauses = analysis.clauses.map((clause, index) => ({
+        id: clause.id || `clause-${index + 1}`,
+        text: clause.text || "",
+        type: clause.type || "general",
+        riskLevel: clause.riskLevel || "medium",
+        explanation: clause.explanation || "Analysis not available",
+        legalImplications: clause.legalImplications || "",
+        suggestions: clause.suggestions || [],
+        redFlags: clause.redFlags || [],
+        obligations: clause.obligations || [],
+      }));
+
       // Set defaults
       analysis.riskLevel = analysis.riskLevel || "medium";
       analysis.overallScore = analysis.overallScore || 70;
@@ -334,4 +347,4 @@ Focus on legal terms, technical definitions, and important concepts.
   }
 }
 
-module.exports = new GeminiService();
+module.exports = GeminiService;

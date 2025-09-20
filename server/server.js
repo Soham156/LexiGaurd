@@ -6,10 +6,7 @@ const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 // Import routes
-const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/users");
-const documentRoutes = require("./routes/documents");
-const chatRoutes = require("./routes/chat");
+const documentAnalysisRoutes = require("./routes/documentRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -40,10 +37,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/documents", documentRoutes);
-app.use("/api/chat", chatRoutes);
+app.use("/api/document", documentAnalysisRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -62,7 +56,7 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === "production" ? {} : err,
   });
 });
-//tvrtv
+
 // 404 handler - must be last middleware
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

@@ -1,13 +1,28 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { Sun, Moon } from 'lucide-react';
+import { useAuth } from '../context/authContext';
+import { doSignOut } from '../firebase/auth';
+import { Sun, Moon, User, LogOut } from 'lucide-react';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { currentUser, userLoggedIn } = useAuth();
+  const navigate = useNavigate();
 
   console.log('Mobile menu open state:', open); // Debug log
+  console.log('User logged in:', userLoggedIn, 'Current user:', currentUser); // Debug log
+
+  const handleSignOut = async () => {
+    try {
+      await doSignOut();
+      setOpen(false); // Close mobile menu if open
+      console.log('User signed out successfully');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <header className="w-full fixed top-0 left-0 right-0 z-50 backdrop-blur-sm">
@@ -29,8 +44,31 @@ export default function Header() {
             >
               {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
-            <Link to="/signin" className="text-sm text-slate-800 dark:text-gray-200 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Sign In</Link>
-            <Link to="/signup" className="ml-2 px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-sm hover:shadow-lg transition-all duration-300 font-medium">Sign Up</Link>
+            
+            {userLoggedIn ? (
+              // Show user info and sign out when logged in
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 text-sm text-slate-700 dark:text-gray-300">
+                  <User className="w-4 h-4" />
+                  <span className="hidden md:inline">
+                    {currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User'}
+                  </span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-1 px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg text-sm hover:shadow-lg transition-all duration-300 font-medium"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              // Show sign in/up when not logged in
+              <div className="flex items-center space-x-2">
+                <Link to="/signin" className="text-sm text-slate-800 dark:text-gray-200 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Sign In</Link>
+                <Link to="/signup" className="px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-sm hover:shadow-lg transition-all duration-300 font-medium">Sign Up</Link>
+              </div>
+            )}
           </nav>
 
           <div className="sm:hidden flex items-center gap-2">
@@ -62,7 +100,7 @@ export default function Header() {
         <div 
           className="fixed top-0 left-0 right-0 bottom-0 bg-black/60 z-[9999] backdrop-blur-sm"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
-          onClick={(e) => {
+          onClick={() => {
             console.log('Backdrop clicked');
             setOpen(false);
           }}
@@ -121,18 +159,49 @@ export default function Header() {
               }} to="/dashboard" className="py-4 px-6 text-white bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl font-medium shadow-lg text-center hover:shadow-xl transition-all duration-300">
                 📊 Dashboard
               </Link>
-              <Link onClick={() => {
-                console.log('Sign In link clicked');
-                setOpen(false);
-              }} to="/signin" className="py-4 px-6 text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-medium shadow-lg text-center hover:shadow-xl transition-all duration-300">
-                🔑 Sign In
-              </Link>
-              <Link onClick={() => {
-                console.log('Sign Up link clicked');
-                setOpen(false);
-              }} to="/signup" className="py-4 px-6 text-white bg-gradient-to-r from-orange-500 to-red-500 rounded-xl font-semibold shadow-lg text-center hover:shadow-xl transition-all duration-300">
-                🚀 Sign Up
-              </Link>
+              
+              {userLoggedIn ? (
+                // Show user info and sign out when logged in
+                <>
+                  <div className="py-3 px-6 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-xl text-center">
+                    <div className="flex items-center justify-center space-x-2 text-gray-700 dark:text-gray-200">
+                      <User className="w-5 h-5" />
+                      <span className="font-medium">
+                        {currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {currentUser?.email}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      console.log('Sign Out clicked');
+                      handleSignOut();
+                    }} 
+                    className="py-4 px-6 text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-xl font-medium shadow-lg text-center hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>🚪 Sign Out</span>
+                  </button>
+                </>
+              ) : (
+                // Show sign in/up when not logged in
+                <>
+                  <Link onClick={() => {
+                    console.log('Sign In link clicked');
+                    setOpen(false);
+                  }} to="/signin" className="py-4 px-6 text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-medium shadow-lg text-center hover:shadow-xl transition-all duration-300">
+                    🔑 Sign In
+                  </Link>
+                  <Link onClick={() => {
+                    console.log('Sign Up link clicked');
+                    setOpen(false);
+                  }} to="/signup" className="py-4 px-6 text-white bg-gradient-to-r from-orange-500 to-red-500 rounded-xl font-semibold shadow-lg text-center hover:shadow-xl transition-all duration-300">
+                    🚀 Sign Up
+                  </Link>
+                </>
+              )}
             </nav>
           </div>
         </div>

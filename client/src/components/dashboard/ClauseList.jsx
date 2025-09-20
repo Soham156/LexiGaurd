@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronDown, ChevronRight, AlertTriangle, Info, CheckCircle, FileText } from 'lucide-react';
 
 const riskColor = (risk) => {
@@ -19,8 +20,27 @@ const riskBadgeColor = (risk) => {
   return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700';
 };
 
-export default function ClauseList({ clauses = [], selectedId, onSelect }) {
+// Helper function to determine risk level from clause content
+const determineRisk = (clause) => {
+  const lowRiskKeywords = ['standard', 'normal', 'typical', 'reasonable', 'fair'];
+  const highRiskKeywords = ['penalty', 'forfeit', 'terminate', 'breach', 'void', 'liable', 'damages', 'sue', 'legal action'];
+  
+  const clauseText = clause.toLowerCase();
+  
+  if (highRiskKeywords.some(keyword => clauseText.includes(keyword))) {
+    return 'high';
+  }
+  if (lowRiskKeywords.some(keyword => clauseText.includes(keyword))) {
+    return 'low';
+  }
+  return 'medium';
+};
+
+export default function ClauseList({ clauses = [], selectedId, onSelect, isAnalysisView = false }) {
   const [expandedClauses, setExpandedClauses] = useState(new Set());
+
+  // Debug: log the incoming clauses to see their structure
+  console.log('ClauseList received clauses:', clauses);
 
   const toggleExpand = (id, e) => {
     e.stopPropagation();
@@ -33,7 +53,35 @@ export default function ClauseList({ clauses = [], selectedId, onSelect }) {
     setExpandedClauses(newExpanded);
   };
 
-  if (!clauses.length) {
+  // Transform clauses array into structured format if needed
+  const structuredClauses = clauses.map((clause, index) => {
+    // If clause is already structured (has id, text, etc.) - use the AI-provided riskLevel
+    if (typeof clause === 'object' && clause.id !== undefined) {
+      return {
+        ...clause,
+        risk: clause.riskLevel || clause.risk || 'medium', // Use AI-provided riskLevel
+      };
+    }
+    
+    // If clause is a simple string, transform it using fallback risk determination
+    const clauseText = typeof clause === 'string' ? clause : clause.text || '';
+    const risk = determineRisk(clauseText);
+    
+    return {
+      id: `clause-${index}`,
+      text: clauseText,
+      risk: risk,
+      type: 'general',
+      explanation: `This clause requires ${risk} attention based on its content and potential legal implications.`,
+      suggestions: risk === 'high' 
+        ? ['Consider legal review', 'Negotiate terms if possible', 'Understand implications before signing']
+        : risk === 'medium'
+        ? ['Review carefully', 'Consider implications']
+        : ['Standard clause', 'Generally acceptable terms']
+    };
+  });
+
+  if (!structuredClauses.length) {
     return (
       <div className="space-y-2">
         <h3 className="font-bold mb-2 text-gray-900 dark:text-gray-100">Clauses</h3>
@@ -47,17 +95,20 @@ export default function ClauseList({ clauses = [], selectedId, onSelect }) {
   return (
     <div className="space-y-2">
       <h3 className="font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
-        Clauses Analyzed
-        <span className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 text-xs px-2 py-1 rounded-full">
-          {clauses.length}
+        {isAnalysisView ? 'Key Clauses Analysis' : 'Clauses Analyzed'}
+        <span className="bg-sky-100 dark:bg-sky-900/20 text-sky-800 dark:text-sky-300 text-xs px-2 py-1 rounded-full">
+          {structuredClauses.length}
         </span>
       </h3>
       <div className="max-h-[60vh] overflow-auto space-y-3">
-        {clauses.map((clause) => {
+        {structuredClauses.map((clause, index) => {
           const isExpanded = expandedClauses.has(clause.id);
           return (
-            <div 
-              key={clause.id} 
+            <motion.div
+              key={clause.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
               className={`border rounded-lg transition-all duration-200 ${
                 selectedId === clause.id 
                   ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700' 
@@ -75,7 +126,7 @@ export default function ClauseList({ clauses = [], selectedId, onSelect }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="font-medium text-gray-900 dark:text-gray-100">
-                          Clause #{clause.id}
+                          {isAnalysisView ? `Clause ${index + 1}` : `Clause #${clause.id}`}
                         </span>
                         <span className={`px-2 py-1 text-xs rounded-full border ${riskBadgeColor(clause.risk)}`}>
                           {clause.risk?.toUpperCase()} RISK
@@ -151,7 +202,7 @@ export default function ClauseList({ clauses = [], selectedId, onSelect }) {
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           );
         })}
       </div>

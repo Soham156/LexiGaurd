@@ -3,11 +3,8 @@ import { auth } from "./firebase.js";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
-  sendEmailVerification,
-  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
-  updatePassword,
 } from "firebase/auth";
 
 export const docreateUserWithEmailAndPassword = async (email, password) => {
@@ -20,9 +17,20 @@ export const doSignInWithEmailAndPassword = async (email, password) => {
 
 export const doSignInWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
 
-  return result;
+  // Configure provider
+  provider.setCustomParameters({
+    prompt: "select_account",
+  });
+
+  try {
+    // Use popup instead of redirect to avoid init.json issues
+    const result = await signInWithPopup(auth, provider);
+    return result;
+  } catch (error) {
+    console.error("Google Sign-In Error:", error);
+    throw error;
+  }
 };
 
 export const doSignOut = () => {
