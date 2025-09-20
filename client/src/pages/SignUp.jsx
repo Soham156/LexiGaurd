@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { authService, handleApiError } from '../services/api';
-import { Shield, Mail, Lock, User, EyeOff, Eye, Loader2 } from 'lucide-react';
+import { Shield, Mail, Lock, User, EyeOff, Eye } from 'lucide-react';
+
+// import Firebase auth helpers
+import { docreateUserWithEmailAndPassword, doSignInWithGoogle } from '../firebase/auth';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -16,9 +18,10 @@ const SignUp = () => {
     confirmPassword: '',
   });
 
+  // Handle email/password signup
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -28,14 +31,29 @@ const SignUp = () => {
     setError(null);
 
     try {
-      await authService.register({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-      });
+      await docreateUserWithEmailAndPassword(formData.email, formData.password);
+
+      // TODO: You can update displayName separately:
+      // await updateProfile(auth.currentUser, { displayName: formData.name });
+
       navigate('/upload');
-    } catch (error) {
-      setError(handleApiError(error, navigate));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Google signup
+  const handleGoogleSignup = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await doSignInWithGoogle();
+      navigate('/upload');
+    } catch (err) {
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -165,41 +183,45 @@ const SignUp = () => {
               </div>
             </div>
 
-            {/* Terms and Conditions */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                required
-                className="rounded text-sky-600 focus:ring-sky-500"
-              />
-              <span className="ml-2 text-sm text-sky-600">
-                I agree to the{' '}
-                <Link
-                  to="/terms"
-                  className="font-medium text-sky-700 hover:text-sky-800 transition-colors"
-                >
-                  Terms of Service
-                </Link>
-                {' '}and{' '}
-                <Link
-                  to="/privacy"
-                  className="font-medium text-sky-700 hover:text-sky-800 transition-colors"
-                >
-                  Privacy Policy
-                </Link>
-              </span>
-            </div>
+            {/* Error */}
+            {error && (
+              <p className="text-red-600 text-sm">{error}</p>
+            )}
 
             {/* Submit Button */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full bg-sky-600 text-white py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors duration-200 flex items-center justify-center space-x-2"
+              disabled={isLoading}
+              className="w-full bg-sky-600 text-white py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50"
             >
-              <span>Sign Up</span>
+              <span>{isLoading ? 'Signing Up...' : 'Sign Up'}</span>
             </motion.button>
           </motion.form>
+
+          {/* OR Divider */}
+          <div className="flex items-center my-6">
+            <div className="flex-grow h-px bg-sky-200" />
+            <span className="px-4 text-sky-500 text-sm">OR</span>
+            <div className="flex-grow h-px bg-sky-200" />
+          </div>
+
+          {/* Google Signup */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleGoogleSignup}
+            disabled={isLoading}
+            className="w-full border border-sky-300 text-sky-700 py-2 px-4 rounded-lg hover:bg-sky-50 transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50"
+          >
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google"
+              className="h-5 w-5"
+            />
+            <span>{isLoading ? 'Loading...' : 'Sign up with Google'}</span>
+          </motion.button>
 
           {/* Sign In Link */}
           <motion.p
