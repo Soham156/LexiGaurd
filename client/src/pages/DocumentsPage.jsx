@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DocumentContext } from '../context/DocumentContext';
-import { documentService } from '../services/firebaseApi';
+import { documentService } from '../services/api';
 import {
   FileText,
   Upload,
