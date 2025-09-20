@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Shield, Mail, Lock, User, EyeOff, Eye } from 'lucide-react';
 
 // import Firebase auth helpers
 import { docreateUserWithEmailAndPassword, doSignInWithGoogle } from '../firebase/auth';
 
 const SignUp = () => {
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -36,7 +35,8 @@ const SignUp = () => {
       // TODO: You can update displayName separately:
       // await updateProfile(auth.currentUser, { displayName: formData.name });
 
-      navigate('/upload');
+      // AuthContext will handle navigation automatically
+      console.log("Email sign-up successful");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -50,9 +50,13 @@ const SignUp = () => {
     setError(null);
 
     try {
-      await doSignInWithGoogle();
-      navigate('/upload');
+      const result = await doSignInWithGoogle();
+      if (result) {
+        console.log("Google sign-up successful:", result.user);
+        // AuthContext will handle navigation automatically
+      }
     } catch (err) {
+      console.error("Google sign-up error:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);

@@ -1,27 +1,24 @@
-import React, { useContext, useRef, useState, useEffect } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { DocumentContext } from '../context/DocumentContext';
 import { documentService, handleApiError, isAuthenticated } from '../services/api';
-import { Shield, Upload, FileText, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Shield, User, ArrowRight, Loader2, Upload, FileText } from 'lucide-react';
 import ClauseList from '../components/dashboard/ClauseList';
 
 const UploadPage = () => {
   const { setDocument, setRole, setClauses } = useContext(DocumentContext);
   const [selectedRole, setSelectedRole] = useState('Tenant');
-  const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [analysisResults, setAnalysisResults] = useState(null);
-  const fileInput = useRef();
+  const [selectedClause, setSelectedClause] = useState(null);
   const navigate = useNavigate();
 
   // Check authentication on component mount
   useEffect(() => {
     if (!isAuthenticated()) {
-      // If not authenticated, redirect to sign in
       navigate('/signin', { 
         state: { 
           from: '/upload',
@@ -31,28 +28,30 @@ const UploadPage = () => {
     }
   }, [navigate]);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
     if (file) {
-      setSelectedFile(file);
-    }
-  };
+      // Check file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword',
+        'text/plain'
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        setError('Please select a valid document file (PDF, Word, or Text file)');
+        return;
+      }
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+      // Check file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('File size must be less than 10MB');
+        return;
+      }
+
       setSelectedFile(file);
+      setError(null);
     }
   };
 
@@ -60,314 +59,362 @@ const UploadPage = () => {
     if (!selectedFile) return;
 
     try {
+      setIsAnalyzing(true);
       setError(null);
-      setIsUploading(true);
 
-      // First, upload the document
-      console.log('Uploading document...');
-      const uploadResponse = await documentService.upload(
-        selectedFile, 
-        selectedFile.name, 
-        [selectedRole.toLowerCase()]
+      console.log('Starting analysis with selectedFile:', selectedFile.name);
+
+      // Call the direct file upload and analysis
+      const response = await documentService.uploadAndAnalyze(
+        selectedFile,
+        selectedRole
       );
 
-      console.log('Upload successful:', uploadResponse);
-      const documentId = uploadResponse.document.id;
-
-      setIsUploading(false);
-      setIsAnalyzing(true);
-
-      // Then, analyze the document
-      console.log('Analyzing document...');
-      const analysisResponse = await documentService.analyze(documentId);
-
-      console.log('Analysis successful:', analysisResponse);
-
-      // Transform the AI analysis into the format expected by the frontend
-      const analysis = analysisResponse.analysis;
-      
-      // Convert clauses to the format expected by ClauseList component
-      const transformedClauses = analysis.clauses?.map((clause, index) => ({
-        id: index + 1,
-        text: clause.text,
-        risk: clause.riskLevel,
-        type: clause.type,
-        explanation: clause.explanation,
-        suggestions: clause.suggestions || []
-      })) || [];
-
-      // Set the context data
-      setDocument({
-        id: documentId,
-        name: selectedFile.name,
-        analysis: analysis,
-        uploadResponse: uploadResponse
-      });
-      setRole(selectedRole);
-      setClauses(transformedClauses);
-
-      // Store analysis results to display on this page
-      setAnalysisResults({
-        document: {
-          id: documentId,
-          name: selectedFile.name,
-          analysis: analysis
-        },
-        clauses: transformedClauses
-      });
-
-    } catch (error) {
-      console.error('Error uploading/analyzing document:', error);
-      setError(handleApiError(error, navigate));
+      if (response.success) {
+        setAnalysisResults(response.analysis);
+        setDocument(response.analysis);
+        setRole(selectedRole);
+        setClauses(response.analysis?.clauses || []);
+      } else {
+        setError(response.error || 'Analysis failed');
+      }
+    } catch (err) {
+      console.error('Analysis error:', err);
+      const errorMessage = handleApiError(err, navigate);
+      setError(errorMessage);
     } finally {
-      setIsUploading(false);
       setIsAnalyzing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-sky-50 dark:bg-gray-900 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-4xl"
-      >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          {/* Logo */}
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-sky-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <div className="flex justify-center mb-4">
+            <Shield className="w-16 h-16 text-sky-600 dark:text-sky-400" />
+          </div>
+          <h1 className="text-4xl font-bold text-sky-900 dark:text-sky-100 mb-4">
+            Document Analysis
+          </h1>
+          <p className="text-sky-600 dark:text-sky-300 text-lg max-w-2xl mx-auto">
+            Upload a document for AI-powered legal analysis and risk assessment
+          </p>
+        </motion.div>
+
+        {/* Error Display */}
+        {error && (
           <motion.div
-            className="flex justify-center mb-8"
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-8 rounded-r-lg"
           >
-            <div className="flex items-center space-x-2">
-              <Shield className="h-8 w-8 text-sky-600 dark:text-sky-400" />
-              <span className="text-2xl font-bold text-sky-800 dark:text-sky-300">LexiGuard</span>
+            <div className="flex">
+              <div className="ml-3">
+                <p className="text-red-700 dark:text-red-300">{error}</p>
+              </div>
             </div>
           </motion.div>
+        )}
 
-          {/* Title */}
+        {/* Analysis Results */}
+        {analysisResults && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-center mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8"
           >
-            <h2 className="text-2xl font-bold text-sky-900 dark:text-sky-100">Upload Your Document</h2>
-            <p className="text-sky-600 dark:text-sky-400 mt-2">
-              Drag and drop your document or click to browse
-            </p>
-          </motion.div>
+            <h2 className="text-2xl font-bold text-sky-900 dark:text-sky-100 mb-6">
+              Analysis Complete
+            </h2>
+            
+            {/* Document Type and Risk Level */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-sky-50 dark:bg-sky-900/20 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100 mb-2">Document Type</h3>
+                <p className="text-sky-700 dark:text-sky-300">{analysisResults.documentType || 'Unknown'}</p>
+              </div>
+              <div className="bg-sky-50 dark:bg-sky-900/20 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100 mb-2">Risk Level</h3>
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  (analysisResults.riskLevel || '').toLowerCase() === 'high' 
+                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                    : (analysisResults.riskLevel || '').toLowerCase() === 'medium'
+                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
+                    : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                }`}>
+                  {analysisResults.riskLevel || 'Unknown'}
+                </span>
+              </div>
+            </div>
 
-          {/* Error Message */}
-          {error && !analysisResults && (
+            {/* Purpose */}
+            {analysisResults.purpose && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100 mb-2">Purpose</h3>
+                <p className="text-gray-700 dark:text-gray-300">{analysisResults.purpose}</p>
+              </div>
+            )}
+
+            {/* Key Clauses with ClauseList Component */}
+            {analysisResults.clauses && analysisResults.clauses.length > 0 && (
+              <div className="mb-6">
+                <ClauseList 
+                  clauses={analysisResults.clauses} 
+                  selectedId={selectedClause}
+                  onSelect={setSelectedClause}
+                  isAnalysisView={true}
+                />
+              </div>
+            )}
+
+            {/* Legal Issues */}
+            {analysisResults.legalIssues && analysisResults.legalIssues.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100 mb-3 flex items-center gap-2">
+                  Legal Issues 
+                  <span className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300 text-xs px-2 py-1 rounded-full">
+                    {analysisResults.legalIssues.length}
+                  </span>
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {analysisResults.legalIssues.map((issue, index) => (
+                    <motion.div 
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                          !
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-red-700 dark:text-red-300 leading-relaxed">{issue}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            {analysisResults.recommendations && analysisResults.recommendations.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100 mb-3 flex items-center gap-2">
+                  Recommendations 
+                  <span className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 text-xs px-2 py-1 rounded-full">
+                    {analysisResults.recommendations.length}
+                  </span>
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {analysisResults.recommendations.map((recommendation, index) => (
+                    <motion.div 
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                          ✓
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-green-700 dark:text-green-300 leading-relaxed">{recommendation}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Debug Information */}
+            {(analysisResults.parseError || analysisResults.error) && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-3">Debug Information</h3>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-sm">
+                  {analysisResults.parseError && <p className="text-yellow-700 dark:text-yellow-300 mb-2">Parse Error: {analysisResults.parseError}</p>}
+                  {analysisResults.error && <p className="text-yellow-700 dark:text-yellow-300">Error: {analysisResults.error}</p>}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center space-x-4 mt-8">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setAnalysisResults(null);
+                  setSelectedFile(null);
+                  setError(null);
+                }}
+                className="px-6 py-3 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+              >
+                Analyze Another Document
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/dashboard')}
+                className="px-6 py-3 bg-sky-600 dark:bg-sky-700 text-white rounded-lg hover:bg-sky-700 dark:hover:bg-sky-600 transition-colors flex items-center space-x-2"
+              >
+                <span>Go to Dashboard</span>
+                <ArrowRight className="w-5 h-5" />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Upload Form - only show when no analysis results */}
+        {!analysisResults && (
+          <>
+            {/* File Upload Area */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
               className="mb-8"
             >
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Analysis Results */}
-          {analysisResults && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-6"
-            >
-              {/* Document Info */}
-              <div className="bg-sky-50 dark:bg-sky-900/20 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-sky-800 dark:text-sky-200 mb-4">Analysis Complete!</h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Document</p>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{analysisResults.document.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Risk Level</p>
-                    <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                      analysisResults.document.analysis.riskLevel === 'high' 
-                        ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                        : analysisResults.document.analysis.riskLevel === 'medium'
-                        ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
-                        : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                    }`}>
-                      {analysisResults.document.analysis.riskLevel?.toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Overall Score</p>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{analysisResults.document.analysis.overallScore}/100</p>
+              {!selectedFile ? (
+                <div className="border-2 border-dashed border-sky-200 dark:border-sky-800 rounded-xl p-12 text-center">
+                  <div className="flex flex-col items-center gap-6">
+                    <div className="p-4 bg-sky-100 dark:bg-sky-900/30 rounded-full">
+                      <Upload className="w-16 h-16 text-sky-600 dark:text-sky-400" />
+                    </div>
+                    <div>
+                      <p className="text-sky-700 dark:text-sky-300 text-2xl font-bold mb-2">
+                        Upload Document
+                      </p>
+                      <p className="text-sky-600 dark:text-sky-400 text-lg mb-4">
+                        Choose a file from your computer
+                      </p>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.txt"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        id="file-upload"
+                      />
+                      <motion.label
+                        htmlFor="file-upload"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg cursor-pointer transition-colors"
+                      >
+                        <FileText className="w-5 h-5" />
+                        Choose File
+                      </motion.label>
+                      <p className="text-sky-500 dark:text-sky-400 mt-4 text-sm">
+                        Supports PDF, Word Documents (.doc, .docx), and Text files (.txt)
+                        <br />
+                        Maximum file size: 10MB
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* Selected File Display */
+                <div className="border-2 border-sky-200 dark:border-sky-600 rounded-xl p-8 text-center bg-sky-50 dark:bg-sky-900/20">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="p-3 bg-sky-100 dark:bg-sky-900/30 rounded-full">
+                      <FileText className="w-12 h-12 text-sky-600 dark:text-sky-400" />
+                    </div>
+                    <div>
+                      <p className="text-sky-900 dark:text-sky-100 font-medium text-lg">{selectedFile.name}</p>
+                      <p className="text-sky-600 dark:text-sky-400 text-sm mt-1">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB • {selectedFile.type}
+                      </p>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSelectedFile(null)}
+                      className="text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 text-sm underline"
+                    >
+                      Choose different file
+                    </motion.button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
 
-              {/* Clauses */}
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
-                <ClauseList 
-                  clauses={analysisResults.clauses}
-                  onSelect={(id) => console.log('Selected clause:', id)}
-                />
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-4 justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setAnalysisResults(null);
-                    setSelectedFile(null);
-                    setError(null);
-                  }}
-                  className="px-6 py-3 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Analyze Another Document
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/dashboard')}
-                  className="px-6 py-3 bg-sky-600 dark:bg-sky-700 text-white rounded-lg hover:bg-sky-700 dark:hover:bg-sky-600 transition-colors flex items-center space-x-2"
-                >
-                  <span>Go to Dashboard</span>
-                  <ArrowRight className="w-5 h-5" />
-                </motion.button>
+            {/* Role Selection */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mb-8"
+            >
+              <label className="block text-sm font-medium text-sky-700 dark:text-sky-300 mb-4">
+                Select Your Role
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {['Tenant', 'Landlord', 'Employee', 'Employer', 'Contractor', 'Client'].map(
+                  (role) => (
+                    <motion.button
+                      key={role}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedRole(role)}
+                      className={`p-4 rounded-lg flex items-center space-x-3 transition-colors ${
+                        selectedRole === role
+                          ? 'bg-sky-100 dark:bg-sky-900/30 border-2 border-sky-500 dark:border-sky-400'
+                          : 'bg-sky-50 dark:bg-gray-700 border-2 border-transparent hover:border-sky-200 dark:hover:border-sky-600'
+                      }`}
+                    >
+                      <User className={`w-5 h-5 ${selectedRole === role ? 'text-sky-600 dark:text-sky-400' : 'text-sky-400 dark:text-sky-500'}`} />
+                      <span className={`font-medium ${selectedRole === role ? 'text-sky-900 dark:text-sky-100' : 'text-sky-600 dark:text-sky-300'}`}>
+                        {role}
+                      </span>
+                    </motion.button>
+                  )
+                )}
               </div>
             </motion.div>
-          )}
 
-          {/* Upload Form - only show when no analysis results */}
-          {!analysisResults && (
-            <>
-              {/* Upload Area */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mb-8"
-          >
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-                isDragging
-                  ? 'border-sky-500 dark:border-sky-400 bg-sky-50 dark:bg-sky-900/20'
-                  : 'border-sky-200 dark:border-gray-600 hover:border-sky-400 dark:hover:border-sky-500'
-              }`}
-              onClick={() => fileInput.current.click()}
+            {/* Submit Button */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex justify-center"
             >
-              <input
-                type="file"
-                ref={fileInput}
-                onChange={handleFileSelect}
-                className="hidden"
-                accept=".pdf,.doc,.docx,.txt"
-              />
-              <motion.div
-                initial={{ scale: 1 }}
-                animate={{ scale: isDragging ? 1.05 : 1 }}
-                className="flex flex-col items-center gap-4"
+              <motion.button
+                whileHover={{ scale: selectedFile && !isAnalyzing ? 1.02 : 1 }}
+                whileTap={{ scale: selectedFile && !isAnalyzing ? 0.98 : 1 }}
+                onClick={handleAnalyze}
+                disabled={!selectedFile || isAnalyzing}
+                className={`flex items-center space-x-2 px-8 py-4 rounded-lg text-white text-lg font-medium transition-colors ${
+                  selectedFile && !isAnalyzing
+                    ? 'bg-sky-600 hover:bg-sky-700'
+                    : 'bg-sky-300 cursor-not-allowed'
+                }`}
               >
-                <Upload className="w-12 h-12 text-sky-500 dark:text-sky-400" />
-                {selectedFile ? (
+                {isAnalyzing ? (
                   <>
-                    <FileText className="w-16 h-16 text-sky-600 dark:text-sky-400" />
-                    <p className="text-sky-900 dark:text-sky-100 font-medium">{selectedFile.name}</p>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span>Analyzing Document...</span>
                   </>
                 ) : (
-                  <p className="text-sky-600 dark:text-sky-400">
-                    Drop your file here or click to browse
-                  </p>
+                  <>
+                    <Shield className="w-6 h-6" />
+                    <span>Analyze Document</span>
+                  </>
                 )}
-                <p className="text-sm text-sky-500 dark:text-sky-400">
-                  Supported formats: <strong>PDF, TXT, DOC, DOCX</strong>
-                </p>
-              </motion.div>
-            </div>
-          </motion.div>
-
-          {/* Role Selection */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mb-8"
-          >
-            <label className="block text-sm font-medium text-sky-700 dark:text-sky-300 mb-4">
-              Select Your Role
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {['Tenant', 'Landlord', 'Employee', 'Employer', 'Contractor', 'Client'].map(
-                (role) => (
-                  <motion.button
-                    key={role}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedRole(role)}
-                    className={`p-4 rounded-lg flex items-center space-x-3 transition-colors ${
-                      selectedRole === role
-                        ? 'bg-sky-100 dark:bg-sky-900/30 border-2 border-sky-500 dark:border-sky-400'
-                        : 'bg-sky-50 dark:bg-gray-700 border-2 border-transparent hover:border-sky-200 dark:hover:border-sky-600'
-                    }`}
-                  >
-                    <User className={`w-5 h-5 ${selectedRole === role ? 'text-sky-600 dark:text-sky-400' : 'text-sky-400 dark:text-sky-500'}`} />
-                    <span className={`font-medium ${selectedRole === role ? 'text-sky-900 dark:text-sky-100' : 'text-sky-600 dark:text-sky-300'}`}>
-                      {role}
-                    </span>
-                  </motion.button>
-                )
-              )}
-            </div>
-          </motion.div>
-
-          {/* Submit Button */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex justify-center"
-          >
-            <motion.button
-              whileHover={{ scale: selectedFile && !isUploading && !isAnalyzing ? 1.02 : 1 }}
-              whileTap={{ scale: selectedFile && !isUploading && !isAnalyzing ? 0.98 : 1 }}
-              onClick={handleAnalyze}
-              disabled={!selectedFile || isUploading || isAnalyzing}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg text-white transition-colors ${
-                selectedFile && !isUploading && !isAnalyzing
-                  ? 'bg-sky-600 hover:bg-sky-700'
-                  : 'bg-sky-300 cursor-not-allowed'
-              }`}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Uploading...</span>
-                </>
-              ) : isAnalyzing ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Analyzing...</span>
-                </>
-              ) : (
-                <>
-                  <span>Analyze Document</span>
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </motion.button>
-          </motion.div>
-            </>
-          )}
-        </div>
-      </motion.div>
+              </motion.button>
+            </motion.div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

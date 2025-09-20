@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "cloudinary": "^2.7.0",
     "firebase": "^12.3.0",
     "framer-motion": "10.12.16",
     "lucide-react": "^0.284.0",

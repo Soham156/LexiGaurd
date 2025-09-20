@@ -9,11 +9,79 @@ const mammoth = require("mammoth");
 class TextExtractor {
   /**
    * Extract text from a file based on its type
+   * @param {string|Buffer} fileInput - Path to the file or buffer
+   * @param {string} mimeType - MIME type of the file
+   * @returns {Promise<string>} Extracted text content
+   */
+  static async extractText(fileInput, mimeType) {
+    try {
+      // Determine file type from MIME type
+      let fileType;
+      switch (mimeType) {
+        case "application/pdf":
+          fileType = "pdf";
+          break;
+        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+          fileType = "docx";
+          break;
+        case "application/msword":
+          fileType = "doc";
+          break;
+        case "text/plain":
+          fileType = "txt";
+          break;
+        default:
+          throw new Error(`Unsupported MIME type: ${mimeType}`);
+      }
+
+      // Check if input is a Buffer or file path
+      if (Buffer.isBuffer(fileInput)) {
+        return await this.extractFromBuffer(fileInput, fileType);
+      } else {
+        return await this.extractFromFile(fileInput, fileType);
+      }
+    } catch (error) {
+      console.error(`Error extracting text from ${mimeType} file:`, error);
+      throw new Error(
+        `Failed to extract text from ${mimeType} file: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Extract text from a buffer based on file type
+   * @param {Buffer} buffer - File buffer
+   * @param {string} fileType - File type (pdf, txt, doc, docx)
+   * @returns {Promise<string>} Extracted text content
+   */
+  static async extractFromBuffer(buffer, fileType) {
+    try {
+      switch (fileType.toLowerCase()) {
+        case "pdf":
+          return await this.extractFromPDFBuffer(buffer);
+        case "txt":
+          return await this.extractFromTXTBuffer(buffer);
+        case "doc":
+        case "docx":
+          return await this.extractFromWordBuffer(buffer);
+        default:
+          throw new Error(`Unsupported file type: ${fileType}`);
+      }
+    } catch (error) {
+      console.error(`Error extracting text from ${fileType} buffer:`, error);
+      throw new Error(
+        `Failed to extract text from ${fileType} buffer: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Extract text from a file based on its type (legacy method for file paths)
    * @param {string} filePath - Path to the file
    * @param {string} fileType - File extension (pdf, txt, doc, docx)
    * @returns {Promise<string>} Extracted text content
    */
-  static async extractText(filePath, fileType) {
+  static async extractFromFile(filePath, fileType) {
     try {
       switch (fileType.toLowerCase()) {
         case "pdf":
@@ -35,14 +103,13 @@ class TextExtractor {
   }
 
   /**
-   * Extract text from PDF file
-   * @param {string} filePath - Path to PDF file
+   * Extract text from PDF buffer
+   * @param {Buffer} buffer - PDF file buffer
    * @returns {Promise<string>} Extracted text
    */
-  static async extractFromPDF(filePath) {
+  static async extractFromPDFBuffer(buffer) {
     try {
-      const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdf(dataBuffer);
+      const data = await pdf(buffer);
 
       // Clean up the extracted text
       let text = data.text;
@@ -52,10 +119,82 @@ class TextExtractor {
       text = text.replace(/\n\s*\n/g, "\n\n");
 
       if (!text || text.length < 10) {
-        throw new Error("No readable text found in PDF file");
+        throw new Error("No readable text found in PDF buffer");
       }
 
       return text;
+    } catch (error) {
+      console.error("PDF buffer extraction error:", error);
+      throw new Error(
+        `Failed to extract text from PDF buffer: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Extract text from Word document buffer (DOC/DOCX)
+   * @param {Buffer} buffer - Word file buffer
+   * @returns {Promise<string>} Extracted text
+   */
+  static async extractFromWordBuffer(buffer) {
+    try {
+      const result = await mammoth.extractRawText({ buffer: buffer });
+      let text = result.value;
+
+      // Clean up the extracted text
+      text = text.replace(/\s+/g, " ").trim();
+      text = text.replace(/\n\s*\n/g, "\n\n");
+
+      if (!text || text.length < 10) {
+        throw new Error("No readable text found in Word document buffer");
+      }
+
+      // Log any messages from mammoth (warnings about unsupported elements)
+      if (result.messages && result.messages.length > 0) {
+        console.log(
+          "Word extraction messages:",
+          result.messages.map((m) => m.message)
+        );
+      }
+
+      return text;
+    } catch (error) {
+      console.error("Word buffer extraction error:", error);
+      throw new Error(
+        `Failed to extract text from Word document buffer: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Extract text from TXT buffer
+   * @param {Buffer} buffer - TXT file buffer
+   * @returns {Promise<string>} File content
+   */
+  static async extractFromTXTBuffer(buffer) {
+    try {
+      const content = buffer.toString("utf8");
+
+      if (!content || content.trim().length === 0) {
+        throw new Error("Text buffer is empty");
+      }
+
+      return content.trim();
+    } catch (error) {
+      console.error("TXT buffer extraction error:", error);
+      throw new Error(`Failed to read text buffer: ${error.message}`);
+    }
+  }
+
+  /**
+   * Extract text from PDF file
+   * @param {string} filePath - Path to PDF file
+   * @returns {Promise<string>} Extracted text
+   */
+  static async extractFromPDF(filePath) {
+    try {
+      const dataBuffer = fs.readFileSync(filePath);
+      return await this.extractFromPDFBuffer(dataBuffer);
     } catch (error) {
       console.error("PDF extraction error:", error);
       throw new Error(`Failed to extract text from PDF: ${error.message}`);
@@ -144,7 +283,22 @@ class TextExtractor {
   }
 
   /**
-   * Check if file type is supported
+   * Check if MIME type is supported
+   * @param {string} mimeType - MIME type
+   * @returns {boolean} True if supported
+   */
+  static isSupportedMimeType(mimeType) {
+    const supportedTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/msword",
+      "text/plain",
+    ];
+    return supportedTypes.includes(mimeType.toLowerCase());
+  }
+
+  /**
+   * Check if file type is supported (legacy method)
    * @param {string} fileType - File extension
    * @returns {boolean} True if supported
    */
@@ -154,4 +308,6 @@ class TextExtractor {
   }
 }
 
+// Export both the class and individual methods for backward compatibility
 module.exports = TextExtractor;
+module.exports.extractText = TextExtractor.extractText.bind(TextExtractor);

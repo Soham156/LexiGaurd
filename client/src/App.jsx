@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'r
 import './index.css';
 import { DocumentProvider } from './context/DocumentContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider, useAuth } from './context/authContext';
 import LandingPage from './pages/LandingPage';
 import UploadPage from './pages/UploadPage';
 import DashboardPage from './pages/DashboardPage';
@@ -10,6 +11,53 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import AuthTest from './components/AuthTest';
+import FirestoreDebug from './components/FirestoreDebug';
+
+// Protected Route Component
+function ProtectedRoute({ children }) {
+  const { userLoggedIn, loading } = useAuth();
+  const location = useLocation();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-600 mx-auto"></div>
+          <p className="mt-4 text-sky-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!userLoggedIn) {
+    return <Navigate to="/signin" state={{ from: location.pathname }} replace />;
+  }
+  
+  return children;
+}
+
+// Public Route Component (redirects to dashboard if already logged in)
+function PublicRoute({ children }) {
+  const { userLoggedIn, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-600 mx-auto"></div>
+          <p className="mt-4 text-sky-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (userLoggedIn) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return children;
+}
 
 function Layout() {
   const location = useLocation();
@@ -25,15 +73,80 @@ function Layout() {
       <main className={showHeader && !isDashboardPage ? "pt-20" : ""}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/upload" element={<UploadPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/dashboard/documents" element={<DashboardPage />} />
-          <Route path="/dashboard/chat" element={<DashboardPage />} />
-          <Route path="/dashboard/team" element={<DashboardPage />} />
-          <Route path="/dashboard/notifications" element={<DashboardPage />} />
-          <Route path="/dashboard/settings" element={<DashboardPage />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
+          <Route 
+            path="/upload" 
+            element={
+              <ProtectedRoute>
+                <UploadPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard/documents" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard/chat" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard/team" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard/notifications" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard/settings" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/signin" 
+            element={
+              <PublicRoute>
+                <SignIn />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              <PublicRoute>
+                <SignUp />
+              </PublicRoute>
+            } 
+          />
+          <Route path="/auth-test" element={<AuthTest />} />
+          <Route path="/firestore-debug" element={<FirestoreDebug />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
@@ -44,13 +157,15 @@ function Layout() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <DocumentProvider>
-        <Router>
-          <Layout />
-        </Router>
-      </DocumentProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <DocumentProvider>
+          <Router>
+            <Layout />
+          </Router>
+        </DocumentProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

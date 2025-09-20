@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD7t8kW9kJVjI3hcA4BpWoS9hsH14Ns0N8",
@@ -12,9 +12,14 @@ const firebaseConfig = {
   measurementId: "G-JRMK6EK3YD",
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const auth = getAuth(app);
+// Initialize Firebase with explicit config to prevent auto-detection
+const app = initializeApp(firebaseConfig, "lexigaurd-app");
 
-export { app, analytics, auth };
+// Initialize services
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Don't initialize analytics for now to avoid init.json issues
+let analytics = null;
+
+export { app, analytics, auth, db };
