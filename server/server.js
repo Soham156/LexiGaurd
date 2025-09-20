@@ -7,6 +7,7 @@ require("dotenv").config();
 
 // Import routes
 const documentAnalysisRoutes = require("./routes/documentRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -38,6 +39,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Routes
 app.use("/api/document", documentAnalysisRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
