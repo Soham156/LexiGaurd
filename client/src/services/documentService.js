@@ -9,7 +9,6 @@ import {
   updateDoc,
   query,
   where,
-  orderBy,
   serverTimestamp,
 } from "firebase/firestore";
 
@@ -107,19 +106,27 @@ export const getAll = async () => {
   }
 
   try {
+    // Simple query - only filter by userId
     const q = query(
       collection(db, "documents"),
-      where("userId", "==", auth.currentUser.uid),
-      where("status", "==", "active"),
-      orderBy("uploadDate", "desc")
+      where("userId", "==", auth.currentUser.uid)
     );
 
     const querySnapshot = await getDocs(q);
-    const documents = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      uploadDate: doc.data().uploadDate?.toDate?.(),
-    }));
+    const documents = querySnapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        uploadDate: doc.data().uploadDate?.toDate?.(),
+      }))
+      // Filter and sort client-side
+      .filter((doc) => doc.status !== "deleted")
+      .sort((a, b) => {
+        // Sort by uploadDate descending (newest first)
+        const dateA = a.uploadDate || new Date(0);
+        const dateB = b.uploadDate || new Date(0);
+        return dateB - dateA;
+      });
 
     return { success: true, documents };
   } catch (error) {

@@ -2,6 +2,11 @@ const express = require("express");
 const multer = require("multer");
 const router = express.Router();
 const cloudinary = require("../config/cloudinary");
+
+// Import fetch for Node.js
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
 const {
   analyzeDocumentFromBase64,
   analyzeDocumentFromBuffer,
@@ -184,20 +189,67 @@ router.delete("/delete", async (req, res) => {
 
     console.log(`Deleting document from Cloudinary: ${publicId}`);
 
-    // Delete from Cloudinary
-    const deletionResult = await cloudinary.uploader.destroy(publicId);
+    // Delete from Cloudinary with proper resource type handling
+    let deletionResult;
+    let successfulResourceType = null;
 
-    if (deletionResult.result === "ok") {
+    // Try deleting as raw resource first (for documents like PDF, DOCX, TXT, etc.)
+    try {
+      deletionResult = await cloudinary.uploader.destroy(publicId, {
+        resource_type: "raw",
+      });
+
+      if (deletionResult.result === "ok") {
+        successfulResourceType = "raw";
+      }
+    } catch (rawError) {
+      console.warn("Failed to delete as raw resource:", rawError);
+    }
+
+    // If not found as raw, try as image (for JPG, PNG, etc.)
+    if (!successfulResourceType) {
+      try {
+        deletionResult = await cloudinary.uploader.destroy(publicId, {
+          resource_type: "image",
+        });
+
+        if (deletionResult.result === "ok") {
+          successfulResourceType = "image";
+        }
+      } catch (imageError) {
+        console.warn("Failed to delete as image resource:", imageError);
+      }
+    }
+
+    // If still not found, try as auto (default)
+    if (!successfulResourceType) {
+      try {
+        deletionResult = await cloudinary.uploader.destroy(publicId);
+
+        if (deletionResult.result === "ok") {
+          successfulResourceType = "auto";
+        }
+      } catch (autoError) {
+        console.warn("Failed to delete as auto resource:", autoError);
+      }
+    }
+
+    console.log("Cloudinary deletion result:", deletionResult);
+
+    if (successfulResourceType) {
+      console.log(`Successfully deleted as ${successfulResourceType} resource`);
       res.json({
         success: true,
-        message: "Document deleted from Cloudinary",
+        message: `Document deleted from Cloudinary (${successfulResourceType} resource)`,
         deletedAt: new Date().toISOString(),
       });
     } else {
-      console.warn("Cloudinary deletion result:", deletionResult);
+      console.warn("File not found in Cloudinary with any resource type");
+      // Still return success since the file doesn't exist anyway
       res.json({
-        success: false,
-        error: "Failed to delete from Cloudinary",
+        success: true,
+        message:
+          "Document not found in Cloudinary (may have been deleted already)",
         details: deletionResult,
       });
     }
@@ -232,6 +284,62 @@ router.post("/analyze-base64", async (req, res) => {
   } catch (error) {
     console.error("Error in /analyze-base64 route:", error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Generate temporary signed URL for Cloudinary files
+router.get("/signed-url", async (req, res) => {
+  try {
+    const { publicId, userId } = req.query;
+
+    if (!userId || !publicId) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required parameters: userId, publicId",
+      });
+    }
+
+    console.log(`Generating signed URL for: ${publicId} for user: ${userId}`);
+
+    // Try to generate a signed URL for the resource
+    try {
+      // First try as raw resource
+      let signedUrl = cloudinary.url(publicId, {
+        resource_type: "raw",
+        type: "upload",
+        sign_url: true,
+        secure: true,
+      });
+
+      // If the above doesn't work, we'll try as image
+      if (!signedUrl) {
+        signedUrl = cloudinary.url(publicId, {
+          resource_type: "image",
+          type: "upload",
+          sign_url: true,
+          secure: true,
+        });
+      }
+
+      res.json({
+        success: true,
+        url: signedUrl,
+        publicId: publicId,
+      });
+    } catch (cloudinaryError) {
+      console.error("Error generating signed URL:", cloudinaryError);
+      res.status(500).json({
+        success: false,
+        error: "Failed to generate signed URL",
+        details: cloudinaryError.message,
+      });
+    }
+  } catch (error) {
+    console.error("Error in /signed-url route:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "Signed URL generation failed",
+    });
   }
 });
 
