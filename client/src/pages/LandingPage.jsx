@@ -171,13 +171,7 @@ const LandingPage = () => {
               transition={{ delay: 0.5 }}
               className="md:w-1/2 flex justify-center"
             >
-              <motion.img
-                src="/vite.svg"
-                alt="LexiGuard Interface"
-                className="max-w-full h-auto rounded-lg shadow-lg"
-                whileHover={{ scale: 1.05, rotate: -2 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              />
+              {/* Vite logo removed */}
             </motion.div>
           </div>
         </div>

@@ -1,20 +1,37 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Mail, Lock, EyeOff, Eye } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { authService, handleApiError } from '../services/api';
+import { Shield, Mail, Lock, EyeOff, Eye, Loader2 } from 'lucide-react';
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
-  const handleSubmit = (e) => {
+  // Get redirect info from navigation state
+  const from = location.state?.from || '/dashboard';
+  const redirectMessage = location.state?.message;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your authentication logic here
-    navigate('/dashboard');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await authService.login(formData);
+      navigate(from);
+    } catch (error) {
+      setError(handleApiError(error, navigate));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,6 +66,32 @@ const SignIn = () => {
             <h2 className="text-2xl font-bold text-sky-900">Welcome back</h2>
             <p className="text-sky-600 mt-2">Sign in to continue to LexiGuard</p>
           </motion.div>
+
+          {/* Redirect Message */}
+          {redirectMessage && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-6"
+            >
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-blue-700 text-sm">{redirectMessage}</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-6"
+            >
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Form */}
           <motion.form
@@ -121,12 +164,24 @@ const SignIn = () => {
 
             {/* Submit Button */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: !isLoading ? 1.02 : 1 }}
+              whileTap={{ scale: !isLoading ? 0.98 : 1 }}
               type="submit"
-              className="w-full bg-sky-600 text-white py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors duration-200 flex items-center justify-center space-x-2"
+              disabled={isLoading}
+              className={`w-full py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 ${
+                isLoading 
+                  ? 'bg-sky-400 cursor-not-allowed' 
+                  : 'bg-sky-600 hover:bg-sky-700'
+              } text-white`}
             >
-              <span>Sign In</span>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing In...</span>
+                </>
+              ) : (
+                <span>Sign In</span>
+              )}
             </motion.button>
           </motion.form>
 

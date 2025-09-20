@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Mail, Lock, User, EyeOff, Eye } from 'lucide-react';
+import { authService, handleApiError } from '../services/api';
+import { Shield, Mail, Lock, User, EyeOff, Eye, Loader2 } from 'lucide-react';
 
 const SignUp = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -13,10 +16,29 @@ const SignUp = () => {
     confirmPassword: '',
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your registration logic here
-    navigate('/dashboard');
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await authService.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+      navigate('/upload');
+    } catch (error) {
+      setError(handleApiError(error, navigate));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
