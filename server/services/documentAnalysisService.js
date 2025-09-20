@@ -1,6 +1,5 @@
 const { extractText } = require("../utils/textExtractor");
 const GeminiService = require("./geminiService");
-const fetch = require("node-fetch");
 
 const geminiService = new GeminiService();
 
@@ -113,18 +112,31 @@ async function analyzeDocumentFromCloudinaryUrl(
 
     const fileBuffer = Buffer.from(await response.arrayBuffer());
 
-    // Determine MIME type from URL or use a default
+    // Determine MIME type from URL or filename
     let mimeType = "application/octet-stream";
-    if (cloudinaryUrl.includes(".pdf")) {
+    const urlLower = cloudinaryUrl.toLowerCase();
+    const fileNameLower = fileName.toLowerCase();
+
+    if (urlLower.includes(".pdf") || fileNameLower.includes(".pdf")) {
       mimeType = "application/pdf";
-    } else if (cloudinaryUrl.includes(".docx")) {
+    } else if (
+      urlLower.includes(".docx") ||
+      fileNameLower.includes(".docx") ||
+      fileNameLower.includes("_docx")
+    ) {
       mimeType =
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    } else if (cloudinaryUrl.includes(".doc")) {
+    } else if (
+      urlLower.includes(".doc") ||
+      fileNameLower.includes(".doc") ||
+      fileNameLower.includes("_doc")
+    ) {
       mimeType = "application/msword";
-    } else if (cloudinaryUrl.includes(".txt")) {
+    } else if (urlLower.includes(".txt") || fileNameLower.includes(".txt")) {
       mimeType = "text/plain";
     }
+
+    console.log(`Detected MIME type: ${mimeType} for file: ${fileName}`);
 
     // Extract text from the buffer
     const extractedText = await extractText(fileBuffer, mimeType);

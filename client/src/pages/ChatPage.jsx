@@ -17,13 +17,14 @@ import {
   Download,
   Sparkles,
   CheckCircle,
+  X,
   AlertTriangle,
   Info
 } from 'lucide-react';
 
 const ChatPage = () => {
   // Custom component for formatting bot messages
-  const BotMessage = ({ content }) => {
+  const BotMessage = ({ content, documentContext }) => {
     // Format the content to handle different types of information
     const formatContent = (text) => {
       // Split content into sections based on patterns
@@ -33,19 +34,19 @@ const ChatPage = () => {
         // Check if section is a numbered list
         if (section.includes('**') && section.includes(':')) {
           return (
-            <div key={index} className="mb-4">
+            <div key={index} className="mb-4 break-words overflow-hidden">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  h1: ({children}) => <h1 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center"><CheckCircle className="h-5 w-5 text-green-500 mr-2" />{children}</h1>,
-                  h2: ({children}) => <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2 flex items-center"><Info className="h-4 w-4 text-blue-500 mr-2" />{children}</h2>,
-                  h3: ({children}) => <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{children}</h3>,
-                  p: ({children}) => <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-2">{children}</p>,
-                  ul: ({children}) => <ul className="list-none space-y-1 mb-3">{children}</ul>,
-                  li: ({children}) => <li className="text-sm text-gray-600 dark:text-gray-300 flex items-start"><span className="inline-block w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span>{children}</span></li>,
-                  strong: ({children}) => <strong className="font-semibold text-gray-900 dark:text-white bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 px-1 rounded">{children}</strong>,
-                  blockquote: ({children}) => <blockquote className="border-l-4 border-green-400 pl-4 py-2 bg-green-50 dark:bg-green-900/20 rounded-r-lg mb-3">{children}</blockquote>,
-                  code: ({children}) => <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs font-mono text-green-600 dark:text-green-400">{children}</code>
+                  h1: ({children}) => <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center break-words"><CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /><span className="break-words">{children}</span></h1>,
+                  h2: ({children}) => <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2 flex items-center break-words"><Info className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" /><span className="break-words">{children}</span></h2>,
+                  h3: ({children}) => <h3 className="text-base font-medium text-gray-700 dark:text-gray-300 mb-2 break-words">{children}</h3>,
+                  p: ({children}) => <p className="text-base text-gray-600 dark:text-gray-300 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
+                  ul: ({children}) => <ul className="list-none space-y-1 mb-3 break-words">{children}</ul>,
+                  li: ({children}) => <li className="text-base text-gray-600 dark:text-gray-300 flex items-start break-words"><span className="inline-block w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span className="break-words">{children}</span></li>,
+                  strong: ({children}) => <strong className="font-semibold text-gray-900 dark:text-white bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 px-1 rounded break-words">{children}</strong>,
+                  blockquote: ({children}) => <blockquote className="border-l-4 border-green-400 pl-4 py-2 bg-green-50 dark:bg-green-900/20 rounded-r-lg mb-3 break-words">{children}</blockquote>,
+                  code: ({children}) => <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs font-mono text-green-600 dark:text-green-400 break-all">{children}</code>
                 }}
               >
                 {section}
@@ -57,15 +58,15 @@ const ChatPage = () => {
         // Handle risk/warning sections
         if (section.toLowerCase().includes('risk') || section.toLowerCase().includes('warning')) {
           return (
-            <div key={index} className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-l-4 border-orange-400 rounded-r-lg">
+            <div key={index} className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-l-4 border-orange-400 rounded-r-lg break-words overflow-hidden">
               <div className="flex items-start">
                 <AlertTriangle className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      p: ({children}) => <p className="text-sm text-orange-800 dark:text-orange-200 leading-relaxed mb-2">{children}</p>,
-                      strong: ({children}) => <strong className="font-semibold text-orange-900 dark:text-orange-100">{children}</strong>
+                      p: ({children}) => <p className="text-base text-orange-800 dark:text-orange-200 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
+                      strong: ({children}) => <strong className="font-semibold text-orange-900 dark:text-orange-100 break-words">{children}</strong>
                     }}
                   >
                     {section}
@@ -79,17 +80,17 @@ const ChatPage = () => {
         // Handle actionable insights sections
         if (section.toLowerCase().includes('actionable') || section.toLowerCase().includes('recommend')) {
           return (
-            <div key={index} className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 border-l-4 border-blue-400 rounded-r-lg">
+            <div key={index} className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 border-l-4 border-blue-400 rounded-r-lg break-words overflow-hidden">
               <div className="flex items-start">
                 <CheckCircle className="h-5 w-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      p: ({children}) => <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed mb-2">{children}</p>,
-                      strong: ({children}) => <strong className="font-semibold text-blue-900 dark:text-blue-100">{children}</strong>,
-                      ul: ({children}) => <ul className="list-none space-y-1 mb-3">{children}</ul>,
-                      li: ({children}) => <li className="text-sm text-blue-700 dark:text-blue-300 flex items-start"><span className="inline-block w-2 h-2 bg-blue-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span>{children}</span></li>
+                      p: ({children}) => <p className="text-base text-blue-800 dark:text-blue-200 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
+                      strong: ({children}) => <strong className="font-semibold text-blue-900 dark:text-blue-100 break-words">{children}</strong>,
+                      ul: ({children}) => <ul className="list-none space-y-1 mb-3 break-words">{children}</ul>,
+                      li: ({children}) => <li className="text-base text-blue-700 dark:text-blue-300 flex items-start break-words"><span className="inline-block w-2 h-2 bg-blue-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span className="break-words">{children}</span></li>
                     }}
                   >
                     {section}
@@ -102,14 +103,14 @@ const ChatPage = () => {
         
         // Default formatting
         return (
-          <div key={index} className="mb-3">
+          <div key={index} className="mb-3 break-words overflow-hidden">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                p: ({children}) => <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-2">{children}</p>,
-                strong: ({children}) => <strong className="font-semibold text-gray-900 dark:text-white">{children}</strong>,
-                ul: ({children}) => <ul className="list-none space-y-1 mb-3">{children}</ul>,
-                li: ({children}) => <li className="text-sm text-gray-700 dark:text-gray-300 flex items-start"><span className="inline-block w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span>{children}</span></li>
+                p: ({children}) => <p className="text-base text-gray-700 dark:text-gray-300 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
+                strong: ({children}) => <strong className="font-semibold text-gray-900 dark:text-white break-words">{children}</strong>,
+                ul: ({children}) => <ul className="list-none space-y-1 mb-3 break-words">{children}</ul>,
+                li: ({children}) => <li className="text-base text-gray-700 dark:text-gray-300 flex items-start break-words"><span className="inline-block w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span className="break-words">{children}</span></li>
               }}
             >
               {section}
@@ -120,7 +121,23 @@ const ChatPage = () => {
     };
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-full overflow-hidden break-words">
+        {documentContext && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg"
+          >
+            <div className="flex items-center text-xs text-blue-600 mb-2">
+              <FileText className="h-3 w-3 mr-1" />
+              Document Context Applied
+            </div>
+            <div className="text-xs text-blue-700">
+              {documentContext.fileName && `📄 ${documentContext.fileName}`}
+              {documentContext.summary && ` - ${documentContext.summary}`}
+            </div>
+          </motion.div>
+        )}
         {formatContent(content)}
       </div>
     );
@@ -162,6 +179,10 @@ const ChatPage = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isContextPanelOpen, setIsContextPanelOpen] = useState(true);
+  const [userDocuments, setUserDocuments] = useState([]);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const [analysisStatus, setAnalysisStatus] = useState('idle'); // idle, analyzing, complete
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -169,9 +190,80 @@ const ChatPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Helper function to format file size
+  const formatFileSize = (bytes) => {
+    if (!bytes) return 'Unknown size';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  // Helper function to get status text
+  const getAnalysisStatusText = () => {
+    switch(analysisStatus) {
+      case 'analyzing': return 'Analyzing...';
+      case 'complete': return 'Analysis complete';
+      default: return selectedDocument ? 'Ready for analysis' : 'No document selected';
+    }
+  };
+
+  // Fetch user documents from Cloudinary
+  const fetchUserDocuments = async () => {
+    setLoadingDocuments(true);
+    try {
+      // Get current user ID - use Firebase auth if available, otherwise demo user
+      let userId = 'demo-user'; // Default fallback
+      
+      // Try to get Firebase auth user first
+      try {
+        const { getCurrentUser } = await import('../services/documentService');
+        const currentUser = getCurrentUser();
+        if (currentUser && currentUser.uid) {
+          userId = currentUser.uid;
+          console.log('Using Firebase user ID:', userId);
+        } else {
+          // Try localStorage as fallback
+          const storedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+          if (storedUser.uid) {
+            userId = storedUser.uid;
+            console.log('Using stored user ID:', userId);
+          } else {
+            console.log('No authenticated user found, using demo-user');
+          }
+        }
+      } catch (authError) {
+        console.log('Firebase auth not available, using demo-user');
+      }
+
+      console.log(`Fetching documents for user: ${userId}`);
+      const response = await fetch(`http://localhost:8080/api/chat/documents/${userId}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setUserDocuments(data.documents || []);
+      } else {
+        console.error('Failed to fetch documents:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
+  // Load documents when component mounts
+  useEffect(() => {
+    fetchUserDocuments();
+  }, []);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Reset analysis status when document changes
+  useEffect(() => {
+    setAnalysisStatus('idle');
+  }, [selectedDocument]);
 
   const handleSendMessage = async () => {
     if (inputMessage.trim()) {
@@ -185,19 +277,32 @@ const ChatPage = () => {
       const currentInput = inputMessage;
       setInputMessage('');
       
-      // Send to Gemini AI
+      // Send to Gemini AI with document context if available
       setIsTyping(true);
+      if (selectedDocument) {
+        setAnalysisStatus('analyzing');
+      }
       try {
-        const response = await fetch('http://localhost:8080/api/chat/message', {
+        const endpoint = selectedDocument 
+          ? 'http://localhost:8080/api/chat/message-with-document'
+          : 'http://localhost:8080/api/chat/message';
+
+        const requestBody = {
+          message: currentInput,
+          context: 'Legal document analysis and compliance checking',
+          ...(selectedDocument && {
+            documentUrl: selectedDocument.url,
+            fileName: selectedDocument.fileName,
+            userId: selectedDocument.userId || 'demo-user'
+          })
+        };
+
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            message: currentInput,
-            context: 'Legal document analysis and compliance checking',
-            documentContent: '' // Can be populated with uploaded document content
-          })
+          body: JSON.stringify(requestBody)
         });
 
         const data = await response.json();
@@ -207,9 +312,13 @@ const ChatPage = () => {
             id: messages.length + 2,
             type: 'bot',
             content: data.response,
-            timestamp: new Date()
+            timestamp: new Date(),
+            documentContext: data.documentContext || null
           };
           setMessages(prev => [...prev, botResponse]);
+          if (selectedDocument) {
+            setAnalysisStatus('complete');
+          }
         } else {
           throw new Error(data.error || 'Failed to get response');
         }
@@ -222,6 +331,9 @@ const ChatPage = () => {
           timestamp: new Date()
         };
         setMessages(prev => [...prev, errorResponse]);
+        if (selectedDocument) {
+          setAnalysisStatus('idle');
+        }
       } finally {
         setIsTyping(false);
       }
@@ -412,13 +524,71 @@ const ChatPage = () => {
           </div>
         </motion.div>
 
+        {/* Document Selector */}
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <label className="text-sm font-semibold text-gray-700 flex items-center">
+                <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                Document Context:
+              </label>
+              <select 
+                value={selectedDocument?.public_id || ''}
+                onChange={(e) => {
+                  const doc = userDocuments.find(d => d.public_id === e.target.value);
+                  setSelectedDocument(doc || null);
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                disabled={loadingDocuments}
+              >
+                <option value="">
+                  {loadingDocuments ? 'Loading documents...' : 'No document selected'}
+                </option>
+                {userDocuments.map((doc) => (
+                  <option key={doc.public_id} value={doc.public_id}>
+                    📄 {doc.fileName || doc.public_id.split('/').pop()}
+                  </option>
+                ))}
+              </select>
+              {loadingDocuments && (
+                <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+              )}
+            </div>
+            
+            {selectedDocument && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex items-center space-x-2"
+              >
+                <span className="text-xs text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-200 flex items-center">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Using: {selectedDocument.fileName || 'Document'}
+                </span>
+                <button
+                  onClick={() => setSelectedDocument(null)}
+                  className="text-gray-400 hover:text-red-500 transition-colors"
+                  title="Remove document context"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+
         {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 min-h-0 max-h-full messages-container" 
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-6 space-y-6 min-h-0 max-h-full messages-container" 
              style={{ 
                scrollbarWidth: 'thin',
                scrollbarColor: '#CBD5E0 transparent'
              }}>
-          <style jsx>{`
+          <style>{`
             .messages-container::-webkit-scrollbar {
               width: 6px;
             }
@@ -443,7 +613,7 @@ const ChatPage = () => {
                 transition={{ delay: index * 0.1, type: "spring", stiffness: 300, damping: 25 }}
                 className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[70%] flex ${message.type === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3`}>
+                <div className={`${message.type === 'user' ? 'max-w-[70%]' : 'max-w-[75%]'} flex ${message.type === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3 min-w-0`}>
                   {/* Avatar */}
                   <motion.div 
                     className={`p-3 rounded-2xl shadow-lg flex-shrink-0 ${
@@ -461,17 +631,17 @@ const ChatPage = () => {
                   </motion.div>
                   
                   {/* Message Bubble */}
-                  <div className={`px-6 py-4 rounded-3xl shadow-lg relative ${
+                  <div className={`px-6 py-4 rounded-3xl shadow-lg relative overflow-hidden break-words ${
                     message.type === 'user' 
                       ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white ml-3' 
                       : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 mr-3'
                   }`}>
                     {message.type === 'user' ? (
-                      <p className="text-sm leading-relaxed whitespace-pre-line">
+                      <p className="text-sm leading-relaxed whitespace-pre-line break-words">
                         {message.content}
                       </p>
                     ) : (
-                      <BotMessage content={message.content} />
+                      <BotMessage content={message.content} documentContext={message.documentContext} />
                     )}
                     <p className={`text-xs mt-3 flex items-center ${
                       message.type === 'user' 
@@ -603,41 +773,59 @@ const ChatPage = () => {
                   Current Session
                 </h3>
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 border border-green-200 dark:border-green-700">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl">
-                      <FileText className="h-4 w-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Contract_Analysis_2024.pdf</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">2.4 MB • Analyzing...</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-600 dark:text-gray-400">Progress</span>
-                      <span className="text-green-600 dark:text-green-400 font-medium">85%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <motion.div 
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: '85%' }}
-                        transition={{ duration: 2, ease: "easeOut" }}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3 mt-4">
-                      <div className="text-center">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Risk Level</p>
-                        <p className="text-sm font-bold text-yellow-600 dark:text-yellow-400">Medium</p>
+                  {selectedDocument ? (
+                    <>
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl">
+                          <FileText className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {selectedDocument.fileName || selectedDocument.public_id?.split('/').pop() || 'Unknown file'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatFileSize(selectedDocument.fileSize)} • {getAnalysisStatusText()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Compliance</p>
-                        <p className="text-sm font-bold text-green-600 dark:text-green-400">94%</p>
+                      
+                      {analysisStatus === 'analyzing' && (
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-gray-600 dark:text-gray-400">Status</span>
+                            <span className="text-blue-600 dark:text-blue-400 font-medium">Processing...</span>
+                          </div>
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <motion.div 
+                              className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: '100%' }}
+                              transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {analysisStatus === 'complete' && (
+                        <div className="mt-3 p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                          <p className="text-xs text-green-700 dark:text-green-300 font-medium flex items-center">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Analysis completed successfully
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-6">
+                      <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-xl inline-block mb-3">
+                        <FileText className="h-6 w-6 text-gray-400" />
                       </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">No Document Selected</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                        Select a document above to start analysis
+                      </p>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
