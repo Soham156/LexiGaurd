@@ -6,12 +6,6 @@ const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 // Import routes
-const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/users");
-const documentRoutes = require("./routes/documents");
-const simpleDriveRoutes = require("./routes/simpleDriveRoutes");
-const hybridRoutes = require("./routes/hybridRoutes");
-const testRoutes = require("./routes/testRoutes");
 const documentAnalysisRoutes = require("./routes/documentRoutes");
 
 const app = express();
@@ -43,12 +37,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/documents", documentRoutes);
-app.use("/api/drive", simpleDriveRoutes);
-app.use("/api/hybrid", hybridRoutes);
-app.use("/api/test", testRoutes);
 app.use("/api/document", documentAnalysisRoutes);
 
 // Health check endpoint
