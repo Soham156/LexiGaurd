@@ -90,7 +90,7 @@ const NotificationsPage = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -98,17 +98,17 @@ const NotificationsPage = () => {
         className="flex items-center justify-between mb-8"
       >
         <div>
-          <h1 className="text-3xl font-bold text-sky-900 mb-2">Notifications</h1>
-          <p className="text-sky-600">Stay updated with your recent activities</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Notifications</h1>
+          <p className="text-gray-600 dark:text-gray-400">Stay updated with your recent activities and alerts</p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="px-3 py-1 bg-sky-100 text-sky-800 rounded-full text-sm font-medium">
+          <span className="px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 text-purple-700 dark:text-purple-300 rounded-full text-sm font-semibold border border-purple-200 dark:border-purple-800">
             {unreadCount} unread
           </span>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             <Check className="w-4 h-4" />
             Mark All Read
@@ -121,33 +121,35 @@ const NotificationsPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white rounded-xl shadow-sm p-6 mb-6"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6"
       >
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-sky-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search notifications..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-sky-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
             />
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {['all', 'unread', 'document', 'alert', 'user', 'system'].map((filterType) => (
-              <button
+              <motion.button
                 key={filterType}
                 onClick={() => setFilter(filterType)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   filter === filterType
-                    ? 'bg-sky-600 text-white'
-                    : 'bg-sky-50 text-sky-700 hover:bg-sky-100'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>

@@ -8,7 +8,6 @@ import LandingPage from './pages/LandingPage';
 import UploadPage from './pages/UploadPage';
 import DashboardPage from './pages/DashboardPage';
 import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -60,7 +59,7 @@ function PublicRoute({ children }) {
 function Layout() {
   const location = useLocation();
   // Show header on all pages except authentication pages
-  const isAuthPage = location.pathname === '/signin' || location.pathname === '/signup';
+  const isAuthPage = location.pathname === '/signin';
   const isDashboardPage = location.pathname.startsWith('/dashboard');
   const showHeader = !isAuthPage;
   const showFooter = location.pathname === '/';
@@ -132,14 +131,6 @@ function Layout() {
             element={
               <PublicRoute>
                 <SignIn />
-              </PublicRoute>
-            } 
-          />
-          <Route 
-            path="/signup" 
-            element={
-              <PublicRoute>
-                <SignUp />
               </PublicRoute>
             } 
           />

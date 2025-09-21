@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { Shield, Mail, Lock, EyeOff, Eye, Loader2 } from "lucide-react";
 import { doSignInWithEmailAndPassword, doSignInWithGoogle } from "../firebase/auth";
 
@@ -221,20 +221,7 @@ const SignIn = () => {
           </motion.button>
 
           {/* Sign Up Link */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mt-8 text-center text-sky-600"
-          >
-            Don&apos;t have an account?{" "}
-            <Link
-              to="/signup"
-              className="font-medium text-sky-700 hover:text-sky-800 transition-colors"
-            >
-              Sign up
-            </Link>
-          </motion.p>
+
         </div>
       </motion.div>
     </div>

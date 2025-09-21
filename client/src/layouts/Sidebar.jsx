@@ -13,8 +13,7 @@ import {
   Bell,
 } from 'lucide-react';
 
-const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
   const location = useLocation();
 
   const navItems = [
@@ -72,7 +71,7 @@ const Sidebar = () => {
 
   return (
     <motion.div
-      className="bg-white dark:bg-gray-800 border-r border-sky-100 dark:border-gray-700 py-6 shadow-lg relative transition-colors"
+      className="fixed left-0 top-20 bg-white dark:bg-gray-800 border-r border-sky-100 dark:border-gray-700 py-6 shadow-lg transition-colors z-40"
       style={{ height: 'calc(100vh - 80px)' }}
       initial="expanded"
       animate={isCollapsed ? 'collapsed' : 'expanded'}
@@ -105,8 +104,8 @@ const Sidebar = () => {
 
       {/* Collapse Button */}
       <motion.button
-        className="absolute -right-3 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full bg-white dark:bg-gray-800 border border-sky-100 dark:border-gray-600 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-gray-700 transition-colors"
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -right-3 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full bg-white dark:bg-gray-800 border border-sky-100 dark:border-gray-600 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-gray-700 transition-colors shadow-md"
+        onClick={() => onToggleCollapse(!isCollapsed)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
