@@ -1,13 +1,16 @@
 const { extractText } = require("../utils/textExtractor");
 const GeminiService = require("./geminiService");
+const FairnessBenchmarkService = require("./fairnessBenchmarkService");
 
 const geminiService = new GeminiService();
+const fairnessBenchmarkService = new FairnessBenchmarkService();
 
 async function analyzeDocumentFromBase64(
   base64Content,
   fileName,
   mimeType,
-  userRole = "Tenant"
+  userRole = "Tenant",
+  jurisdiction = "India"
 ) {
   try {
     console.log(`Analyzing document from Base64: ${fileName} (${mimeType})`);
@@ -32,11 +35,29 @@ async function analyzeDocumentFromBase64(
       userRole
     );
 
+    // Get fairness benchmark analysis
+    let fairnessBenchmark = null;
+    try {
+      const contractType = determineContractType(fileName, extractedText);
+      fairnessBenchmark = await fairnessBenchmarkService.analyzeFairness(
+        extractedText,
+        contractType,
+        jurisdiction,
+        userRole
+      );
+    } catch (fairnessError) {
+      console.warn(
+        "Fairness benchmark analysis failed:",
+        fairnessError.message
+      );
+    }
+
     return {
       success: true,
       fileName,
       extractedText,
       analysis,
+      fairnessBenchmark,
       metadata: {
         processingMethod: "backend-base64",
         source: "base64-upload",
@@ -52,7 +73,8 @@ async function analyzeDocumentFromBuffer(
   fileBuffer,
   fileName,
   mimeType,
-  userRole = "Tenant"
+  userRole = "Tenant",
+  jurisdiction = "India"
 ) {
   try {
     console.log(`Analyzing document from Buffer: ${fileName} (${mimeType})`);
@@ -74,11 +96,29 @@ async function analyzeDocumentFromBuffer(
       userRole
     );
 
+    // Get fairness benchmark analysis
+    let fairnessBenchmark = null;
+    try {
+      const contractType = determineContractType(fileName, extractedText);
+      fairnessBenchmark = await fairnessBenchmarkService.analyzeFairness(
+        extractedText,
+        contractType,
+        jurisdiction,
+        userRole
+      );
+    } catch (fairnessError) {
+      console.warn(
+        "Fairness benchmark analysis failed:",
+        fairnessError.message
+      );
+    }
+
     return {
       success: true,
       fileName,
       extractedText,
       analysis,
+      fairnessBenchmark,
       metadata: {
         processingMethod: "backend-buffer",
         source: "direct-upload",
@@ -97,7 +137,8 @@ async function analyzeDocumentFromBuffer(
 async function analyzeDocumentFromCloudinaryUrl(
   cloudinaryUrl,
   fileName,
-  userRole = "Tenant"
+  userRole = "Tenant",
+  jurisdiction = "India"
 ) {
   try {
     console.log(`Analyzing document from Cloudinary URL: ${fileName}`);
@@ -155,11 +196,29 @@ async function analyzeDocumentFromCloudinaryUrl(
       userRole
     );
 
+    // Get fairness benchmark analysis
+    let fairnessBenchmark = null;
+    try {
+      const contractType = determineContractType(fileName, extractedText);
+      fairnessBenchmark = await fairnessBenchmarkService.analyzeFairness(
+        extractedText,
+        contractType,
+        jurisdiction,
+        userRole
+      );
+    } catch (fairnessError) {
+      console.warn(
+        "Fairness benchmark analysis failed:",
+        fairnessError.message
+      );
+    }
+
     return {
       success: true,
       fileName,
       extractedText,
       analysis,
+      fairnessBenchmark,
       metadata: {
         processingMethod: "backend-cloudinary",
         source: "cloudinary-url",
@@ -175,6 +234,78 @@ async function analyzeDocumentFromCloudinaryUrl(
       fileName,
     };
   }
+}
+
+/**
+ * Helper function to determine contract type from filename and content
+ * @param {string} fileName - The name of the file
+ * @param {string} extractedText - The extracted text content
+ * @returns {string} Contract type
+ */
+function determineContractType(fileName, extractedText) {
+  const fileNameLower = fileName.toLowerCase();
+  const textLower = extractedText.toLowerCase();
+
+  // Check filename for keywords
+  if (
+    fileNameLower.includes("rent") ||
+    fileNameLower.includes("lease") ||
+    fileNameLower.includes("tenancy")
+  ) {
+    return "rental agreement";
+  }
+  if (
+    fileNameLower.includes("employ") ||
+    fileNameLower.includes("job") ||
+    fileNameLower.includes("work")
+  ) {
+    return "employment contract";
+  }
+  if (fileNameLower.includes("service") || fileNameLower.includes("vendor")) {
+    return "service agreement";
+  }
+
+  // Check content for keywords
+  if (
+    textLower.includes("tenant") ||
+    textLower.includes("landlord") ||
+    textLower.includes("rent") ||
+    textLower.includes("lease")
+  ) {
+    return "rental agreement";
+  }
+  if (
+    textLower.includes("employee") ||
+    textLower.includes("employer") ||
+    textLower.includes("salary") ||
+    textLower.includes("employment")
+  ) {
+    return "employment contract";
+  }
+  if (
+    textLower.includes("service provider") ||
+    textLower.includes("client") ||
+    textLower.includes("vendor")
+  ) {
+    return "service agreement";
+  }
+  if (
+    textLower.includes("purchase") ||
+    textLower.includes("buyer") ||
+    textLower.includes("seller")
+  ) {
+    return "purchase agreement";
+  }
+  if (
+    textLower.includes("license") ||
+    textLower.includes("software") ||
+    textLower.includes("intellectual property")
+  ) {
+    return "license agreement";
+  }
+
+  // Default fallback
+  return "contract";
 }
 
 module.exports = {

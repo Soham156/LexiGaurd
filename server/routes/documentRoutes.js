@@ -43,7 +43,12 @@ const upload = multer({
 // Upload and analyze document
 router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
   try {
-    const { selectedRole, userId, userEmail } = req.body;
+    const {
+      selectedRole,
+      userId,
+      userEmail,
+      jurisdiction = "India",
+    } = req.body;
     const file = req.file;
 
     if (!file) {
@@ -94,7 +99,8 @@ router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
       file.buffer,
       file.originalname,
       file.mimetype,
-      selectedRole
+      selectedRole,
+      jurisdiction
     );
 
     if (!analysisResult.success) {
@@ -115,6 +121,7 @@ router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
     res.json({
       success: true,
       analysis: analysisResult.analysis,
+      fairnessBenchmark: analysisResult.fairnessBenchmark,
       fileUrl: cloudinaryResult.secure_url,
       publicId: cloudinaryResult.public_id,
       fileName: file.originalname,
@@ -134,8 +141,14 @@ router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
 // Re-analyze document from Cloudinary URL
 router.post("/reanalyze", async (req, res) => {
   try {
-    const { documentId, cloudinaryUrl, fileName, selectedRole, userId } =
-      req.body;
+    const {
+      documentId,
+      cloudinaryUrl,
+      fileName,
+      selectedRole,
+      userId,
+      jurisdiction = "India",
+    } = req.body;
 
     if (!cloudinaryUrl || !fileName || !selectedRole || !userId) {
       return res.status(400).json({
@@ -151,7 +164,8 @@ router.post("/reanalyze", async (req, res) => {
     const analysisResult = await analyzeDocumentFromCloudinaryUrl(
       cloudinaryUrl,
       fileName,
-      selectedRole
+      selectedRole,
+      jurisdiction
     );
 
     if (!analysisResult.success) {
@@ -164,6 +178,7 @@ router.post("/reanalyze", async (req, res) => {
     res.json({
       success: true,
       analysis: analysisResult.analysis,
+      fairnessBenchmark: analysisResult.fairnessBenchmark,
       reanalyzedAt: new Date().toISOString(),
     });
   } catch (error) {
@@ -264,7 +279,13 @@ router.delete("/delete", async (req, res) => {
 
 // Route to analyze a document from a Base64 string (keeping for compatibility)
 router.post("/analyze-base64", async (req, res) => {
-  const { base64Content, fileName, mimeType, userRole } = req.body;
+  const {
+    base64Content,
+    fileName,
+    mimeType,
+    userRole,
+    jurisdiction = "India",
+  } = req.body;
 
   if (!base64Content || !fileName || !mimeType) {
     return res.status(400).json({
@@ -278,7 +299,8 @@ router.post("/analyze-base64", async (req, res) => {
       base64Content,
       fileName,
       mimeType,
-      userRole
+      userRole,
+      jurisdiction
     );
     res.json(result);
   } catch (error) {

@@ -1,13 +1,14 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { DocumentContext } from '../context/DocumentContext';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Dashboard from './Dashboard';
 import DocumentsPage from './DocumentsPage';
+import SummaryPage from './SummaryPage';
 import ChatPage from './ChatPage';
 import SettingsPage from './SettingsPage';
 import TeamPage from './TeamPage';
 import NotificationsPage from './NotificationsPage';
+import BenchmarkPage from './BenchmarkPage';
 
 export default function DashboardPage() {
   const location = useLocation();
@@ -18,6 +19,10 @@ export default function DashboardPage() {
     
     if (path === '/dashboard/documents') {
       return <DocumentsPage />;
+    } else if (path === '/dashboard/summary') {
+      return <SummaryPage />;
+    } else if (path === '/dashboard/benchmark') {
+      return <BenchmarkPage />;
     } else if (path === '/dashboard/chat') {
       return <ChatPage />;
     } else if (path === '/dashboard/settings') {

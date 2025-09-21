@@ -11,6 +11,8 @@ import {
   MessageSquare,
   Shield,
   Bell,
+  BarChart3,
+  Globe,
 } from 'lucide-react';
 
 const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
@@ -19,6 +21,8 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
   const navItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: FileText, label: 'Documents', path: '/dashboard/documents' },
+    { icon: Globe, label: 'Summary', path: '/dashboard/summary' },
+    { icon: BarChart3, label: 'Market Benchmark', path: '/dashboard/benchmark' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Team', path: '/dashboard/team' },
     { icon: Bell, label: 'Notifications', path: '/dashboard/notifications' },
@@ -40,6 +44,10 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
           return isActive ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/50 dark:hover:to-pink-900/50 hover:text-purple-700 dark:hover:text-purple-300';
         case '/dashboard/documents':
           return isActive ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 dark:hover:from-blue-900/50 dark:hover:to-cyan-900/50 hover:text-blue-700 dark:hover:text-blue-300';
+        case '/dashboard/summary':
+          return isActive ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/50 dark:hover:to-pink-900/50 hover:text-purple-700 dark:hover:text-purple-300';
+        case '/dashboard/benchmark':
+          return isActive ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-900/50 dark:hover:to-teal-900/50 hover:text-emerald-700 dark:hover:text-emerald-300';
         case '/dashboard/chat':
           return isActive ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/50 dark:hover:to-emerald-900/50 hover:text-green-700 dark:hover:text-green-300';
         case '/dashboard/team':
