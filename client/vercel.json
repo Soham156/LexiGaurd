@@ -11,20 +11,14 @@
     }
   ],
   "env": {
-    "VITE_API_BASE_URL": "@vite-api-base-url",
-    "VITE_APP_NAME": "@vite-app-name",
-    "VITE_FIREBASE_API_KEY": "@vite-firebase-api-key",
-    "VITE_FIREBASE_AUTH_DOMAIN": "@vite-firebase-auth-domain",
-    "VITE_FIREBASE_PROJECT_ID": "@vite-firebase-project-id",
-    "VITE_FIREBASE_STORAGE_BUCKET": "@vite-firebase-storage-bucket",
-    "VITE_FIREBASE_MESSAGING_SENDER_ID": "@vite-firebase-messaging-sender-id",
-    "VITE_FIREBASE_APP_ID": "@vite-firebase-app-id",
-    "VITE_ENVIRONMENT": "@vite-environment",
-    "VITE_ENABLE_ANALYTICS": "@vite-enable-analytics"
+    "VITE_API_BASE_URL": "https://lexiguard-server.vercel.app/api",
+    "VITE_APP_NAME": "LexiGuard",
+    "VITE_ENVIRONMENT": "production",
+    "VITE_ENABLE_ANALYTICS": "false"
   },
   "build": {
     "env": {
-      "VITE_API_BASE_URL": "https://your-backend-url.vercel.app/api"
+      "VITE_API_BASE_URL": "https://lexiguard-server.vercel.app/api"
     }
   },
   "functions": {
