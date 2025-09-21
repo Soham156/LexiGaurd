@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { 
@@ -24,7 +24,38 @@ import {
 
 const ChatPage = () => {
   // Custom component for formatting bot messages
-  const BotMessage = ({ content, documentContext }) => {
+  const BotMessage = ({ content, documentContext, responseType }) => {
+    // Special handling for What-If scenario responses
+    if (responseType === 'scenario_analysis') {
+      return (
+        <div className="space-y-4 max-w-full overflow-hidden break-words">
+          <div className="mb-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
+            <div className="flex items-center text-sm text-purple-700 mb-2">
+              <Zap className="h-4 w-4 mr-2" />
+              What-If Scenario Analysis
+            </div>
+            <div className="text-xs text-purple-600">
+              Advanced predictive analysis based on your contract
+            </div>
+          </div>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h2: ({children}) => <h2 className="text-lg font-bold text-purple-800 mb-3 flex items-center break-words"><Zap className="h-5 w-5 text-purple-500 mr-2 flex-shrink-0" /><span className="break-words">{children}</span></h2>,
+              h3: ({children}) => <h3 className="text-base font-semibold text-purple-700 mb-2 break-words">{children}</h3>,
+              p: ({children}) => <p className="text-base text-gray-700 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
+              ul: ({children}) => <ul className="list-none space-y-2 mb-3 break-words">{children}</ul>,
+              li: ({children}) => <li className="text-base text-gray-700 flex items-start break-words"><span className="inline-block w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span className="break-words">{children}</span></li>,
+              strong: ({children}) => <strong className="font-semibold text-purple-900 bg-gradient-to-r from-purple-100 to-pink-100 px-1 rounded break-words">{children}</strong>,
+              blockquote: ({children}) => <blockquote className="border-l-4 border-purple-400 pl-4 py-2 bg-purple-50 rounded-r-lg mb-3 break-words">{children}</blockquote>,
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
+      );
+    }
+
     // Format the content to handle different types of information
     const formatContent = (text) => {
       // Split content into sections based on patterns
@@ -123,7 +154,7 @@ const ChatPage = () => {
     return (
       <div className="space-y-2 max-w-full overflow-hidden break-words">
         {documentContext && (
-          <motion.div 
+          <Motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg"
@@ -136,7 +167,7 @@ const ChatPage = () => {
               {documentContext.fileName && `📄 ${documentContext.fileName}`}
               {documentContext.summary && ` - ${documentContext.summary}`}
             </div>
-          </motion.div>
+          </Motion.div>
         )}
         {formatContent(content)}
       </div>
@@ -231,7 +262,7 @@ const ChatPage = () => {
             console.log('No authenticated user found, using demo-user');
           }
         }
-      } catch (authError) {
+      } catch {
         console.log('Firebase auth not available, using demo-user');
       }
 
@@ -313,7 +344,8 @@ const ChatPage = () => {
             type: 'bot',
             content: data.response,
             timestamp: new Date(),
-            documentContext: data.documentContext || null
+            documentContext: data.documentContext || null,
+            responseType: data.responseType || 'regular_chat'
           };
           setMessages(prev => [...prev, botResponse]);
           if (selectedDocument) {
@@ -408,10 +440,17 @@ const ChatPage = () => {
     { name: 'Document Summary', icon: FileText, color: 'from-blue-500 to-cyan-500', description: 'Get key insights' },
     { name: 'Compliance Check', icon: Shield, color: 'from-green-500 to-emerald-500', description: 'Regulatory analysis' },
     { name: 'Risk Assessment', icon: BarChart3, color: 'from-yellow-500 to-orange-500', description: 'Identify potential risks' },
-    { name: 'Export Report', icon: Download, color: 'from-purple-500 to-pink-500', description: 'Download analysis' }
+    { name: 'What-If Scenarios', icon: Zap, color: 'from-purple-500 to-pink-500', description: 'Explore hypotheticals' },
+    { name: 'Export Report', icon: Download, color: 'from-gray-500 to-gray-600', description: 'Download analysis' }
   ];
 
   const handleQuickAction = async (actionName) => {
+    if (actionName === 'What-If Scenarios') {
+      // Handle What-If scenarios specially
+      await handleWhatIfScenariosAction();
+      return;
+    }
+
     const actionQueries = {
       'Document Summary': 'Please provide a comprehensive summary of legal documents commonly used in business, including key components and best practices.',
       'Compliance Check': 'What are the main compliance requirements I should be aware of for legal documents? Please provide a detailed compliance checklist.',
@@ -472,60 +511,133 @@ const ChatPage = () => {
     }
   };
 
+  const handleWhatIfScenariosAction = async () => {
+    // Add user message
+    const userMessage = {
+      id: messages.length + 1,
+      type: 'user',
+      content: 'Quick Action: What-If Scenarios',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    // Fetch What-If examples based on selected document type
+    setIsTyping(true);
+    try {
+      const documentType = selectedDocument ? 'contract' : 'contract'; // Could be enhanced to detect type
+      const response = await fetch(`http://localhost:8080/api/chat/what-if-examples?documentType=${encodeURIComponent(documentType)}&jurisdiction=India`);
+      const data = await response.json();
+      
+      if (data.success) {
+        let botContent = `## 🔮 ${data.helpText.title}\n\n`;
+        botContent += `${data.helpText.description}\n\n`;
+        
+        if (selectedDocument) {
+          botContent += `### 📄 Based on your selected document: ${selectedDocument.fileName}\n\n`;
+        }
+        
+        botContent += `### 💡 Example Questions You Can Ask:\n\n`;
+        data.examples.forEach((example, index) => {
+          botContent += `${index + 1}. **"${example}"**\n`;
+        });
+        
+        botContent += `\n### 🎯 How to Use:\n\n`;
+        data.helpText.instructions.forEach((instruction) => {
+          botContent += `• ${instruction}\n`;
+        });
+        
+        botContent += `\n### ✨ Benefits:\n\n`;
+        data.helpText.benefits.forEach((benefit) => {
+          botContent += `• ${benefit}\n`;
+        });
+        
+        if (selectedDocument) {
+          botContent += `\n---\n\n💬 **Try asking me one of the questions above, or create your own scenario!** I'll analyze it against your selected document and provide detailed insights.\n\n`;
+          botContent += `🔍 **Example**: Type "What if I need to terminate this contract early?" and I'll tell you exactly what clauses apply and what the consequences would be.`;
+        } else {
+          botContent += `\n---\n\n📄 **To get document-specific scenario analysis**: Select a document from the dropdown above, then ask your "What if..." question!\n\n`;
+          botContent += `💡 **For now**: You can ask general scenario questions and I'll provide insights based on common contract principles.`;
+        }
+
+        const botResponse = {
+          id: messages.length + 2,
+          type: 'bot',
+          content: botContent,
+          timestamp: new Date(),
+          responseType: 'what_if_examples'
+        };
+        setMessages(prev => [...prev, botResponse]);
+      } else {
+        throw new Error(data.error || 'Failed to get What-If examples');
+      }
+    } catch (error) {
+      console.error('Error getting What-If examples:', error);
+      const errorResponse = {
+        id: messages.length + 2,
+        type: 'bot',
+        content: `I apologize, but I encountered an error while getting What-If scenario examples. Here are some common scenarios you can ask about:\n\n• What if I need to terminate this contract early?\n• What happens if payments are delayed?\n• What if there's a dispute about contract terms?\n• What are my options if the other party breaches the contract?\n\nJust ask me any "What if..." question and I'll help analyze the situation!`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   return (
     <div className="flex bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden" style={{ height: 'calc(100vh - 160px)' }}>
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full max-h-full">
         {/* Header */}
-        <motion.div 
+        <Motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex-shrink-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 shadow-lg"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <motion.div 
+              <Motion.div 
                 className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl shadow-lg"
                 whileHover={{ scale: 1.05, rotate: 5 }}
               >
                 <Bot className="h-8 w-8 text-white" />
-              </motion.div>
+              </Motion.div>
               <div>
                 <h1 className="text-2xl font-bold flex items-center">
                   AI Assistant
-                  <motion.div
+                  <Motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                     className="ml-2"
                   >
                     <Sparkles className="h-5 w-5" />
-                  </motion.div>
+                  </Motion.div>
                 </h1>
                 <p className="text-green-100 text-sm">Powered by Advanced Language Models • Online</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <motion.button
+              <Motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsContextPanelOpen(!isContextPanelOpen)}
                 className="p-3 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-xl transition-all"
               >
                 <Settings className="h-5 w-5 text-white" />
-              </motion.button>
-              <motion.button
+              </Motion.button>
+              <Motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-3 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-xl transition-all"
               >
                 <MoreVertical className="h-5 w-5 text-white" />
-              </motion.button>
+              </Motion.button>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
 
         {/* Document Selector */}
-        <motion.div 
+        <Motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -561,7 +673,7 @@ const ChatPage = () => {
             </div>
             
             {selectedDocument && (
-              <motion.div
+              <Motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="flex items-center space-x-2"
@@ -577,10 +689,10 @@ const ChatPage = () => {
                 >
                   <X className="h-4 w-4" />
                 </button>
-              </motion.div>
+              </Motion.div>
             )}
           </div>
-        </motion.div>
+        </Motion.div>
 
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-6 space-y-6 min-h-0 max-h-full messages-container" 
@@ -605,7 +717,7 @@ const ChatPage = () => {
           `}</style>
           <AnimatePresence>
             {messages.map((message, index) => (
-              <motion.div
+              <Motion.div
                 key={message.id}
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -615,7 +727,7 @@ const ChatPage = () => {
               >
                 <div className={`${message.type === 'user' ? 'max-w-[70%]' : 'max-w-[75%]'} flex ${message.type === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3 min-w-0`}>
                   {/* Avatar */}
-                  <motion.div 
+                  <Motion.div 
                     className={`p-3 rounded-2xl shadow-lg flex-shrink-0 ${
                       message.type === 'user' 
                         ? 'bg-gradient-to-br from-purple-500 to-pink-500' 
@@ -628,7 +740,7 @@ const ChatPage = () => {
                     ) : (
                       <Bot className="h-5 w-5 text-white" />
                     )}
-                  </motion.div>
+                  </Motion.div>
                   
                   {/* Message Bubble */}
                   <div className={`px-6 py-4 rounded-3xl shadow-lg relative overflow-hidden break-words ${
@@ -641,7 +753,11 @@ const ChatPage = () => {
                         {message.content}
                       </p>
                     ) : (
-                      <BotMessage content={message.content} documentContext={message.documentContext} />
+                      <BotMessage 
+                        content={message.content} 
+                        documentContext={message.documentContext}
+                        responseType={message.responseType}
+                      />
                     )}
                     <p className={`text-xs mt-3 flex items-center ${
                       message.type === 'user' 
@@ -650,25 +766,25 @@ const ChatPage = () => {
                     }`}>
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       {message.isFile && (
-                        <motion.span
+                        <Motion.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-full text-xs"
                         >
                           FILE
-                        </motion.span>
+                        </Motion.span>
                       )}
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </Motion.div>
             ))}
           </AnimatePresence>
           
           {/* Typing Indicator */}
           <AnimatePresence>
             {isTyping && (
-              <motion.div
+              <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -681,17 +797,17 @@ const ChatPage = () => {
                   <div className="bg-white dark:bg-gray-700 px-6 py-4 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-600">
                     <div className="flex space-x-2 items-center">
                       <div className="flex space-x-1">
-                        <motion.div 
+                        <Motion.div 
                           className="w-2 h-2 bg-green-500 rounded-full"
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ duration: 1, repeat: Infinity, delay: 0 }}
                         />
-                        <motion.div 
+                        <Motion.div 
                           className="w-2 h-2 bg-green-500 rounded-full"
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
                         />
-                        <motion.div 
+                        <Motion.div 
                           className="w-2 h-2 bg-green-500 rounded-full"
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
@@ -701,14 +817,14 @@ const ChatPage = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </Motion.div>
             )}
           </AnimatePresence>
           <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
-        <motion.div 
+        <Motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6 min-h-fit"
@@ -722,14 +838,14 @@ const ChatPage = () => {
               className="hidden"
             />
             
-            <motion.button
+            <Motion.button
               whileHover={{ scale: 1.05, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => fileInputRef.current?.click()}
               className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
             >
               <Paperclip className="h-5 w-5" />
-            </motion.button>
+            </Motion.button>
             
             <div className="flex-1 relative">
               <textarea
@@ -741,7 +857,7 @@ const ChatPage = () => {
                 rows="1"
                 style={{ minHeight: '60px', maxHeight: '120px' }}
               />
-              <motion.button
+              <Motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSendMessage}
@@ -749,16 +865,16 @@ const ChatPage = () => {
                 className="absolute right-3 bottom-3 p-3 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-2xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 <Send className="h-5 w-5" />
-              </motion.button>
+              </Motion.button>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
       </div>
 
       {/* Context Panel */}
       <AnimatePresence>
         {isContextPanelOpen && (
-          <motion.div
+          <Motion.div
             initial={{ x: 320, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 320, opacity: 0 }}
@@ -796,7 +912,7 @@ const ChatPage = () => {
                             <span className="text-blue-600 dark:text-blue-400 font-medium">Processing...</span>
                           </div>
                           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <motion.div 
+                            <Motion.div 
                               className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
                               initial={{ width: 0 }}
                               animate={{ width: '100%' }}
@@ -837,7 +953,7 @@ const ChatPage = () => {
                 </h3>
                 <div className="space-y-3">
                   {quickActions.map((action, index) => (
-                    <motion.button
+                    <Motion.button
                       key={index}
                       whileHover={{ scale: 1.02, x: 5 }}
                       whileTap={{ scale: 0.98 }}
@@ -853,7 +969,7 @@ const ChatPage = () => {
                           </div>
                         </div>
                       </div>
-                    </motion.button>
+                    </Motion.button>
                   ))}
                 </div>
               </div>
@@ -874,7 +990,7 @@ const ChatPage = () => {
                         <span className="text-gray-500 dark:text-gray-400">{capability.progress}%</span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                        <motion.div 
+                        <Motion.div 
                           className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
                           initial={{ width: 0 }}
                           animate={{ width: `${capability.progress}%` }}
@@ -886,7 +1002,7 @@ const ChatPage = () => {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
     </div>
