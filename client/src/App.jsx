@@ -96,6 +96,14 @@ function Layout() {
             } 
           />
           <Route 
+            path="/dashboard/summary" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/dashboard/benchmark" 
             element={
               <ProtectedRoute>

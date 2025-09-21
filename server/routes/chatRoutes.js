@@ -1081,4 +1081,126 @@ router.get("/what-if-examples", async (req, res) => {
   }
 });
 
+// @route   POST /api/chat/multilingual-summary
+// @desc    Generate multilingual document summary
+// @access  Public
+router.post("/multilingual-summary", async (req, res) => {
+  try {
+    const { documentContent, fileName, language, summaryType } = req.body;
+
+    if (!documentContent) {
+      return res.status(400).json({
+        success: false,
+        error: "Document content is required",
+      });
+    }
+
+    if (!language) {
+      return res.status(400).json({
+        success: false,
+        error: "Language selection is required",
+      });
+    }
+
+    console.log(`Generating ${language} summary for: ${fileName || 'document'}`);
+
+    // Language-specific instructions
+    const languageInstructions = {
+      english: "Provide the summary in clear, professional English",
+      spanish: "Proporciona el resumen en español claro y profesional",
+      french: "Fournissez le résumé en français clair et professionnel", 
+      german: "Erstellen Sie die Zusammenfassung auf klarem, professionellem Deutsch",
+      hindi: "स्पष्ट और व्यावसायिक हिंदी में सारांश प्रदान करें",
+      marathi: "स्पष्ट आणि व्यावसायिक मराठीत सारांश द्या",
+      gujarati: "સ્પષ્ટ અને વ્યાવસાયિક ગુજરાતીમાં સારાંશ આપો",
+      tamil: "தெளிவான மற்றும் தொழில்முறை தமிழில் சுருக்கம் வழங்கவும்",
+      telugu: "స్పష్టమైన మరియు వృత్తిపరమైన తెలుగులో సారాంశం అందించండి",
+      kannada: "ಸ್ಪಷ್ಟ ಮತ್ತು ವೃತ್ತಿಪರ ಕನ್ನಡದಲ್ಲಿ ಸಾರಾಂಶವನ್ನು ಒದಗಿಸಿ",
+      bengali: "স্পষ্ট এবং পেশাদার বাংলায় সারসংক্ষেপ প্রদান করুন",
+      punjabi: "ਸਪਸ਼ਟ ਅਤੇ ਪੇਸ਼ੇਵਰ ਪੰਜਾਬੀ ਵਿੱਚ ਸਾਰ ਪ੍ਰਦਾਨ ਕਰੋ",
+      urdu: "واضح اور پیشہ ورانہ اردو میں خلاصہ فراہم کریں",
+      chinese: "请用清晰专业的中文提供摘要",
+      japanese: "明確で専門的な日本語で要約を提供してください",
+      korean: "명확하고 전문적인 한국어로 요약을 제공해주세요",
+      arabic: "قدم الملخص باللغة العربية الواضحة والمهنية",
+      portuguese: "Forneça o resumo em português claro e profissional",
+      italian: "Fornisci il riassunto in italiano chiaro e professionale",
+      dutch: "Geef de samenvatting in duidelijk, professioneel Nederlands",
+      russian: "Предоставьте краткое изложение на ясном профессиональном русском языке"
+    };
+
+    // Summary type templates
+    const summaryTemplates = {
+      comprehensive: "Provide a comprehensive analysis covering all key aspects",
+      executive: "Create an executive summary focusing on high-level insights and strategic implications",
+      legal: "Focus on legal implications, risks, and compliance requirements",
+      financial: "Emphasize financial aspects, costs, and monetary implications",
+      risks: "Concentrate on identifying and analyzing potential risks and mitigation strategies"
+    };
+
+    const selectedLanguageInstruction = languageInstructions[language] || languageInstructions.english;
+    const selectedTemplate = summaryTemplates[summaryType] || summaryTemplates.comprehensive;
+
+    const multilingualPrompt = `
+You are an expert document analyst specializing in multilingual summaries. ${selectedTemplate}.
+
+Document Content:
+${documentContent}
+
+Instructions:
+1. ${selectedLanguageInstruction}
+2. Structure your response with clear headings and subheadings
+3. Use bullet points and numbered lists for clarity
+4. Include actionable insights and recommendations
+5. Highlight key risks, opportunities, and important clauses
+6. Maintain professional tone throughout
+7. Provide cultural context if relevant for the selected language
+
+Please provide a detailed ${summaryType} summary in ${language}. Use markdown formatting for better readability.
+
+Required Structure:
+# Document Summary - ${fileName || 'Document'}
+
+## Overview
+[Brief overview in selected language]
+
+## Key Points
+[Main findings and insights]
+
+## Important Details
+[Detailed analysis]
+
+## Recommendations
+[Actionable recommendations]
+
+## Risk Assessment
+[Potential risks and concerns]
+
+Summary:`;
+
+    if (!geminiService.model) {
+      await geminiService.initializeModel();
+    }
+
+    const result = await geminiService.model.generateContent(multilingualPrompt);
+    const summary = result.response.text();
+
+    res.json({
+      success: true,
+      summary: summary,
+      language: language,
+      summaryType: summaryType,
+      fileName: fileName,
+      timestamp: new Date().toISOString(),
+    });
+
+  } catch (error) {
+    console.error("Error generating multilingual summary:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to generate multilingual summary",
+    });
+  }
+});
+
 module.exports = router;

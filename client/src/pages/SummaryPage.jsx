@@ -1,0 +1,337 @@
+import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Upload,
+  FileText,
+  Globe,
+  Sparkles,
+  AlertTriangle,
+  CheckCircle,
+  Trash2,
+  Download,
+  Copy,
+  Printer,
+  RefreshCw,
+  Info,
+  Star
+} from 'lucide-react';
+import MultilingualSummary from '../components/dashboard/MultilingualSummary';
+
+const SummaryPage = () => {
+  const [uploadedDocument, setUploadedDocument] = useState(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadHistory, setUploadHistory] = useState([]);
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = async (file) => {
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      // Validate file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'text/pdf'
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Unsupported file type. Please upload PDF, Word documents (.doc, .docx), or text files (.txt) only.');
+      }
+
+      // Check file size (limit to 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('File too large. Please select a file smaller than 10MB.');
+      }
+
+      // Upload and analyze the document
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('selectedRole', 'user');
+      formData.append('userId', 'summary-user');
+      formData.append('userEmail', 'summary@lexiguard.com');
+
+      const uploadResponse = await fetch('http://localhost:8080/api/document/upload-and-analyze', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.status}`);
+      }
+
+      const uploadResult = await uploadResponse.json();
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Failed to process document');
+      }
+
+      // Check if we have extracted text
+      if (!uploadResult.extractedText || uploadResult.extractedText.trim() === '') {
+        throw new Error('No text could be extracted from the document. Please ensure the document contains readable text.');
+      }
+
+      // Set the uploaded document
+      const documentData = {
+        fileName: file.name,
+        content: uploadResult.extractedText,
+        analysis: uploadResult.analysis,
+        fileSize: file.size,
+        uploadTime: new Date().toISOString(),
+        fileUrl: uploadResult.fileUrl
+      };
+
+      setUploadedDocument(documentData);
+
+      // Add to upload history
+      setUploadHistory(prev => [
+        documentData,
+        ...prev.filter(doc => doc.fileName !== file.name).slice(0, 4) // Keep only 5 most recent
+      ]);
+
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      setUploadError(error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+    e.target.value = '';
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileUpload(files[0]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const clearDocument = () => {
+    setUploadedDocument(null);
+    setUploadError(null);
+  };
+
+  const loadFromHistory = (document) => {
+    setUploadedDocument(document);
+    setUploadError(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Page Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg">
+              <Globe className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Multilingual Document Summarizer
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Upload documents and get detailed summaries in 20+ languages
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Upload Section */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Document Upload */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
+            >
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <Upload className="h-5 w-5 mr-2" />
+                Upload Document
+              </h2>
+
+              {/* Upload Area */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={handleFileSelect}
+                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                  isDragOver
+                    ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/20'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/10'
+                }`}
+              >
+                {isUploading ? (
+                  <div className="text-purple-600 dark:text-purple-400">
+                    <Sparkles className="h-12 w-12 mx-auto mb-4 animate-pulse" />
+                    <p className="text-lg font-medium">Processing document...</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Please wait while we analyze your file</p>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      Drop your document here
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      or click to browse files
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">PDF</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">DOC</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">DOCX</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">TXT</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,.txt"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {/* Error Display */}
+              {uploadError && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
+                >
+                  <div className="flex items-start space-x-3">
+                    <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-red-800 dark:text-red-200">Upload Error</h4>
+                      <p className="text-sm text-red-700 dark:text-red-300 mt-1">{uploadError}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Current Document */}
+              {uploadedDocument && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-green-800 dark:text-green-200">
+                          {uploadedDocument.fileName}
+                        </h4>
+                        <p className="text-sm text-green-700 dark:text-green-300">
+                          {(uploadedDocument.fileSize / 1024 / 1024).toFixed(2)} MB • Ready for analysis
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={clearDocument}
+                      className="p-1 text-green-600 hover:text-red-600 transition-colors"
+                      title="Remove document"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+
+            {/* Upload History */}
+            {uploadHistory.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
+              >
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Recent Documents
+                </h3>
+                <div className="space-y-3">
+                  {uploadHistory.map((doc, index) => (
+                    <motion.button
+                      key={`${doc.fileName}-${doc.uploadTime}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      onClick={() => loadFromHistory(doc)}
+                      className={`w-full text-left p-3 rounded-xl transition-all ${
+                        uploadedDocument?.fileName === doc.fileName
+                          ? 'bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700'
+                          : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">
+                            {doc.fileName}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {new Date(doc.uploadTime).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <FileText className="h-4 w-4 text-gray-400" />
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Summary Section */}
+          <div className="lg:col-span-2">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <MultilingualSummary uploadedDocument={uploadedDocument} />
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SummaryPage;
