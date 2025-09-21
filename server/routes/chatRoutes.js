@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const GeminiService = require("../services/geminiService");
+const WhatIfSimulatorService = require("../services/whatIfSimulatorService");
 const {
   analyzeDocumentFromCloudinaryUrl,
   analyzeDocumentFromBuffer,
@@ -8,6 +9,7 @@ const {
 const cloudinary = require("../config/cloudinary");
 
 const geminiService = new GeminiService();
+const whatIfSimulator = new WhatIfSimulatorService();
 
 // @route   POST /api/chat/message
 // @desc    Send message to AI chat
@@ -693,7 +695,14 @@ Provide a specific, actionable response to their question based on this document
 // @access  Public
 router.post("/message-with-document", async (req, res) => {
   try {
-    const { message, documentUrl, fileName, userId } = req.body;
+    const {
+      message,
+      documentUrl,
+      fileName,
+      userId,
+      jurisdiction = "India",
+      userRole = "Consumer",
+    } = req.body;
 
     if (!message) {
       return res.status(400).json({
@@ -717,7 +726,7 @@ router.post("/message-with-document", async (req, res) => {
         const analysisResult = await analyzeDocumentFromCloudinaryUrl(
           documentUrl,
           fileName,
-          "General"
+          userRole || "General"
         );
 
         if (analysisResult.success) {
@@ -744,7 +753,54 @@ router.post("/message-with-document", async (req, res) => {
       console.log("No document URL provided - using regular chat mode");
     }
 
-    // Create enhanced prompt with document context
+    // Check if this is a "What If" scenario question
+    const isScenarioQuestion = whatIfSimulator.isScenarioQuestion(message);
+
+    if (isScenarioQuestion && documentContent && documentAnalysis) {
+      console.log(
+        "Detected What-If scenario question - using scenario simulator"
+      );
+
+      try {
+        // Use the What-If Scenario Simulator
+        const scenarioAnalysis = await whatIfSimulator.analyzeScenario(
+          message,
+          documentContent,
+          documentAnalysis,
+          jurisdiction,
+          userRole
+        );
+
+        // Format the response for chat
+        const formattedResponse =
+          whatIfSimulator.formatScenarioForChat(scenarioAnalysis);
+
+        res.json({
+          success: true,
+          response: formattedResponse,
+          responseType: "scenario_analysis",
+          scenarioAnalysis: scenarioAnalysis,
+          documentContext: {
+            fileName,
+            documentType: documentAnalysis.documentType,
+            riskLevel: documentAnalysis.riskLevel,
+            hasDocumentContext: true,
+            isScenarioQuestion: true,
+          },
+          timestamp: new Date().toISOString(),
+        });
+
+        return; // Exit early since we handled the scenario
+      } catch (scenarioError) {
+        console.error(
+          "Scenario analysis failed, falling back to regular chat:",
+          scenarioError
+        );
+        // Fall through to regular chat handling
+      }
+    }
+
+    // Regular chat handling (non-scenario or fallback)
     const chatPrompt = `
 You are an expert AI assistant specializing in legal document analysis, compliance, and business guidance.
 You are helpful, professional, and provide detailed, actionable advice.
@@ -773,12 +829,41 @@ TOTAL DOCUMENT LENGTH: ${documentContent.length} characters
 
 User Question: ${message}
 
-Please provide a comprehensive, well-structured response that:
+${
+  isScenarioQuestion
+    ? `
+IMPORTANT: The user is asking a "What If" scenario question. Please provide a CONCISE response (max 300 words):
+1. Direct answer to their scenario (1-2 sentences)
+2. Key clauses that apply (if document available)
+3. 2-3 main consequences or steps
+4. 2-3 practical actions they should take
+5. Overall risk level (low/medium/high)
+
+Keep it short and focused - no lengthy explanations.
+`
+    : ""
+}
+
+Please provide a ${
+      isScenarioQuestion ? "concise, focused" : "comprehensive, well-structured"
+    } response that:
 1. Addresses the user's specific question
-2. References the document content when relevant
+2. ${
+      isScenarioQuestion
+        ? "Stays under 300 words"
+        : "References the document content when relevant"
+    }
 3. Provides practical, actionable advice
-4. Uses clear formatting with headings, bullet points, or numbered lists when appropriate
-5. Includes relevant legal or business insights based on the document
+4. ${
+      isScenarioQuestion
+        ? "Uses brief bullet points"
+        : "Uses clear formatting with headings, bullet points, or numbered lists when appropriate"
+    }
+5. ${
+      isScenarioQuestion
+        ? "Focuses on key risks and actions"
+        : "Includes relevant legal or business insights based on the document"
+    }
 6. Is professional but conversational
 
 Response:`;
@@ -795,14 +880,16 @@ Response:`;
     res.json({
       success: true,
       response: aiResponse,
+      responseType: isScenarioQuestion ? "scenario_fallback" : "regular_chat",
       documentContext: documentAnalysis
         ? {
             fileName,
             documentType: documentAnalysis.documentType,
             riskLevel: documentAnalysis.riskLevel,
             hasDocumentContext: true,
+            isScenarioQuestion: isScenarioQuestion,
           }
-        : { hasDocumentContext: false },
+        : { hasDocumentContext: false, isScenarioQuestion: isScenarioQuestion },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -857,6 +944,139 @@ router.post("/extract-text", async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
+    });
+  }
+});
+
+// @route   POST /api/chat/what-if-scenario
+// @desc    Analyze a specific What-If scenario against a document
+// @access  Public
+router.post("/what-if-scenario", async (req, res) => {
+  try {
+    const {
+      scenarioQuestion,
+      documentUrl,
+      fileName,
+      userId,
+      jurisdiction = "India",
+      userRole = "Consumer",
+    } = req.body;
+
+    if (!scenarioQuestion) {
+      return res.status(400).json({
+        success: false,
+        error: "Scenario question is required",
+      });
+    }
+
+    if (!documentUrl || !fileName) {
+      return res.status(400).json({
+        success: false,
+        error: "Document URL and file name are required for scenario analysis",
+      });
+    }
+
+    console.log(`Analyzing What-If scenario for document: ${fileName}`);
+    console.log(`Scenario: ${scenarioQuestion}`);
+
+    // First, extract document content and get analysis
+    const analysisResult = await analyzeDocumentFromCloudinaryUrl(
+      documentUrl,
+      fileName,
+      userRole
+    );
+
+    if (!analysisResult.success) {
+      return res.status(400).json({
+        success: false,
+        error: `Failed to analyze document: ${analysisResult.error}`,
+      });
+    }
+
+    const documentContent = analysisResult.extractedText;
+    const documentAnalysis = analysisResult.analysis;
+
+    // Perform scenario analysis
+    const scenarioAnalysis = await whatIfSimulator.analyzeScenario(
+      scenarioQuestion,
+      documentContent,
+      documentAnalysis,
+      jurisdiction,
+      userRole
+    );
+
+    // Format response for chat
+    const formattedResponse =
+      whatIfSimulator.formatScenarioForChat(scenarioAnalysis);
+
+    res.json({
+      success: true,
+      response: formattedResponse,
+      scenarioAnalysis: scenarioAnalysis,
+      documentContext: {
+        fileName,
+        documentType: documentAnalysis.documentType,
+        riskLevel: documentAnalysis.riskLevel,
+        jurisdiction,
+        userRole,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error in What-If scenario analysis:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to analyze What-If scenario",
+    });
+  }
+});
+
+// @route   GET /api/chat/what-if-examples
+// @desc    Get example What-If scenario questions based on document type
+// @access  Public
+router.get("/what-if-examples", async (req, res) => {
+  try {
+    const { documentType = "contract", jurisdiction = "India" } = req.query;
+
+    console.log(
+      `Getting What-If examples for ${documentType} in ${jurisdiction}`
+    );
+
+    const examples = whatIfSimulator.generateExampleScenarios(
+      documentType,
+      jurisdiction
+    );
+
+    res.json({
+      success: true,
+      documentType,
+      jurisdiction,
+      examples,
+      helpText: {
+        title: "What-If Scenario Simulator",
+        description:
+          "Ask hypothetical questions to understand the real-world consequences of your contract",
+        instructions: [
+          "Start your question with 'What if...' or 'What happens if...'",
+          "Be specific about the situation you're concerned about",
+          "Include relevant details like timeframes or amounts",
+          "Ask about both best-case and worst-case scenarios",
+        ],
+        benefits: [
+          "Predict consequences before they happen",
+          "Identify hidden risks in your contract",
+          "Understand your rights and obligations",
+          "Get strategic advice for negotiation",
+          "Find ambiguous language that needs clarification",
+        ],
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error getting What-If examples:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to get What-If examples",
     });
   }
 });
