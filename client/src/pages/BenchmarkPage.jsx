@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -18,7 +18,25 @@ import {
   Download,
   Eye,
   RefreshCw,
-  Loader
+  Loader,
+  Zap,
+  Award,
+  Filter,
+  Settings,
+  Plus,
+  ArrowRight,
+  Star,
+  Briefcase,
+  Globe,
+  Calendar,
+  Activity,
+  PieChart,
+  LineChart,
+  TrendingDown,
+  X,
+  ChevronRight,
+  Lightbulb,
+  Scale
 } from 'lucide-react';
 import documentService from '../services/documentService';
 import benchmarkService from '../services/benchmarkService';
@@ -406,6 +424,8 @@ export default function BenchmarkPage() {
   const [selectedJurisdiction, setSelectedJurisdiction] = useState('India');
   const [selectedContractType, setSelectedContractType] = useState('All');
   const [selectedUserRole, setSelectedUserRole] = useState('Consumer');
+  const [activeTab, setActiveTab] = useState('analyze');
+  const [showUploadModal, setShowUploadModal] = useState(false);
   
   // Document management state
   const [documents, setDocuments] = useState([]);
@@ -505,264 +525,522 @@ export default function BenchmarkPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="h-full bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg"
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6"
       >
-        <div className="flex items-center gap-3 mb-2">
-          <BarChart3 className="w-8 h-8" />
-          <h1 className="text-2xl font-bold">Market Fairness Benchmark</h1>
-        </div>
-        <p className="text-blue-100 text-sm max-w-3xl">
-          Compare your contracts against thousands of similar agreements in your jurisdiction. 
-          Get unprecedented leverage in negotiations with real market data.
-        </p>
-      </motion.div>
-
-      {/* Document Analysis Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700"
-      >
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-          <FileText className="w-6 h-6" />
-          Analyze Document Fairness
-        </h2>
-        
-        {/* Configuration */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="flex items-center justify-between">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Your Role
-            </label>
-            <select
-              value={selectedUserRole}
-              onChange={(e) => setSelectedUserRole(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            >
-              <option value="Consumer">Consumer</option>
-              <option value="Tenant">Tenant</option>
-              <option value="Employee">Employee</option>
-              <option value="Client">Client</option>
-              <option value="Buyer">Buyer</option>
-            </select>
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <BarChart3 className="w-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Market Benchmark</h1>
+                <p className="text-gray-600 dark:text-gray-400">Compare contracts and get negotiation insights</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Jurisdiction
-            </label>
-            <select
-              value={selectedJurisdiction}
-              onChange={(e) => setSelectedJurisdiction(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          <div className="flex items-center space-x-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
-              <option value="India">India</option>
-              <option value="Maharashtra">Maharashtra</option>
-              <option value="Karnataka">Karnataka</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Tamil Nadu">Tamil Nadu</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Contract Type Filter
-            </label>
-            <select
-              value={selectedContractType}
-              onChange={(e) => setSelectedContractType(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              <Settings className="w-4 h-4" />
+              <span>Settings</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              <option value="All">All Contract Types</option>
-              <option value="Rental Agreement">Rental Agreement</option>
-              <option value="Employment Contract">Employment Contract</option>
-              <option value="Service Agreement">Service Agreement</option>
-              <option value="Vendor Agreement">Vendor Agreement</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Upload Section */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Upload New Document</h3>
-            <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-colors">
               <Upload className="w-4 h-4" />
-              {isUploading ? 'Uploading...' : 'Upload & Analyze'}
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx,.txt"
-                onChange={handleFileUpload}
-                disabled={isUploading}
-                className="hidden"
-              />
-            </label>
+              <span>Upload Document</span>
+            </motion.button>
           </div>
         </div>
 
-        {/* Document Selection */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Or Select from Your Documents</h3>
-            <button
-              onClick={loadUserDocuments}
-              disabled={loadingDocuments}
-              className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            >
-              <RefreshCw className={`w-3 h-3 ${loadingDocuments ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
-          </div>
-
-          {loadingDocuments ? (
-            <div className="text-center py-8">
-              <Loader className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
-              <p className="text-gray-600 dark:text-gray-400">Loading your documents...</p>
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="text-center py-8 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <FileText className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-              <p className="text-gray-600 dark:text-gray-400">No documents found. Upload your first document to get started!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-60 overflow-y-auto">
-              {documents.map((document) => (
-                <DocumentCard
-                  key={document.id}
-                  document={document}
-                  isSelected={selectedDocument?.id === document.id}
-                  onSelect={setSelectedDocument}
-                  onAnalyze={handleAnalyzeDocument}
-                  isAnalyzing={isAnalyzing && selectedDocument?.id === document.id}
-                />
-              ))}
-            </div>
-          )}
+        {/* Navigation Tabs */}
+        <div className="mt-6 border-b border-gray-200 dark:border-gray-700">
+          <nav className="flex space-x-8">
+            {[
+              { id: 'analyze', label: 'Analyze Document', icon: FileText },
+              { id: 'insights', label: 'Market Insights', icon: Lightbulb },
+              { id: 'comparisons', label: 'Popular Comparisons', icon: Scale },
+              { id: 'statistics', label: 'Statistics', icon: PieChart }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
-
-        {/* Error Display */}
-        {analysisError && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg"
-          >
-            <div className="flex items-center gap-2 text-red-800 dark:text-red-300">
-              <AlertTriangle className="w-4 h-4" />
-              <span className="font-medium">Analysis Error</span>
-            </div>
-            <p className="text-sm text-red-700 dark:text-red-400 mt-1">{analysisError}</p>
-          </motion.div>
-        )}
-
-        {/* Analysis Results */}
-        {fairnessAnalysis && (
-          <FairnessResultCard analysis={fairnessAnalysis} />
-        )}
       </motion.div>
 
-      {/* Key Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <BenchmarkCard
-          title="Total Contracts Analyzed"
-          value={mockBenchmarkData.totalContracts.toLocaleString()}
-          subtitle="Across all jurisdictions"
-          icon={FileText}
-          color="blue"
-        />
-        <BenchmarkCard
-          title="Jurisdictions Covered"
-          value={mockBenchmarkData.jurisdictions}
-          subtitle="States and territories"
-          icon={MapPin}
-          color="green"
-        />
-        <BenchmarkCard
-          title="Last Updated"
-          value="Today"
-          subtitle={`${mockBenchmarkData.lastUpdated}`}
-          icon={TrendingUp}
-          color="purple"
-        />
+      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'analyze' && (
+            <motion.div
+              key="analyze"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Documents Analyzed</p>
+                      <p className="text-2xl font-semibold text-gray-900 dark:text-white">{documents.length}</p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Your portfolio</p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Market Database</p>
+                      <p className="text-2xl font-semibold text-gray-900 dark:text-white">{mockBenchmarkData.totalContracts.toLocaleString()}</p>
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">Contracts analyzed</p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-xl flex items-center justify-center">
+                      <BarChart3 className="w-6 h-6 text-green-600 dark:text-green-400" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Jurisdictions</p>
+                      <p className="text-2xl font-semibold text-gray-900 dark:text-white">{mockBenchmarkData.jurisdictions}</p>
+                      <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">States covered</p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-xl flex items-center justify-center">
+                      <Globe className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Last Updated</p>
+                      <p className="text-2xl font-semibold text-gray-900 dark:text-white">Today</p>
+                      <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">Real-time data</p>
+                    </div>
+                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-xl flex items-center justify-center">
+                      <Activity className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Document Analysis Section */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Document Fairness Analysis</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mt-1">Upload or select a document to analyze against market standards</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Award className="w-5 h-5 text-yellow-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">AI-Powered</span>
+                  </div>
+                </div>
+                {/* Configuration */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Your Role
+                    </label>
+                    <select
+                      value={selectedUserRole}
+                      onChange={(e) => setSelectedUserRole(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="Consumer">Consumer</option>
+                      <option value="Tenant">Tenant</option>
+                      <option value="Employee">Employee</option>
+                      <option value="Client">Client</option>
+                      <option value="Buyer">Buyer</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Jurisdiction
+                    </label>
+                    <select
+                      value={selectedJurisdiction}
+                      onChange={(e) => setSelectedJurisdiction(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="India">India</option>
+                      <option value="Maharashtra">Maharashtra</option>
+                      <option value="Karnataka">Karnataka</option>
+                      <option value="Delhi">Delhi</option>
+                      <option value="Tamil Nadu">Tamil Nadu</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Contract Type
+                    </label>
+                    <select
+                      value={selectedContractType}
+                      onChange={(e) => setSelectedContractType(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="All">All Contract Types</option>
+                      <option value="Rental Agreement">Rental Agreement</option>
+                      <option value="Employment Contract">Employment Contract</option>
+                      <option value="Service Agreement">Service Agreement</option>
+                      <option value="Vendor Agreement">Vendor Agreement</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Document Selection */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">Select Document to Analyze</h3>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={loadUserDocuments}
+                        disabled={loadingDocuments}
+                        className="flex items-center space-x-2 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${loadingDocuments ? 'animate-spin' : ''}`} />
+                        <span>Refresh</span>
+                      </button>
+                      <button
+                        onClick={() => setShowUploadModal(true)}
+                        className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Upload New</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {loadingDocuments ? (
+                    <div className="text-center py-12">
+                      <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                      <p className="text-gray-600 dark:text-gray-400">Loading your documents...</p>
+                    </div>
+                  ) : documents.length === 0 ? (
+                    <div className="text-center py-12 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                      <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No documents found</h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-6">Upload your first document to get started with market analysis!</p>
+                      <button
+                        onClick={() => setShowUploadModal(true)}
+                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+                      >
+                        <Upload className="w-4 h-4" />
+                        <span>Upload Document</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-80 overflow-y-auto">
+                      {documents.map((document) => (
+                        <DocumentCard
+                          key={document.id}
+                          document={document}
+                          isSelected={selectedDocument?.id === document.id}
+                          onSelect={setSelectedDocument}
+                          onAnalyze={handleAnalyzeDocument}
+                          isAnalyzing={isAnalyzing && selectedDocument?.id === document.id}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Error Display */}
+                {analysisError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-2 text-red-800 dark:text-red-300">
+                      <AlertTriangle className="w-5 h-5" />
+                      <span className="font-medium">Analysis Error</span>
+                    </div>
+                    <p className="text-sm text-red-700 dark:text-red-400 mt-1">{analysisError}</p>
+                  </motion.div>
+                )}
+
+                {/* Analysis Results */}
+                {fairnessAnalysis && (
+                  <FairnessResultCard analysis={fairnessAnalysis} />
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+
+          {activeTab === 'insights' && (
+            <motion.div
+              key="insights"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Latest Market Insights</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mt-1">Real-time trends and patterns from contract analysis</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Updated daily</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {mockBenchmarkData.recentInsights.map((insight, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+                    >
+                      <InsightCard insight={insight} />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {activeTab === 'comparisons' && (
+            <motion.div
+              key="comparisons"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Popular Contract Comparisons</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mt-1">Most analyzed contract types and their market benchmarks</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-5 h-5 text-blue-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Community driven</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {mockBenchmarkData.popularComparisons.map((comparison, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <ComparisonCard comparison={comparison} />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {activeTab === 'statistics' && (
+            <motion.div
+              key="statistics"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Key Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <BenchmarkCard
+                  title="Total Contracts Analyzed"
+                  value={mockBenchmarkData.totalContracts.toLocaleString()}
+                  subtitle="Across all jurisdictions"
+                  icon={FileText}
+                  color="blue"
+                />
+                <BenchmarkCard
+                  title="Jurisdictions Covered"
+                  value={mockBenchmarkData.jurisdictions}
+                  subtitle="States and territories"
+                  icon={MapPin}
+                  color="green"
+                />
+                <BenchmarkCard
+                  title="Last Updated"
+                  value="Today"
+                  subtitle={`${mockBenchmarkData.lastUpdated}`}
+                  icon={TrendingUp}
+                  color="purple"
+                />
+              </div>
+
+              {/* How It Works */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center space-x-2">
+                  <Shield className="w-5 h-5" />
+                  <span>How Market Fairness Benchmark Works</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Select or Upload Contract</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Choose from your existing documents or upload a new contract for analysis.
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <BarChart3 className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    </div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">AI-Powered Fairness Analysis</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Our AI compares your terms against thousands of similar contracts in your jurisdiction.
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Target className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Get Negotiation Leverage</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Receive specific insights and talking points to negotiate better terms.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
 
-      {/* Recent Insights */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="space-y-4"
-      >
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <Target className="w-6 h-6" />
-          Latest Market Insights
-        </h2>
-        <div className="space-y-3">
-          {mockBenchmarkData.recentInsights.map((insight, index) => (
-            <InsightCard key={index} insight={insight} />
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Popular Comparisons */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="space-y-4"
-      >
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <Users className="w-6 h-6" />
-          Popular Contract Comparisons
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {mockBenchmarkData.popularComparisons.map((comparison, index) => (
-            <ComparisonCard key={index} comparison={comparison} />
-          ))}
-        </div>
-      </motion.div>
-
-      {/* How It Works */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700"
-      >
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-          <Shield className="w-5 h-5" />
-          How Market Fairness Benchmark Works
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-              <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Select or Upload Contract</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Choose from your existing documents or upload a new contract for analysis.
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-              <BarChart3 className="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">AI-Powered Fairness Analysis</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Our AI compares your terms against thousands of similar contracts in your jurisdiction.
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="bg-purple-100 dark:bg-purple-900/20 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-              <Target className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Get Negotiation Leverage</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Receive specific insights and talking points to negotiate better terms.
-            </p>
-          </div>
-        </div>
-      </motion.div>
+      {/* Upload Modal */}
+      <AnimatePresence>
+        {showUploadModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={() => setShowUploadModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Upload Document</h3>
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Upload Contract</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Drag and drop your file here, or click to browse
+                  </p>
+                  <label className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors mx-auto w-fit">
+                    <Upload className="w-4 h-4" />
+                    <span>{isUploading ? 'Uploading...' : 'Choose File'}</span>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt"
+                      onChange={handleFileUpload}
+                      disabled={isUploading}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Supported formats: PDF, DOC, DOCX, TXT (Max 25MB)
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

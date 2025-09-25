@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import './index.css';
 import { DocumentProvider } from './context/DocumentContext';
@@ -16,44 +16,44 @@ import Footer from './components/Footer';
 function ProtectedRoute({ children }) {
   const { userLoggedIn, loading } = useAuth();
   const location = useLocation();
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-600 mx-auto"></div>
-          <p className="mt-4 text-sky-600">Loading...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-blue-600 dark:text-blue-400">Loading...</p>
         </div>
       </div>
     );
   }
-  
+
   if (!userLoggedIn) {
     return <Navigate to="/signin" state={{ from: location.pathname }} replace />;
   }
-  
+
   return children;
 }
 
 // Public Route Component (redirects to dashboard if already logged in)
 function PublicRoute({ children }) {
   const { userLoggedIn, loading } = useAuth();
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-600 mx-auto"></div>
-          <p className="mt-4 text-sky-600">Loading...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-blue-600 dark:text-blue-400">Loading...</p>
         </div>
       </div>
     );
   }
-  
+
   if (userLoggedIn) {
     return <Navigate to="/dashboard" replace />;
   }
-  
+
   return children;
 }
 
@@ -71,93 +71,93 @@ function Layout() {
       <main className={showHeader && !isDashboardPage ? "pt-20" : ""}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route 
-            path="/upload" 
+          <Route
+            path="/upload"
             element={
               <ProtectedRoute>
                 <UploadPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard/documents" 
+          <Route
+            path="/dashboard/documents"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard/summary" 
+          <Route
+            path="/dashboard/summary"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard/benchmark" 
+          <Route
+            path="/dashboard/benchmark"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard/chat" 
+          <Route
+            path="/dashboard/chat"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard/team" 
+          <Route
+            path="/dashboard/team"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard/notifications" 
+          <Route
+            path="/dashboard/notifications"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard/settings" 
+          <Route
+            path="/dashboard/settings"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/signin" 
+          <Route
+            path="/signin"
             element={
               <PublicRoute>
                 <SignIn />
               </PublicRoute>
-            } 
+            }
           />
-          <Route 
-            path="/signup" 
+          <Route
+            path="/signup"
             element={
               <PublicRoute>
                 <SignUp />
               </PublicRoute>
-            } 
+            }
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

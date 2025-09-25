@@ -19,7 +19,27 @@ import {
   CheckCircle,
   X,
   AlertTriangle,
-  Info
+  Info,
+  MessageSquare,
+  Brain,
+  Mic,
+  Image,
+  Plus,
+  ChevronDown,
+  Search,
+  Filter,
+  Archive,
+  Star,
+  Copy,
+  Share,
+  Trash2,
+  Edit3,
+  RefreshCw,
+  MicOff,
+  Square,
+  Play,
+  Pause,
+  Volume2
 } from 'lucide-react';
 
 const ChatPage = () => {
@@ -28,26 +48,31 @@ const ChatPage = () => {
     // Special handling for What-If scenario responses
     if (responseType === 'scenario_analysis') {
       return (
-        <div className="space-y-4 max-w-full overflow-hidden break-words">
-          <div className="mb-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
-            <div className="flex items-center text-sm text-purple-700 mb-2">
+        <div className="space-y-3 max-w-full overflow-hidden break-words">
+          <div className="mb-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+            <div className="flex items-center text-sm text-purple-700 dark:text-purple-300 mb-2">
               <Zap className="h-4 w-4 mr-2" />
               What-If Scenario Analysis
             </div>
-            <div className="text-xs text-purple-600">
+            <div className="text-xs text-purple-600 dark:text-purple-400">
               Advanced predictive analysis based on your contract
             </div>
           </div>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              h2: ({children}) => <h2 className="text-lg font-bold text-purple-800 mb-3 flex items-center break-words"><Zap className="h-5 w-5 text-purple-500 mr-2 flex-shrink-0" /><span className="break-words">{children}</span></h2>,
-              h3: ({children}) => <h3 className="text-base font-semibold text-purple-700 mb-2 break-words">{children}</h3>,
-              p: ({children}) => <p className="text-base text-gray-700 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
-              ul: ({children}) => <ul className="list-none space-y-2 mb-3 break-words">{children}</ul>,
-              li: ({children}) => <li className="text-base text-gray-700 flex items-start break-words"><span className="inline-block w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span className="break-words">{children}</span></li>,
-              strong: ({children}) => <strong className="font-semibold text-purple-900 bg-gradient-to-r from-purple-100 to-pink-100 px-1 rounded break-words">{children}</strong>,
-              blockquote: ({children}) => <blockquote className="border-l-4 border-purple-400 pl-4 py-2 bg-purple-50 rounded-r-lg mb-3 break-words">{children}</blockquote>,
+              h2: ({children}) => <h2 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-3 flex items-center break-words"><Zap className="h-5 w-5 text-purple-500 mr-2 flex-shrink-0" /><span className="break-words">{children}</span></h2>,
+              h3: ({children}) => <h3 className="text-base font-medium text-purple-700 dark:text-purple-300 mb-2 break-words">{children}</h3>,
+              p: ({children}) => <p className="text-gray-700 dark:text-gray-300 mb-3 leading-relaxed break-words">{children}</p>,
+              ul: ({children}) => <ul className="list-disc list-inside space-y-1 mb-3 text-gray-700 dark:text-gray-300 break-words">{children}</ul>,
+              ol: ({children}) => <ol className="list-decimal list-inside space-y-1 mb-3 text-gray-700 dark:text-gray-300 break-words">{children}</ol>,
+              li: ({children}) => <li className="break-words">{children}</li>,
+              strong: ({children}) => <strong className="font-semibold text-purple-800 dark:text-purple-200 break-words">{children}</strong>,
+              blockquote: ({children}) => (
+                <blockquote className="border-l-4 border-purple-300 dark:border-purple-600 pl-4 py-2 bg-purple-50 dark:bg-purple-900/10 mb-3 break-words">
+                  <div className="text-purple-700 dark:text-purple-300 break-words">{children}</div>
+                </blockquote>
+              )
             }}
           >
             {content}
@@ -56,157 +81,73 @@ const ChatPage = () => {
       );
     }
 
-    // Format the content to handle different types of information
-    const formatContent = (text) => {
-      // Split content into sections based on patterns
-      const sections = text.split(/\n\n/);
-      
-      return sections.map((section, index) => {
-        // Check if section is a numbered list
-        if (section.includes('**') && section.includes(':')) {
-          return (
-            <div key={index} className="mb-4 break-words overflow-hidden">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  h1: ({children}) => <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center break-words"><CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /><span className="break-words">{children}</span></h1>,
-                  h2: ({children}) => <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2 flex items-center break-words"><Info className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" /><span className="break-words">{children}</span></h2>,
-                  h3: ({children}) => <h3 className="text-base font-medium text-gray-700 dark:text-gray-300 mb-2 break-words">{children}</h3>,
-                  p: ({children}) => <p className="text-base text-gray-600 dark:text-gray-300 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
-                  ul: ({children}) => <ul className="list-none space-y-1 mb-3 break-words">{children}</ul>,
-                  li: ({children}) => <li className="text-base text-gray-600 dark:text-gray-300 flex items-start break-words"><span className="inline-block w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span className="break-words">{children}</span></li>,
-                  strong: ({children}) => <strong className="font-semibold text-gray-900 dark:text-white bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 px-1 rounded break-words">{children}</strong>,
-                  blockquote: ({children}) => <blockquote className="border-l-4 border-green-400 pl-4 py-2 bg-green-50 dark:bg-green-900/20 rounded-r-lg mb-3 break-words">{children}</blockquote>,
-                  code: ({children}) => <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs font-mono text-green-600 dark:text-green-400 break-all">{children}</code>
-                }}
-              >
-                {section}
-              </ReactMarkdown>
-            </div>
-          );
-        }
-        
-        // Handle risk/warning sections
-        if (section.toLowerCase().includes('risk') || section.toLowerCase().includes('warning')) {
-          return (
-            <div key={index} className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-l-4 border-orange-400 rounded-r-lg break-words overflow-hidden">
-              <div className="flex items-start">
-                <AlertTriangle className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      p: ({children}) => <p className="text-base text-orange-800 dark:text-orange-200 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
-                      strong: ({children}) => <strong className="font-semibold text-orange-900 dark:text-orange-100 break-words">{children}</strong>
-                    }}
-                  >
-                    {section}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            </div>
-          );
-        }
-        
-        // Handle actionable insights sections
-        if (section.toLowerCase().includes('actionable') || section.toLowerCase().includes('recommend')) {
-          return (
-            <div key={index} className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 border-l-4 border-blue-400 rounded-r-lg break-words overflow-hidden">
-              <div className="flex items-start">
-                <CheckCircle className="h-5 w-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      p: ({children}) => <p className="text-base text-blue-800 dark:text-blue-200 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
-                      strong: ({children}) => <strong className="font-semibold text-blue-900 dark:text-blue-100 break-words">{children}</strong>,
-                      ul: ({children}) => <ul className="list-none space-y-1 mb-3 break-words">{children}</ul>,
-                      li: ({children}) => <li className="text-base text-blue-700 dark:text-blue-300 flex items-start break-words"><span className="inline-block w-2 h-2 bg-blue-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span className="break-words">{children}</span></li>
-                    }}
-                  >
-                    {section}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            </div>
-          );
-        }
-        
-        // Default formatting
-        return (
-          <div key={index} className="mb-3 break-words overflow-hidden">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                p: ({children}) => <p className="text-base text-gray-700 dark:text-gray-300 leading-7 mb-3 break-words whitespace-pre-wrap">{children}</p>,
-                strong: ({children}) => <strong className="font-semibold text-gray-900 dark:text-white break-words">{children}</strong>,
-                ul: ({children}) => <ul className="list-none space-y-1 mb-3 break-words">{children}</ul>,
-                li: ({children}) => <li className="text-base text-gray-700 dark:text-gray-300 flex items-start break-words"><span className="inline-block w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full mr-3 mt-2 flex-shrink-0"></span><span className="break-words">{children}</span></li>
-              }}
-            >
-              {section}
-            </ReactMarkdown>
-          </div>
-        );
-      });
-    };
-
+    // Regular bot messages
     return (
-      <div className="space-y-2 max-w-full overflow-hidden break-words">
+      <div className="space-y-3 max-w-full overflow-hidden break-words">
         {documentContext && (
-          <Motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg"
-          >
-            <div className="flex items-center text-xs text-blue-600 mb-2">
-              <FileText className="h-3 w-3 mr-1" />
-              Document Context Applied
+          <div className="mb-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center text-sm text-blue-700 dark:text-blue-300 mb-2">
+              <FileText className="h-4 w-4 mr-2" />
+              Document Analysis
             </div>
-            <div className="text-xs text-blue-700">
-              {documentContext.fileName && `📄 ${documentContext.fileName}`}
-              {documentContext.summary && ` - ${documentContext.summary}`}
+            <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
+              Based on: {documentContext.fileName}
             </div>
-          </Motion.div>
+          </div>
         )}
-        {formatContent(content)}
+        
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            h1: ({children}) => <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-4 break-words">{children}</h1>,
+            h2: ({children}) => <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 break-words">{children}</h2>,
+            h3: ({children}) => <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2 break-words">{children}</h3>,
+            p: ({children}) => <p className="text-gray-700 dark:text-gray-300 mb-3 leading-relaxed break-words">{children}</p>,
+            ul: ({children}) => <ul className="list-disc list-inside space-y-1 mb-3 text-gray-700 dark:text-gray-300 break-words">{children}</ul>,
+            ol: ({children}) => <ol className="list-decimal list-inside space-y-1 mb-3 text-gray-700 dark:text-gray-300 break-words">{children}</ol>,
+            li: ({children}) => <li className="break-words">{children}</li>,
+            strong: ({children}) => <strong className="font-semibold text-gray-900 dark:text-white break-words">{children}</strong>,
+            code: ({children}) => <code className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-sm break-words">{children}</code>,
+            pre: ({children}) => <pre className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-3 rounded-lg overflow-x-auto mb-3 break-words">{children}</pre>,
+            blockquote: ({children}) => (
+              <blockquote className="border-l-4 border-blue-300 dark:border-blue-600 pl-4 py-2 bg-blue-50 dark:bg-blue-900/10 mb-3 break-words">
+                <div className="text-blue-700 dark:text-blue-300 break-words">{children}</div>
+              </blockquote>
+            ),
+            table: ({children}) => (
+              <div className="overflow-x-auto mb-3">
+                <table className="min-w-full border border-gray-300 dark:border-gray-600 break-words">{children}</table>
+              </div>
+            ),
+            th: ({children}) => <th className="border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-left break-words">{children}</th>,
+            td: ({children}) => <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 break-words">{children}</td>
+          }}
+        >
+          {content}
+        </ReactMarkdown>
       </div>
     );
   };
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      type: 'bot',
-      content: 'Hello! I\'m your AI assistant powered by advanced language models. I can help you analyze documents, check compliance, assess risks, and much more! 🚀',
-      timestamp: new Date(Date.now() - 1000 * 60 * 10)
-    },
-    {
-      id: 2,
-      type: 'user',
-      content: 'Can you help me analyze the compliance requirements in my latest contract document?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 8)
-    },
-    {
-      id: 3,
-      type: 'bot',
-      content: 'Absolutely! I\'d be happy to help you with compliance analysis. Please upload your contract document and I\'ll provide a comprehensive analysis including:\n\n• Key compliance clauses identification\n• Regulatory requirements assessment\n• Risk level evaluation\n• Recommendations for improvements\n\nJust drag and drop your file or click the attachment button below! 📄',
-      timestamp: new Date(Date.now() - 1000 * 60 * 6)
-    },
-    {
-      id: 4,
-      type: 'user',
-      content: 'That sounds perfect! What file formats do you support?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 4)
-    },
-    {
-      id: 5,
-      type: 'bot',
-      content: 'I support a wide range of document formats:\n\n✅ PDF files (.pdf)\n✅ Word documents (.docx, .doc)\n✅ Text files (.txt)\n✅ PowerPoint (.pptx, .ppt)\n✅ Excel spreadsheets (.xlsx, .xls)\n✅ Images with text (.jpg, .png)\n\nMaximum file size: 25MB per document. I can analyze multiple documents simultaneously! 🎯',
-      timestamp: new Date(Date.now() - 1000 * 60 * 2)
-    }
-  ]);
-  
+  const quickActions = [
+    { name: 'Document Analysis', icon: FileText, color: 'from-blue-500 to-blue-600', description: 'Analyze uploaded documents' },
+    { name: 'Risk Assessment', icon: AlertTriangle, color: 'from-red-500 to-red-600', description: 'Identify potential risks' },
+    { name: 'Compliance Check', icon: Shield, color: 'from-green-500 to-green-600', description: 'Verify legal compliance' },
+    { name: 'Contract Summary', icon: BarChart3, color: 'from-purple-500 to-purple-600', description: 'Generate summaries' },
+    { name: 'Clause Extraction', icon: Copy, color: 'from-yellow-500 to-yellow-600', description: 'Extract key clauses' },
+    { name: 'What-If Analysis', icon: Zap, color: 'from-indigo-500 to-indigo-600', description: 'Scenario planning' }
+  ];
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // State variables
+  const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isContextPanelOpen, setIsContextPanelOpen] = useState(true);
@@ -214,161 +155,71 @@ const ChatPage = () => {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState('idle'); // idle, analyzing, complete
+  
+  // Voice recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
-  // Helper function to format file size
-  const formatFileSize = (bytes) => {
-    if (!bytes) return 'Unknown size';
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  // Helper function to get status text
-  const getAnalysisStatusText = () => {
-    switch(analysisStatus) {
-      case 'analyzing': return 'Analyzing...';
-      case 'complete': return 'Analysis complete';
-      default: return selectedDocument ? 'Ready for analysis' : 'No document selected';
-    }
-  };
-
-  // Fetch user documents from Cloudinary
-  const fetchUserDocuments = async () => {
-    setLoadingDocuments(true);
-    try {
-      // Get current user ID - use Firebase auth if available, otherwise demo user
-      let userId = 'demo-user'; // Default fallback
-      
-      // Try to get Firebase auth user first
-      try {
-        const { getCurrentUser } = await import('../services/documentService');
-        const currentUser = getCurrentUser();
-        if (currentUser && currentUser.uid) {
-          userId = currentUser.uid;
-          console.log('Using Firebase user ID:', userId);
-        } else {
-          // Try localStorage as fallback
-          const storedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-          if (storedUser.uid) {
-            userId = storedUser.uid;
-            console.log('Using stored user ID:', userId);
-          } else {
-            console.log('No authenticated user found, using demo-user');
-          }
-        }
-      } catch {
-        console.log('Firebase auth not available, using demo-user');
-      }
-
-      console.log(`Fetching documents for user: ${userId}`);
-      const response = await fetch(`http://localhost:8080/api/chat/documents/${userId}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setUserDocuments(data.documents || []);
-      } else {
-        console.error('Failed to fetch documents:', data.error);
-      }
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-    } finally {
-      setLoadingDocuments(false);
-    }
-  };
-
-  // Load documents when component mounts
-  useEffect(() => {
-    fetchUserDocuments();
-  }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Reset analysis status when document changes
-  useEffect(() => {
-    setAnalysisStatus('idle');
-  }, [selectedDocument]);
+  const getAnalysisStatusText = () => {
+    switch (analysisStatus) {
+      case 'analyzing': return 'Analyzing...';
+      case 'complete': return 'Analysis Complete';
+      default: return 'Ready';
+    }
+  };
 
   const handleSendMessage = async () => {
-    if (inputMessage.trim()) {
-      const newMessage = {
-        id: messages.length + 1,
-        type: 'user',
-        content: inputMessage,
+    if (!inputMessage.trim() || isTyping) return;
+
+    const userMessage = {
+      id: messages.length + 1,
+      type: 'user',
+      content: inputMessage,
+      timestamp: new Date()
+    };
+
+    setMessages([...messages, userMessage]);
+    setInputMessage('');
+    setIsTyping(true);
+
+    try {
+      // Simulate AI response delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const botResponse = {
+        id: messages.length + 2,
+        type: 'bot',
+        content: `I understand you're asking about: "${inputMessage}"\n\nI'm here to help you with document analysis, legal compliance, and risk assessment. Would you like me to analyze a specific document or provide more information about our capabilities?`,
+        timestamp: new Date(),
+        documentContext: selectedDocument
+      };
+
+      setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorResponse = {
+        id: messages.length + 2,
+        type: 'bot',
+        content: 'I apologize, but I encountered an error while processing your request. Please try again.',
         timestamp: new Date()
       };
-      setMessages([...messages, newMessage]);
-      const currentInput = inputMessage;
-      setInputMessage('');
-      
-      // Send to Gemini AI with document context if available
-      setIsTyping(true);
-      if (selectedDocument) {
-        setAnalysisStatus('analyzing');
-      }
-      try {
-        const endpoint = selectedDocument 
-          ? 'http://localhost:8080/api/chat/message-with-document'
-          : 'http://localhost:8080/api/chat/message';
-
-        const requestBody = {
-          message: currentInput,
-          context: 'Legal document analysis and compliance checking',
-          ...(selectedDocument && {
-            documentUrl: selectedDocument.url,
-            fileName: selectedDocument.fileName,
-            userId: selectedDocument.userId || 'demo-user'
-          })
-        };
-
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody)
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          const botResponse = {
-            id: messages.length + 2,
-            type: 'bot',
-            content: data.response,
-            timestamp: new Date(),
-            documentContext: data.documentContext || null,
-            responseType: data.responseType || 'regular_chat'
-          };
-          setMessages(prev => [...prev, botResponse]);
-          if (selectedDocument) {
-            setAnalysisStatus('complete');
-          }
-        } else {
-          throw new Error(data.error || 'Failed to get response');
-        }
-      } catch (error) {
-        console.error('Error sending message:', error);
-        const errorResponse = {
-          id: messages.length + 2,
-          type: 'bot',
-          content: 'I apologize, but I encountered an error while processing your request. Please make sure the server is running and try again.',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, errorResponse]);
-        if (selectedDocument) {
-          setAnalysisStatus('idle');
-        }
-      } finally {
-        setIsTyping(false);
-      }
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
@@ -377,6 +228,130 @@ const ChatPage = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  // Voice recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+        processAudioToText(audioBlob);
+      };
+
+      setMediaRecorder(recorder);
+      setAudioChunks(chunks);
+      setIsRecording(true);
+      setRecordingDuration(0);
+      
+      recorder.start();
+      
+      // Start duration timer
+      const timer = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+      
+      // Store timer to clear later
+      recorder.timer = timer;
+
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      alert('Unable to access microphone. Please check your browser permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      if (mediaRecorder.timer) {
+        clearInterval(mediaRecorder.timer);
+      }
+      setIsRecording(false);
+      
+      // Stop all tracks to release the microphone
+      mediaRecorder.stream?.getTracks().forEach(track => track.stop());
+    }
+  };
+
+  const processAudioToText = async (audioBlob) => {
+    setIsProcessingAudio(true);
+    
+    try {
+      // Use Web Speech API for speech-to-text
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          setInputMessage(transcript);
+          setIsProcessingAudio(false);
+          
+          // Auto-focus the input after transcription
+          setTimeout(() => {
+            const textarea = document.querySelector('textarea[placeholder*="message"]');
+            if (textarea) textarea.focus();
+          }, 100);
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          let errorMessage = 'Error processing voice input. ';
+          
+          switch(event.error) {
+            case 'no-speech':
+              errorMessage += 'No speech detected. Please try again.';
+              break;
+            case 'network':
+              errorMessage += 'Network error. Please check your connection.';
+              break;
+            case 'not-allowed':
+              errorMessage += 'Microphone permission denied.';
+              break;
+            default:
+              errorMessage += 'Please try again.';
+          }
+          
+          alert(errorMessage);
+          setIsProcessingAudio(false);
+        };
+
+        recognition.onend = () => {
+          setIsProcessingAudio(false);
+        };
+
+        recognition.start();
+      } else {
+        // Fallback for browsers without Speech Recognition
+        alert('Speech recognition is not supported in this browser. Please try Chrome or Edge.');
+        setIsProcessingAudio(false);
+      }
+      
+    } catch (error) {
+      console.error('Error with speech recognition:', error);
+      alert('Error accessing speech recognition. Please try again.');
+      setIsProcessingAudio(false);
+    }
+  };
+
+  const formatRecordingTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleFileUpload = async (e) => {
@@ -391,620 +366,448 @@ const ChatPage = () => {
       };
       setMessages([...messages, fileMessage]);
       
-      // Process file with Gemini AI
       setIsTyping(true);
-      try {
-        // For now, we'll send a document analysis request
-        // In a production app, you'd want to extract text from the file first
-        const response = await fetch('http://localhost:8080/api/chat/message', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: `I've uploaded a document named "${file.name}" (${(file.size / 1024 / 1024).toFixed(2)} MB). Please provide a comprehensive analysis including compliance requirements, risk factors, and key insights for this type of document.`,
-            context: 'Document upload and analysis',
-            documentContent: '' // In production, extract and include actual document text
-          })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          const botResponse = {
-            id: messages.length + 2,
-            type: 'bot',
-            content: data.response,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, botResponse]);
-        } else {
-          throw new Error(data.error || 'Failed to analyze document');
-        }
-      } catch (error) {
-        console.error('Error analyzing document:', error);
-        const errorResponse = {
+      // Simulate file processing
+      setTimeout(() => {
+        const response = {
           id: messages.length + 2,
           type: 'bot',
-          content: `I received your document "${file.name}", but encountered an error during analysis. Please ensure the server is running and try uploading again.`,
+          content: `I've received your file "${file.name}". I'm now analyzing the document for key information, potential risks, and compliance issues. This may take a few moments.`,
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, errorResponse]);
-      } finally {
+        setMessages(prev => [...prev, response]);
         setIsTyping(false);
-      }
+      }, 2000);
     }
   };
-
-  const quickActions = [
-    { name: 'Document Summary', icon: FileText, color: 'from-blue-500 to-cyan-500', description: 'Get key insights' },
-    { name: 'Compliance Check', icon: Shield, color: 'from-green-500 to-emerald-500', description: 'Regulatory analysis' },
-    { name: 'Risk Assessment', icon: BarChart3, color: 'from-yellow-500 to-orange-500', description: 'Identify potential risks' },
-    { name: 'What-If Scenarios', icon: Zap, color: 'from-purple-500 to-pink-500', description: 'Explore hypotheticals' },
-    { name: 'Export Report', icon: Download, color: 'from-gray-500 to-gray-600', description: 'Download analysis' }
-  ];
 
   const handleQuickAction = async (actionName) => {
-    if (actionName === 'What-If Scenarios') {
-      // Handle What-If scenarios specially
-      await handleWhatIfScenariosAction();
-      return;
-    }
-
-    const actionQueries = {
-      'Document Summary': 'Please provide a comprehensive summary of legal documents commonly used in business, including key components and best practices.',
-      'Compliance Check': 'What are the main compliance requirements I should be aware of for legal documents? Please provide a detailed compliance checklist.',
-      'Risk Assessment': 'Can you help me understand the common risk factors in legal documents and how to identify potential legal risks?',
-      'Export Report': 'How can I create and format professional legal analysis reports? What sections should I include?'
-    };
-
-    const query = actionQueries[actionName];
-    if (!query) return;
-
-    // Add user message
     const userMessage = {
       id: messages.length + 1,
       type: 'user',
-      content: `Quick Action: ${actionName}`,
+      content: `Requesting: ${actionName}`,
       timestamp: new Date()
     };
-    setMessages(prev => [...prev, userMessage]);
 
-    // Send to Gemini AI
+    setMessages([...messages, userMessage]);
     setIsTyping(true);
-    try {
-      const response = await fetch('http://localhost:8080/api/chat/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: query,
-          context: `User requested quick action: ${actionName}. Provide specialized legal guidance.`
-        })
-      });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        const botResponse = {
-          id: messages.length + 2,
-          type: 'bot',
-          content: data.response,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, botResponse]);
-      } else {
-        throw new Error(data.error || 'Failed to process quick action');
-      }
-    } catch (error) {
-      console.error('Error with quick action:', error);
-      const errorResponse = {
+    // Simulate processing
+    setTimeout(() => {
+      const response = {
         id: messages.length + 2,
         type: 'bot',
-        content: `I apologize, but I encountered an error while processing your ${actionName} request. Please try again.`,
-        timestamp: new Date()
+        content: `I'll help you with ${actionName.toLowerCase()}. ${selectedDocument ? `I'll analyze your selected document "${selectedDocument.fileName}"` : 'Please upload a document first for the best analysis.'} What specific aspects would you like me to focus on?`,
+        timestamp: new Date(),
+        documentContext: selectedDocument
       };
-      setMessages(prev => [...prev, errorResponse]);
-    } finally {
+      setMessages(prev => [...prev, response]);
       setIsTyping(false);
-    }
-  };
-
-  const handleWhatIfScenariosAction = async () => {
-    // Add user message
-    const userMessage = {
-      id: messages.length + 1,
-      type: 'user',
-      content: 'Quick Action: What-If Scenarios',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, userMessage]);
-
-    // Fetch What-If examples based on selected document type
-    setIsTyping(true);
-    try {
-      const documentType = selectedDocument ? 'contract' : 'contract'; // Could be enhanced to detect type
-      const response = await fetch(`http://localhost:8080/api/chat/what-if-examples?documentType=${encodeURIComponent(documentType)}&jurisdiction=India`);
-      const data = await response.json();
-      
-      if (data.success) {
-        let botContent = `## 🔮 ${data.helpText.title}\n\n`;
-        botContent += `${data.helpText.description}\n\n`;
-        
-        if (selectedDocument) {
-          botContent += `### 📄 Based on your selected document: ${selectedDocument.fileName}\n\n`;
-        }
-        
-        botContent += `### 💡 Example Questions You Can Ask:\n\n`;
-        data.examples.forEach((example, index) => {
-          botContent += `${index + 1}. **"${example}"**\n`;
-        });
-        
-        botContent += `\n### 🎯 How to Use:\n\n`;
-        data.helpText.instructions.forEach((instruction) => {
-          botContent += `• ${instruction}\n`;
-        });
-        
-        botContent += `\n### ✨ Benefits:\n\n`;
-        data.helpText.benefits.forEach((benefit) => {
-          botContent += `• ${benefit}\n`;
-        });
-        
-        if (selectedDocument) {
-          botContent += `\n---\n\n💬 **Try asking me one of the questions above, or create your own scenario!** I'll analyze it against your selected document and provide detailed insights.\n\n`;
-          botContent += `🔍 **Example**: Type "What if I need to terminate this contract early?" and I'll tell you exactly what clauses apply and what the consequences would be.`;
-        } else {
-          botContent += `\n---\n\n📄 **To get document-specific scenario analysis**: Select a document from the dropdown above, then ask your "What if..." question!\n\n`;
-          botContent += `💡 **For now**: You can ask general scenario questions and I'll provide insights based on common contract principles.`;
-        }
-
-        const botResponse = {
-          id: messages.length + 2,
-          type: 'bot',
-          content: botContent,
-          timestamp: new Date(),
-          responseType: 'what_if_examples'
-        };
-        setMessages(prev => [...prev, botResponse]);
-      } else {
-        throw new Error(data.error || 'Failed to get What-If examples');
-      }
-    } catch (error) {
-      console.error('Error getting What-If examples:', error);
-      const errorResponse = {
-        id: messages.length + 2,
-        type: 'bot',
-        content: `I apologize, but I encountered an error while getting What-If scenario examples. Here are some common scenarios you can ask about:\n\n• What if I need to terminate this contract early?\n• What happens if payments are delayed?\n• What if there's a dispute about contract terms?\n• What are my options if the other party breaches the contract?\n\nJust ask me any "What if..." question and I'll help analyze the situation!`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorResponse]);
-    } finally {
-      setIsTyping(false);
-    }
+    }, 1500);
   };
 
   return (
-    <div className="flex bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden" style={{ height: 'calc(100vh - 160px)' }}>
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+      {/* Sidebar */}
+      <Motion.div
+        initial={{ x: -300, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full shadow-sm"
+      >
+        {/* Sidebar Header */}
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <Brain className="h-5 w-5 text-white" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+              </div>
+              <div>
+                <h2 className="font-semibold text-gray-900 dark:text-white">LexiGuard Assistant</h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Always ready to help</p>
+              </div>
+            </div>
+            <Motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <Plus className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </Motion.button>
+          </div>
+        </div>
+        
+        {/* Sidebar Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Quick Actions</h3>
+            <div className="space-y-2">
+              {quickActions.map((action, index) => (
+                <Motion.button
+                  key={index}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleQuickAction(action.name)}
+                  className="w-full flex items-center space-x-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group text-left"
+                >
+                  <div className={`w-8 h-8 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <action.icon className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{action.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{action.description}</p>
+                  </div>
+                </Motion.button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Motion.div>
+
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full max-h-full">
-        {/* Header */}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        {/* Chat Header */}
         <Motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 shadow-lg"
+          className="flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Motion.div 
-                className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl shadow-lg"
-                whileHover={{ scale: 1.05, rotate: 5 }}
-              >
-                <Bot className="h-8 w-8 text-white" />
-              </Motion.div>
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6 text-white" />
+                </div>
+                <Motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"
+                />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold flex items-center">
-                  AI Assistant
-                  <Motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="ml-2"
-                  >
-                    <Sparkles className="h-5 w-5" />
-                  </Motion.div>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  LexiGuard Chat Assistant
                 </h1>
-                <p className="text-green-100 text-sm">Powered by Advanced Language Models • Online</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  Online • Ready to help with your documents
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <Motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setIsContextPanelOpen(!isContextPanelOpen)}
-                className="p-3 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-xl transition-all"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                title="Settings"
               >
-                <Settings className="h-5 w-5 text-white" />
+                <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
               </Motion.button>
               <Motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-3 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-xl transition-all"
+                onClick={() => setIsContextPanelOpen(!isContextPanelOpen)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                title="Toggle context panel"
               >
-                <MoreVertical className="h-5 w-5 text-white" />
+                <MoreVertical className="h-5 w-5 text-gray-600 dark:text-gray-400" />
               </Motion.button>
             </div>
           </div>
         </Motion.div>
 
-        {/* Document Selector */}
-        <Motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 shadow-sm"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <label className="text-sm font-semibold text-gray-700 flex items-center">
-                <FileText className="h-4 w-4 mr-2 text-blue-500" />
-                Document Context:
-              </label>
-              <select 
-                value={selectedDocument?.public_id || ''}
-                onChange={(e) => {
-                  const doc = userDocuments.find(d => d.public_id === e.target.value);
-                  setSelectedDocument(doc || null);
-                }}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                disabled={loadingDocuments}
-              >
-                <option value="">
-                  {loadingDocuments ? 'Loading documents...' : 'No document selected'}
-                </option>
-                {userDocuments.map((doc) => (
-                  <option key={doc.public_id} value={doc.public_id}>
-                    📄 {doc.fileName || doc.public_id.split('/').pop()}
-                  </option>
-                ))}
-              </select>
-              {loadingDocuments && (
-                <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-              )}
-            </div>
-            
-            {selectedDocument && (
-              <Motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="flex items-center space-x-2"
-              >
-                <span className="text-xs text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-200 flex items-center">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Using: {selectedDocument.fileName || 'Document'}
-                </span>
-                <button
-                  onClick={() => setSelectedDocument(null)}
-                  className="text-gray-400 hover:text-red-500 transition-colors"
-                  title="Remove document context"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </Motion.div>
-            )}
-          </div>
-        </Motion.div>
-
         {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-6 space-y-6 min-h-0 max-h-full messages-container" 
-             style={{ 
-               scrollbarWidth: 'thin',
-               scrollbarColor: '#CBD5E0 transparent'
-             }}>
-          <style>{`
-            .messages-container::-webkit-scrollbar {
-              width: 6px;
-            }
-            .messages-container::-webkit-scrollbar-track {
-              background: transparent;
-            }
-            .messages-container::-webkit-scrollbar-thumb {
-              background-color: #CBD5E0;
-              border-radius: 3px;
-            }
-            .messages-container::-webkit-scrollbar-thumb:hover {
-              background-color: #A0AEC0;
-            }
-          `}</style>
+        <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 messages-container">
+          <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+            <style>{`
+              .messages-container::-webkit-scrollbar {
+                width: 6px;
+              }
+              .messages-container::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .messages-container::-webkit-scrollbar-thumb {
+                background-color: rgba(156, 163, 175, 0.3);
+                border-radius: 3px;
+              }
+              .messages-container::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(156, 163, 175, 0.5);
+              }
+            `}</style>
+          
+          {/* Welcome Message */}
+          {messages.length === 0 && (
+            <Motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center min-h-full text-center py-12"
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6">
+                <Sparkles className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+                Welcome to LexiGuard
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md">
+                I'm here to help you analyze documents, check compliance, assess risks, and answer any questions you might have.
+              </p>
+              <div className="grid grid-cols-2 gap-4 max-w-lg">
+                {quickActions.slice(0, 4).map((action, index) => (
+                  <Motion.button
+                    key={index}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleQuickAction(action.name)}
+                    className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all group"
+                  >
+                    <div className={`w-8 h-8 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform`}>
+                      <action.icon className="h-4 w-4 text-white" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{action.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{action.description}</p>
+                  </Motion.button>
+                ))}
+              </div>
+            </Motion.div>
+          )}
+
           <AnimatePresence>
             {messages.map((message, index) => (
               <Motion.div
                 key={message.id}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: index * 0.1, type: "spring", stiffness: 300, damping: 25 }}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: index * 0.05 }}
+                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} group mb-4`}
               >
-                <div className={`${message.type === 'user' ? 'max-w-[70%]' : 'max-w-[75%]'} flex ${message.type === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3 min-w-0`}>
+                <div className={`flex ${message.type === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3 max-w-[85%]`}>
                   {/* Avatar */}
-                  <Motion.div 
-                    className={`p-3 rounded-2xl shadow-lg flex-shrink-0 ${
-                      message.type === 'user' 
-                        ? 'bg-gradient-to-br from-purple-500 to-pink-500' 
-                        : 'bg-gradient-to-br from-green-500 to-emerald-500'
-                    }`}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                  >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    message.type === 'user' 
+                      ? 'bg-gradient-to-br from-blue-500 to-purple-600' 
+                      : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                  }`}>
                     {message.type === 'user' ? (
                       <User className="h-5 w-5 text-white" />
                     ) : (
                       <Bot className="h-5 w-5 text-white" />
                     )}
-                  </Motion.div>
+                  </div>
                   
-                  {/* Message Bubble */}
-                  <div className={`px-6 py-4 rounded-3xl shadow-lg relative overflow-hidden break-words ${
-                    message.type === 'user' 
-                      ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white ml-3' 
-                      : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 mr-3'
-                  }`}>
-                    {message.type === 'user' ? (
-                      <p className="text-sm leading-relaxed whitespace-pre-line break-words">
-                        {message.content}
-                      </p>
-                    ) : (
-                      <BotMessage 
-                        content={message.content} 
-                        documentContext={message.documentContext}
-                        responseType={message.responseType}
-                      />
-                    )}
-                    <p className={`text-xs mt-3 flex items-center ${
-                      message.type === 'user' 
-                        ? 'text-purple-100' 
-                        : 'text-gray-500 dark:text-gray-400'
+                  {/* Message Content */}
+                  <div className="flex flex-col space-y-1 min-w-0 flex-1">
+                    <div className={`px-6 py-4 rounded-2xl shadow-sm border ${
+                      message.type === 'user'
+                        ? 'bg-blue-500 text-white rounded-br-md'
+                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700 rounded-bl-md'
                     }`}>
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      {message.isFile && (
-                        <Motion.span
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-full text-xs"
-                        >
-                          FILE
-                        </Motion.span>
+                      {message.type === 'user' ? (
+                        <p className="break-words">{message.content}</p>
+                      ) : (
+                        <BotMessage 
+                          content={message.content} 
+                          documentContext={message.documentContext}
+                          responseType={message.responseType}
+                        />
                       )}
-                    </p>
+                    </div>
+                    <div className={`flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400 ${
+                      message.type === 'user' ? 'justify-end' : 'justify-start'
+                    }`}>
+                      <span>{message.timestamp.toLocaleTimeString()}</span>
+                      {message.type === 'bot' && (
+                        <div className="flex items-center space-x-1">
+                          <Motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                            title="Copy message"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Motion.button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Motion.div>
             ))}
           </AnimatePresence>
-          
-          {/* Typing Indicator */}
-          <AnimatePresence>
-            {isTyping && (
-              <Motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="flex justify-start"
-              >
-                <div className="flex items-start space-x-3">
-                  <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl shadow-lg">
-                    <Bot className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="bg-white dark:bg-gray-700 px-6 py-4 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-600">
-                    <div className="flex space-x-2 items-center">
-                      <div className="flex space-x-1">
-                        <Motion.div 
-                          className="w-2 h-2 bg-green-500 rounded-full"
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                        />
-                        <Motion.div 
-                          className="w-2 h-2 bg-green-500 rounded-full"
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                        />
-                        <Motion.div 
-                          className="w-2 h-2 bg-green-500 rounded-full"
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">AI is thinking...</span>
+
+          {/* Typing indicator */}
+          {isTyping && (
+            <Motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex justify-start mb-4"
+            >
+              <div className="flex items-start space-x-3 max-w-[85%]">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center">
+                  <Bot className="h-5 w-5 text-white" />
+                </div>
+                <div className="bg-white dark:bg-gray-800 px-6 py-4 rounded-2xl rounded-bl-md shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <Motion.div 
+                        className="w-2 h-2 bg-emerald-500 rounded-full"
+                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+                      />
+                      <Motion.div 
+                        className="w-2 h-2 bg-emerald-500 rounded-full"
+                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+                      />
+                      <Motion.div 
+                        className="w-2 h-2 bg-emerald-500 rounded-full"
+                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
+                      />
                     </div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">AI is thinking...</span>
                   </div>
                 </div>
-              </Motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </Motion.div>
+          )}
           <div ref={messagesEndRef} />
+          </div>
         </div>
 
         {/* Input Area */}
         <Motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6 min-h-fit"
+          className="flex-shrink-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4"
         >
-          <div className="flex items-end space-x-4">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.jpg,.png"
-              className="hidden"
-            />
-            
-            <Motion.button
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => fileInputRef.current?.click()}
-              className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
-            >
-              <Paperclip className="h-5 w-5" />
-            </Motion.button>
-            
-            <div className="flex-1 relative">
-              <textarea
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask me anything about your documents, compliance, or risk analysis..."
-                className="w-full px-6 py-4 pr-16 rounded-3xl border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none transition-all"
-                rows="1"
-                style={{ minHeight: '60px', maxHeight: '120px' }}
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-end space-x-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.jpg,.png"
+                className="hidden"
               />
+              
+              {/* Attachment Button */}
               <Motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim()}
-                className="absolute right-3 bottom-3 p-3 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-2xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-xl transition-colors flex-shrink-0"
+                title="Attach file"
               >
-                <Send className="h-5 w-5" />
+                <Paperclip className="h-5 w-5" />
+              </Motion.button>
+              
+              {/* Image Button */}
+              <Motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-xl transition-colors flex-shrink-0"
+                title="Add image"
+              >
+                <Image className="h-5 w-5" />
+              </Motion.button>
+              
+              {/* Input Field */}
+              <div className="flex-1 relative">
+                <textarea
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={selectedDocument ? "Ask anything about your document..." : "Type your message or click the mic to record..."}
+                  className="w-full px-4 py-3 pr-12 rounded-2xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all min-h-[48px] max-h-[120px]"
+                  rows="1"
+                />
+                
+                {/* Send Button */}
+                <Motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleSendMessage}
+                  disabled={!inputMessage.trim() || isTyping}
+                  className={`absolute right-2 bottom-2 p-2 rounded-xl transition-all flex-shrink-0 ${
+                    inputMessage.trim() && !isTyping
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  <Send className="h-4 w-4" />
+                </Motion.button>
+              </div>
+              
+              {/* Voice Button */}
+              <Motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isProcessingAudio}
+                className={`p-3 rounded-xl transition-all flex-shrink-0 ${
+                  isRecording 
+                    ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                    : isProcessingAudio
+                    ? 'bg-yellow-500 text-white cursor-not-allowed'
+                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300'
+                }`}
+                title={isRecording ? 'Stop recording' : isProcessingAudio ? 'Processing audio...' : 'Voice input'}
+              >
+                {isProcessingAudio ? (
+                  <Motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                  </Motion.div>
+                ) : isRecording ? (
+                  <MicOff className="h-5 w-5" />
+                ) : (
+                  <Mic className="h-5 w-5" />
+                )}
               </Motion.button>
             </div>
+
+            {/* Recording Status */}
+            {isRecording && (
+              <Motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="mt-3 flex items-center justify-center space-x-2 text-red-600 dark:text-red-400"
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium">Recording: {formatRecordingTime(recordingDuration)}</span>
+                  <button
+                    onClick={stopRecording}
+                    className="ml-4 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-full transition-colors"
+                  >
+                    Stop
+                  </button>
+                </div>
+              </Motion.div>
+            )}
+
+            {/* Processing Status */}
+            {isProcessingAudio && (
+              <Motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="mt-3 flex items-center justify-center space-x-2 text-yellow-600 dark:text-yellow-400"
+              >
+                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">Converting speech to text...</span>
+              </Motion.div>
+            )}
           </div>
         </Motion.div>
       </div>
-
-      {/* Context Panel */}
-      <AnimatePresence>
-        {isContextPanelOpen && (
-          <Motion.div
-            initial={{ x: 320, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 320, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex-shrink-0"
-          >
-            <div className="p-6 h-full overflow-y-auto">
-              {/* Current Session */}
-              <div className="mb-8">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-                  <Zap className="h-5 w-5 text-green-500 mr-2" />
-                  Current Session
-                </h3>
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 border border-green-200 dark:border-green-700">
-                  {selectedDocument ? (
-                    <>
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl">
-                          <FileText className="h-4 w-4 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                            {selectedDocument.fileName || selectedDocument.public_id?.split('/').pop() || 'Unknown file'}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {formatFileSize(selectedDocument.fileSize)} • {getAnalysisStatusText()}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {analysisStatus === 'analyzing' && (
-                        <div className="space-y-3">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-gray-600 dark:text-gray-400">Status</span>
-                            <span className="text-blue-600 dark:text-blue-400 font-medium">Processing...</span>
-                          </div>
-                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <Motion.div 
-                              className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
-                              initial={{ width: 0 }}
-                              animate={{ width: '100%' }}
-                              transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                      
-                      {analysisStatus === 'complete' && (
-                        <div className="mt-3 p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                          <p className="text-xs text-green-700 dark:text-green-300 font-medium flex items-center">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Analysis completed successfully
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-6">
-                      <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-xl inline-block mb-3">
-                        <FileText className="h-6 w-6 text-gray-400" />
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">No Document Selected</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        Select a document above to start analysis
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="mb-8">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-                  <Sparkles className="h-5 w-5 text-purple-500 mr-2" />
-                  Quick Actions
-                </h3>
-                <div className="space-y-3">
-                  {quickActions.map((action, index) => (
-                    <Motion.button
-                      key={index}
-                      whileHover={{ scale: 1.02, x: 5 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleQuickAction(action.name)}
-                      className={`w-full text-left p-4 rounded-2xl text-white bg-gradient-to-r ${action.color} shadow-lg hover:shadow-xl transition-all`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <action.icon className="h-5 w-5" />
-                          <div>
-                            <p className="font-medium text-sm">{action.name}</p>
-                            <p className="text-xs opacity-90">{action.description}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </Motion.button>
-                  ))}
-                </div>
-              </div>
-
-              {/* AI Capabilities */}
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">AI Capabilities</h3>
-                <div className="space-y-3">
-                  {[
-                    { name: 'Document Analysis', progress: 98 },
-                    { name: 'Risk Assessment', progress: 95 },
-                    { name: 'Compliance Check', progress: 92 },
-                    { name: 'Data Extraction', progress: 89 }
-                  ].map((capability, index) => (
-                    <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                      <div className="flex justify-between text-xs mb-2">
-                        <span className="text-gray-700 dark:text-gray-300 font-medium">{capability.name}</span>
-                        <span className="text-gray-500 dark:text-gray-400">{capability.progress}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                        <Motion.div 
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${capability.progress}%` }}
-                          transition={{ duration: 1.5, delay: index * 0.2 }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

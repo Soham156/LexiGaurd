@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -6,8 +6,6 @@ import {
   FileText,
   Users,
   Settings,
-  ChevronLeft,
-  ChevronRight,
   MessageSquare,
   Shield,
   Bell,
@@ -16,115 +14,87 @@ import {
 } from 'lucide-react';
 
 const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
 
   const navItems = [
-    { icon: Home, label: 'Dashboard', path: '/dashboard' },
-    { icon: FileText, label: 'Documents', path: '/dashboard/documents' },
-    { icon: Globe, label: 'Summary', path: '/dashboard/summary' },
-    { icon: BarChart3, label: 'Market Benchmark', path: '/dashboard/benchmark' },
-    { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
-    { icon: Users, label: 'Team', path: '/dashboard/team' },
-    { icon: Bell, label: 'Notifications', path: '/dashboard/notifications' },
-    { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
+    { icon: Home, label: 'Dashboard', path: '/dashboard', color: 'from-blue-500 to-indigo-600' },
+    { icon: FileText, label: 'Documents', path: '/dashboard/documents', color: 'from-emerald-500 to-teal-600' },
+    { icon: Globe, label: 'Summary', path: '/dashboard/summary', color: 'from-purple-500 to-pink-600' },
+    { icon: BarChart3, label: 'Benchmark', path: '/dashboard/benchmark', color: 'from-orange-500 to-red-600' },
+    { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat', color: 'from-green-500 to-emerald-600' },
+    { icon: Users, label: 'Team', path: '/dashboard/team', color: 'from-cyan-500 to-blue-600' },
+    { icon: Bell, label: 'Notifications', path: '/dashboard/notifications', color: 'from-yellow-500 to-orange-600' },
+    { icon: Settings, label: 'Settings', path: '/dashboard/settings', color: 'from-indigo-500 to-purple-600' },
   ];
 
   const sidebarVariants = {
-    expanded: { width: '240px' },
+    expanded: { width: '280px' },
     collapsed: { width: '80px' },
   };
 
-  const NavItem = ({ icon: Icon, label, path }) => {
+  const NavItem = ({ icon: Icon, label, path, color }) => {
     const isActive = location.pathname === path;
-    
-    // Define color schemes for each nav item
-    const getItemColors = (path) => {
-      switch (path) {
-        case '/dashboard':
-          return isActive ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/50 dark:hover:to-pink-900/50 hover:text-purple-700 dark:hover:text-purple-300';
-        case '/dashboard/documents':
-          return isActive ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-blue-100 hover:to-cyan-100 dark:hover:from-blue-900/50 dark:hover:to-cyan-900/50 hover:text-blue-700 dark:hover:text-blue-300';
-        case '/dashboard/summary':
-          return isActive ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/50 dark:hover:to-pink-900/50 hover:text-purple-700 dark:hover:text-purple-300';
-        case '/dashboard/benchmark':
-          return isActive ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-900/50 dark:hover:to-teal-900/50 hover:text-emerald-700 dark:hover:text-emerald-300';
-        case '/dashboard/chat':
-          return isActive ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/50 dark:hover:to-emerald-900/50 hover:text-green-700 dark:hover:text-green-300';
-        case '/dashboard/team':
-          return isActive ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-orange-100 hover:to-red-100 dark:hover:from-orange-900/50 dark:hover:to-red-900/50 hover:text-orange-700 dark:hover:text-orange-300';
-        case '/dashboard/notifications':
-          return isActive ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-yellow-100 hover:to-amber-100 dark:hover:from-yellow-900/50 dark:hover:to-amber-900/50 hover:text-yellow-700 dark:hover:text-yellow-300';
-        case '/dashboard/settings':
-          return isActive ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/50 dark:hover:to-purple-900/50 hover:text-indigo-700 dark:hover:text-indigo-300';
-        default:
-          return isActive ? 'bg-sky-600 text-white' : 'text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-gray-800';
-      }
-    };
     
     return (
       <Link to={path}>
         <motion.div
-          className={`flex items-center px-4 py-3 my-2 rounded-xl transition-all duration-300 ${getItemColors(path)}`}
-          whileHover={{ scale: 1.02, x: 5 }}
-          whileTap={{ scale: 0.98 }}
+          className={`group relative flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 ${
+            isActive 
+              ? `bg-gradient-to-r ${color} text-white shadow-sm` 
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+          }`}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
         >
-          <Icon className="w-5 h-5" />
-          {!isCollapsed && (
+          <div className="flex items-center w-full">
+            <Icon className="w-5 h-5 flex-shrink-0" />
             <span className="ml-3 text-sm font-medium">{label}</span>
+          </div>
+          {isActive && (
+            <div className="absolute right-2 w-1.5 h-1.5 bg-white rounded-full"></div>
           )}
         </motion.div>
       </Link>
     );
   };
 
+
+
   return (
-    <motion.div
-      className="bg-white dark:bg-gray-800 border-r border-sky-100 dark:border-gray-700 py-6 shadow-lg relative transition-colors"
-      style={{ height: 'calc(100vh - 80px)' }}
-      initial="expanded"
-      animate={isCollapsed ? 'collapsed' : 'expanded'}
-      variants={sidebarVariants}
-      transition={{ duration: 0.3 }}
-    >
-      {/* Logo */}
-      <div className="px-4 mb-8">
-        <motion.div
-          className="flex items-center"
-          whileHover={{ scale: 1.05 }}
-        >
-          <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
-            <Shield className="h-6 w-6 text-white" />
+    <div className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 fixed left-0 top-0 h-screen z-50 flex flex-col">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <Shield className="w-4 h-4 text-white" />
           </div>
-          {!isCollapsed && (
-            <span className="ml-3 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-pink-400">
-              LexiGuard
-            </span>
-          )}
-        </motion.div>
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">LexiGuard</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Document Analysis</p>
+          </div>
+        </div>
       </div>
 
       {/* Navigation Items */}
-      <nav className="px-2">
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           <NavItem key={item.path} {...item} />
         ))}
       </nav>
 
-      {/* Collapse Button */}
-      <motion.button
-        className="absolute -right-3 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full bg-white dark:bg-gray-800 border border-sky-100 dark:border-gray-600 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-gray-700 transition-colors"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        {isCollapsed ? (
-          <ChevronRight className="w-4 h-4" />
-        ) : (
-          <ChevronLeft className="w-4 h-4" />
-        )}
-      </motion.button>
-    </motion.div>
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+          <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm font-medium">U</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">User</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Free Plan</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
