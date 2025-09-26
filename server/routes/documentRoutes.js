@@ -1,363 +1,653 @@
 const express = require("express");
 const multer = require("multer");
-const router = express.Router();
 const cloudinary = require("../config/cloudinary");
-
-// Import fetch for Node.js
-const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args));
-
 const {
-  analyzeDocumentFromBase64,
   analyzeDocumentFromBuffer,
   analyzeDocumentFromCloudinaryUrl,
 } = require("../services/documentAnalysisService");
 
+const router = express.Router();
+
 // Configure multer for memory storage
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    // Accept only certain file types
-    const allowedTypes = [
-      "application/pdf",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/msword",
-      "text/plain",
-    ];
+const upload = multer({ storage: multer.memoryStorage() });
 
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(
-        new Error(
-          "Invalid file type. Only PDF, Word documents, and text files are allowed."
-        )
-      );
-    }
-  },
-});
+// POST /upload-only - Simple document upload WITH text extraction (fixed for cached clients)
+router.post("/upload-only", upload.single("file"), async (req, res) => {
+  const requestStart = Date.now();
+  const requestId = Math.random().toString(36).substr(2, 9);
 
-// Upload and analyze document
-router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
+  console.group(
+    `📤 [${requestId}] FIXED Upload-Only (with text extraction) Started`
+  );
+  console.log(
+    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
+  );
+  console.log(
+    `🔧 [${requestId}] NOTE: This now extracts text even for 'upload-only' to fix cached clients`
+  );
+
   try {
-    const {
-      selectedRole,
-      userId,
-      userEmail,
-      jurisdiction = "India",
-    } = req.body;
-    const file = req.file;
+    const { file } = req;
+    const { userRole = "user", jurisdiction = "India" } = req.body;
+
+    console.log(
+      `⏰ [${requestId}] Step 1: Validating request - ${
+        Date.now() - requestStart
+      }ms`
+    );
 
     if (!file) {
+      console.error(`❌ [${requestId}] No file provided`);
+      console.groupEnd();
       return res.status(400).json({
         success: false,
         error: "No file provided",
       });
     }
 
-    if (!selectedRole || !userId) {
-      return res.status(400).json({
-        success: false,
-        error: "Missing required fields: selectedRole, userId",
-      });
-    }
-
-    console.log(
-      `Processing file upload: ${file.originalname} (${file.mimetype})`
-    );
-
-    // Upload to Cloudinary
-    const cloudinaryResult = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: "auto",
-          folder: "lexiguard-documents",
-          public_id: `${userId}_${Date.now()}_${file.originalname.replace(
-            /[^a-zA-Z0-9]/g,
-            "_"
-          )}`,
-        },
-        (error, result) => {
-          if (error) {
-            console.error("Cloudinary upload error:", error);
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-      uploadStream.end(file.buffer);
+    console.log(`📄 [${requestId}] File details:`, {
+      filename: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      userRole,
+      jurisdiction,
     });
 
-    console.log("File uploaded to Cloudinary:", cloudinaryResult.secure_url);
+    // Step 2: Upload to Cloudinary
+    console.log(
+      `⏰ [${requestId}] Step 2: Starting Cloudinary upload - ${
+        Date.now() - requestStart
+      }ms`
+    );
+    const cloudinaryStart = Date.now();
 
-    // Extract text and analyze
-    const analysisResult = await analyzeDocumentFromBuffer(
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "auto",
+          folder: "legal-documents",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(file.buffer);
+    });
+
+    const cloudinaryTime = Date.now() - cloudinaryStart;
+    console.log(
+      `✅ [${requestId}] Cloudinary upload completed in ${cloudinaryTime}ms`
+    );
+    console.log(`☁️ [${requestId}] Cloudinary result:`, {
+      url: result.secure_url,
+      publicId: result.public_id,
+      format: result.format,
+    });
+
+    // Step 3: NEW - Extract text and analyze (this is the fix!)
+    console.log(
+      `⏰ [${requestId}] Step 3: Starting text extraction and analysis - ${
+        Date.now() - requestStart
+      }ms`
+    );
+    const analysisStart = Date.now();
+
+    console.log(`🔍 [${requestId}] Calling analyzeDocumentFromBuffer with:`, {
+      bufferSize: file.buffer.length,
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+      userRole,
+      jurisdiction,
+    });
+
+    const analysis = await analyzeDocumentFromBuffer(
       file.buffer,
       file.originalname,
       file.mimetype,
-      selectedRole,
+      userRole,
       jurisdiction
     );
 
-    if (!analysisResult.success) {
-      // Clean up Cloudinary file if analysis fails
-      try {
-        await cloudinary.uploader.destroy(cloudinaryResult.public_id);
-      } catch (cleanupError) {
-        console.warn("Failed to cleanup Cloudinary file:", cleanupError);
-      }
+    const analysisTime = Date.now() - analysisStart;
+    console.log(`✅ [${requestId}] Analysis completed in ${analysisTime}ms`);
+    console.log(`� [${requestId}] Analysis success:`, analysis.success);
+    console.log(
+      `🔍 [${requestId}] Has extractedText:`,
+      !!analysis.extractedText
+    );
+    console.log(
+      `🔍 [${requestId}] ExtractedText length:`,
+      analysis.extractedText?.length || 0
+    );
 
-      return res.status(500).json({
-        success: false,
-        error: analysisResult.error || "Analysis failed",
-      });
-    }
+    const totalTime = Date.now() - requestStart;
+    console.log(
+      `🎉 [${requestId}] FIXED Upload completed successfully in ${totalTime}ms`
+    );
+    console.log(`📊 [${requestId}] Timing summary:`, {
+      validation: `${cloudinaryStart - requestStart}ms`,
+      cloudinaryUpload: `${cloudinaryTime}ms`,
+      textExtraction: `${analysisTime}ms`,
+      totalTime: `${totalTime}ms`,
+    });
+    console.groupEnd();
 
-    // Return successful response
+    // Return both upload and analysis data
     res.json({
       success: true,
-      analysis: analysisResult.analysis,
-      fairnessBenchmark: analysisResult.fairnessBenchmark,
-      fileUrl: cloudinaryResult.secure_url,
-      publicId: cloudinaryResult.public_id,
-      fileName: file.originalname,
-      fileSize: file.size,
-      mimeType: file.mimetype,
-      uploadedAt: new Date().toISOString(),
+      data: {
+        fileName: file.originalname,
+        fileUrl: result.secure_url,
+        publicId: result.public_id,
+        // Include analysis data if successful
+        analysis: analysis.success ? analysis.analysis : null,
+        fairnessBenchmark: analysis.success ? analysis.fairnessBenchmark : null,
+        extractedText: analysis.success ? analysis.extractedText : null,
+        metadata: {
+          processingMethod: "upload-only-with-analysis-fix",
+          cloudinaryUploadTime: cloudinaryTime,
+          textExtractionTime: analysisTime,
+          totalRequestTime: totalTime,
+          analysisSuccess: analysis.success,
+          ...(analysis.success ? analysis.metadata : {}),
+        },
+      },
     });
   } catch (error) {
-    console.error("Error in /upload-and-analyze route:", error);
+    const totalTime = Date.now() - requestStart;
+    console.error(
+      `❌ [${requestId}] FIXED Upload failed after ${totalTime}ms:`,
+      error.message
+    );
+    console.groupEnd();
+
     res.status(500).json({
       success: false,
-      error: error.message || "Upload and analysis failed",
+      error: error.message || "Document upload failed",
+      details: {
+        totalTime: totalTime,
+      },
     });
   }
 });
 
-// Re-analyze document from Cloudinary URL
+// POST /upload-and-analyze
+router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
+  const requestStart = Date.now();
+  const requestId = Math.random().toString(36).substr(2, 9);
+
+  console.log(
+    `🔥 [${requestId}] UPLOAD-AND-ANALYZE ENDPOINT HIT!!! This should always appear`
+  );
+  console.group(`📤 [${requestId}] Document Upload Request Started`);
+  console.log(
+    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
+  );
+
+  try {
+    const { file } = req;
+    const { userRole = "Tenant", jurisdiction = "India" } = req.body;
+
+    console.log(
+      `⏰ [${requestId}] Step 1: Validating request - ${
+        Date.now() - requestStart
+      }ms`
+    );
+
+    if (!file) {
+      console.error(`❌ [${requestId}] No file provided`);
+      console.groupEnd();
+      return res.status(400).json({
+        success: false,
+        error: "No file provided",
+      });
+    }
+
+    console.log(`📄 [${requestId}] File details:`, {
+      filename: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    });
+
+    // Step 2: Upload to Cloudinary
+    console.log(
+      `⏰ [${requestId}] Step 2: Starting Cloudinary upload - ${
+        Date.now() - requestStart
+      }ms`
+    );
+    const cloudinaryStart = Date.now();
+
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "auto",
+          folder: "legal-documents",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(file.buffer);
+    });
+
+    const cloudinaryTime = Date.now() - cloudinaryStart;
+    console.log(
+      `✅ [${requestId}] Cloudinary upload completed in ${cloudinaryTime}ms`
+    );
+    console.log(`☁️ [${requestId}] Cloudinary result:`, {
+      url: result.secure_url,
+      publicId: result.public_id,
+      format: result.format,
+    });
+
+    // Step 3: Analyze document
+    console.log(
+      `⏰ [${requestId}] Step 3: Starting document analysis - ${
+        Date.now() - requestStart
+      }ms`
+    );
+    const analysisStart = Date.now();
+
+    console.log(`🔍 [${requestId}] Calling analyzeDocumentFromBuffer with:`, {
+      bufferSize: file.buffer.length,
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+      userRole,
+      jurisdiction,
+    });
+
+    const analysis = await analyzeDocumentFromBuffer(
+      file.buffer,
+      file.originalname,
+      file.mimetype,
+      userRole,
+      jurisdiction
+    );
+
+    const analysisTime = Date.now() - analysisStart;
+    console.log(
+      `✅ [${requestId}] Document analysis completed in ${analysisTime}ms`
+    );
+    console.log(`🔍 [${requestId}] Analysis success:`, analysis.success);
+    console.log(
+      `🔍 [${requestId}] Analysis result keys:`,
+      Object.keys(analysis)
+    );
+    console.log(
+      `🔍 [${requestId}] Has extractedText:`,
+      !!analysis.extractedText
+    );
+    console.log(
+      `🔍 [${requestId}] ExtractedText length:`,
+      analysis.extractedText?.length || 0
+    );
+
+    if (!analysis.success) {
+      console.error(`❌ [${requestId}] Analysis failed:`, analysis.error);
+      console.error(`❌ [${requestId}] Analysis object:`, analysis);
+      console.groupEnd();
+      return res.status(500).json({
+        success: false,
+        error: analysis.error,
+        details: {
+          fileName: file.originalname,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          cloudinaryUrl: result.secure_url,
+          analysisTime: analysisTime,
+        },
+      });
+    }
+
+    const totalTime = Date.now() - requestStart;
+    console.log(
+      `🎉 [${requestId}] Request completed successfully in ${totalTime}ms`
+    );
+    console.log(`📊 [${requestId}] Request timing summary:`, {
+      validation: `${cloudinaryStart - requestStart}ms`,
+      cloudinaryUpload: `${cloudinaryTime}ms`,
+      documentAnalysis: `${analysisTime}ms`,
+      totalTime: `${totalTime}ms`,
+    });
+    console.groupEnd();
+
+    res.json({
+      success: true,
+      data: {
+        fileName: file.originalname,
+        fileUrl: result.secure_url,
+        publicId: result.public_id,
+        analysis: analysis.analysis,
+        fairnessBenchmark: analysis.fairnessBenchmark,
+        extractedText: analysis.extractedText,
+        metadata: {
+          ...analysis.metadata,
+          cloudinaryUploadTime: cloudinaryTime,
+          totalRequestTime: totalTime,
+        },
+      },
+    });
+  } catch (error) {
+    const totalTime = Date.now() - requestStart;
+    console.error(
+      `❌ [${requestId}] Request failed after ${totalTime}ms:`,
+      error.message
+    );
+    console.groupEnd();
+
+    res.status(500).json({
+      success: false,
+      error: error.message || "Document upload and analysis failed",
+    });
+  }
+});
+
+// POST /reanalyze - Reanalyze document from Cloudinary URL
 router.post("/reanalyze", async (req, res) => {
+  const requestStart = Date.now();
+  const requestId = Math.random().toString(36).substr(2, 9);
+
+  console.group(`🔄 [${requestId}] Document Reanalysis Request Started`);
+  console.log(
+    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
+  );
+
   try {
     const {
-      documentId,
       cloudinaryUrl,
       fileName,
-      selectedRole,
-      userId,
+      userRole = "Tenant",
       jurisdiction = "India",
     } = req.body;
 
-    if (!cloudinaryUrl || !fileName || !selectedRole || !userId) {
+    console.log(
+      `⏰ [${requestId}] Step 1: Validating reanalysis request - ${
+        Date.now() - requestStart
+      }ms`
+    );
+
+    if (!cloudinaryUrl || !fileName) {
+      console.error(`❌ [${requestId}] Missing cloudinaryUrl or fileName`);
+      console.groupEnd();
       return res.status(400).json({
         success: false,
-        error:
-          "Missing required fields: cloudinaryUrl, fileName, selectedRole, userId",
+        error: "Cloudinary URL and file name are required",
       });
     }
 
-    console.log(`Re-analyzing document: ${fileName} from ${cloudinaryUrl}`);
+    console.log(`🔗 [${requestId}] Reanalyzing:`, {
+      url: cloudinaryUrl,
+      fileName,
+      userRole,
+      jurisdiction,
+    });
 
     // Analyze document from Cloudinary URL
-    const analysisResult = await analyzeDocumentFromCloudinaryUrl(
+    console.log(
+      `⏰ [${requestId}] Step 2: Starting document analysis - ${
+        Date.now() - requestStart
+      }ms`
+    );
+    const analysisStart = Date.now();
+
+    const analysis = await analyzeDocumentFromCloudinaryUrl(
       cloudinaryUrl,
       fileName,
-      selectedRole,
+      userRole,
       jurisdiction
     );
 
-    if (!analysisResult.success) {
+    const analysisTime = Date.now() - analysisStart;
+    console.log(
+      `✅ [${requestId}] Document analysis completed in ${analysisTime}ms`
+    );
+    console.log(`🔍 [${requestId}] Analysis success:`, analysis.success);
+
+    if (!analysis.success) {
+      console.error(`❌ [${requestId}] Analysis failed:`, analysis.error);
+      console.groupEnd();
       return res.status(500).json({
         success: false,
-        error: analysisResult.error || "Re-analysis failed",
+        error: analysis.error,
       });
     }
+
+    const totalTime = Date.now() - requestStart;
+    console.log(
+      `🎉 [${requestId}] Reanalysis completed successfully in ${totalTime}ms`
+    );
+    console.log(`📊 [${requestId}] Reanalysis timing:`, {
+      documentAnalysis: `${analysisTime}ms`,
+      totalTime: `${totalTime}ms`,
+    });
+    console.groupEnd();
 
     res.json({
       success: true,
-      analysis: analysisResult.analysis,
-      fairnessBenchmark: analysisResult.fairnessBenchmark,
-      reanalyzedAt: new Date().toISOString(),
+      data: {
+        fileName,
+        analysis: analysis.analysis,
+        fairnessBenchmark: analysis.fairnessBenchmark,
+        extractedText: analysis.extractedText,
+        metadata: {
+          ...analysis.metadata,
+          totalRequestTime: totalTime,
+        },
+      },
     });
   } catch (error) {
-    console.error("Error in /reanalyze route:", error);
+    const totalTime = Date.now() - requestStart;
+    console.error(
+      `❌ [${requestId}] Reanalysis failed after ${totalTime}ms:`,
+      error.message
+    );
+    console.groupEnd();
+
     res.status(500).json({
       success: false,
-      error: error.message || "Re-analysis failed",
+      error: error.message || "Document reanalysis failed",
     });
   }
 });
 
-// Delete document from Cloudinary
-router.delete("/delete", async (req, res) => {
-  try {
-    const { documentId, publicId, userId } = req.body;
+// POST /analyze-base64 - Analyze document from base64 data
+router.post("/analyze-base64", async (req, res) => {
+  const requestStart = Date.now();
+  const requestId = Math.random().toString(36).substr(2, 9);
 
-    if (!publicId || !userId) {
+  console.group(`📄 [${requestId}] Base64 Document Analysis Request Started`);
+  console.log(
+    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
+  );
+
+  try {
+    const {
+      base64Data,
+      fileName,
+      mimeType,
+      userRole = "Tenant",
+      jurisdiction = "India",
+    } = req.body;
+
+    console.log(
+      `⏰ [${requestId}] Step 1: Validating base64 request - ${
+        Date.now() - requestStart
+      }ms`
+    );
+
+    if (!base64Data || !fileName) {
+      console.error(`❌ [${requestId}] Missing base64Data or fileName`);
+      console.groupEnd();
       return res.status(400).json({
         success: false,
-        error: "Missing required fields: publicId, userId",
+        error: "Base64 data and file name are required",
       });
     }
 
-    console.log(`Deleting document from Cloudinary: ${publicId}`);
-
-    // Delete from Cloudinary with proper resource type handling
-    let deletionResult;
-    let successfulResourceType = null;
-
-    // Try deleting as raw resource first (for documents like PDF, DOCX, TXT, etc.)
-    try {
-      deletionResult = await cloudinary.uploader.destroy(publicId, {
-        resource_type: "raw",
-      });
-
-      if (deletionResult.result === "ok") {
-        successfulResourceType = "raw";
-      }
-    } catch (rawError) {
-      console.warn("Failed to delete as raw resource:", rawError);
-    }
-
-    // If not found as raw, try as image (for JPG, PNG, etc.)
-    if (!successfulResourceType) {
-      try {
-        deletionResult = await cloudinary.uploader.destroy(publicId, {
-          resource_type: "image",
-        });
-
-        if (deletionResult.result === "ok") {
-          successfulResourceType = "image";
-        }
-      } catch (imageError) {
-        console.warn("Failed to delete as image resource:", imageError);
-      }
-    }
-
-    // If still not found, try as auto (default)
-    if (!successfulResourceType) {
-      try {
-        deletionResult = await cloudinary.uploader.destroy(publicId);
-
-        if (deletionResult.result === "ok") {
-          successfulResourceType = "auto";
-        }
-      } catch (autoError) {
-        console.warn("Failed to delete as auto resource:", autoError);
-      }
-    }
-
-    console.log("Cloudinary deletion result:", deletionResult);
-
-    if (successfulResourceType) {
-      console.log(`Successfully deleted as ${successfulResourceType} resource`);
-      res.json({
-        success: true,
-        message: `Document deleted from Cloudinary (${successfulResourceType} resource)`,
-        deletedAt: new Date().toISOString(),
-      });
-    } else {
-      console.warn("File not found in Cloudinary with any resource type");
-      // Still return success since the file doesn't exist anyway
-      res.json({
-        success: true,
-        message:
-          "Document not found in Cloudinary (may have been deleted already)",
-        details: deletionResult,
-      });
-    }
-  } catch (error) {
-    console.error("Error in /delete route:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message || "Deletion failed",
+    console.log(`📄 [${requestId}] Base64 analysis details:`, {
+      fileName,
+      mimeType,
+      userRole,
+      jurisdiction,
+      dataLength: base64Data.length,
     });
-  }
-});
 
-// Route to analyze a document from a Base64 string (keeping for compatibility)
-router.post("/analyze-base64", async (req, res) => {
-  const {
-    base64Content,
-    fileName,
-    mimeType,
-    userRole,
-    jurisdiction = "India",
-  } = req.body;
+    // Convert base64 to buffer
+    console.log(
+      `⏰ [${requestId}] Step 2: Converting base64 to buffer - ${
+        Date.now() - requestStart
+      }ms`
+    );
+    const conversionStart = Date.now();
 
-  if (!base64Content || !fileName || !mimeType) {
-    return res.status(400).json({
-      success: false,
-      error: "Missing required fields: base64Content, fileName, mimeType",
-    });
-  }
+    const fileBuffer = Buffer.from(base64Data, "base64");
 
-  try {
-    const result = await analyzeDocumentFromBase64(
-      base64Content,
+    const conversionTime = Date.now() - conversionStart;
+    console.log(
+      `✅ [${requestId}] Base64 conversion completed in ${conversionTime}ms`
+    );
+    console.log(`📦 [${requestId}] Buffer size: ${fileBuffer.length} bytes`);
+
+    // Analyze document from buffer
+    console.log(
+      `⏰ [${requestId}] Step 3: Starting document analysis - ${
+        Date.now() - requestStart
+      }ms`
+    );
+    const analysisStart = Date.now();
+
+    const analysis = await analyzeDocumentFromBuffer(
+      fileBuffer,
       fileName,
       mimeType,
       userRole,
       jurisdiction
     );
-    res.json(result);
+
+    const analysisTime = Date.now() - analysisStart;
+    console.log(
+      `✅ [${requestId}] Document analysis completed in ${analysisTime}ms`
+    );
+    console.log(`🔍 [${requestId}] Analysis success:`, analysis.success);
+
+    if (!analysis.success) {
+      console.error(`❌ [${requestId}] Analysis failed:`, analysis.error);
+      console.groupEnd();
+      return res.status(500).json({
+        success: false,
+        error: analysis.error,
+      });
+    }
+
+    const totalTime = Date.now() - requestStart;
+    console.log(
+      `🎉 [${requestId}] Base64 analysis completed successfully in ${totalTime}ms`
+    );
+    console.log(`📊 [${requestId}] Base64 analysis timing:`, {
+      base64Conversion: `${conversionTime}ms`,
+      documentAnalysis: `${analysisTime}ms`,
+      totalTime: `${totalTime}ms`,
+    });
+    console.groupEnd();
+
+    res.json({
+      success: true,
+      data: {
+        fileName,
+        analysis: analysis.analysis,
+        fairnessBenchmark: analysis.fairnessBenchmark,
+        extractedText: analysis.extractedText,
+        metadata: {
+          ...analysis.metadata,
+          base64ConversionTime: conversionTime,
+          totalRequestTime: totalTime,
+        },
+      },
+    });
   } catch (error) {
-    console.error("Error in /analyze-base64 route:", error);
-    res.status(500).json({ success: false, error: error.message });
+    const totalTime = Date.now() - requestStart;
+    console.error(
+      `❌ [${requestId}] Base64 analysis failed after ${totalTime}ms:`,
+      error.message
+    );
+    console.groupEnd();
+
+    res.status(500).json({
+      success: false,
+      error: error.message || "Base64 document analysis failed",
+    });
   }
 });
 
-// Generate temporary signed URL for Cloudinary files
+// GET /signed-url - Generate signed URL for Cloudinary
 router.get("/signed-url", async (req, res) => {
-  try {
-    const { publicId, userId } = req.query;
+  const requestStart = Date.now();
+  const requestId = Math.random().toString(36).substr(2, 9);
 
-    if (!userId || !publicId) {
+  console.group(`🔐 [${requestId}] Signed URL Request Started`);
+  console.log(
+    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
+  );
+
+  try {
+    const { publicId } = req.query;
+
+    console.log(
+      `⏰ [${requestId}] Step 1: Validating signed URL request - ${
+        Date.now() - requestStart
+      }ms`
+    );
+
+    if (!publicId) {
+      console.error(`❌ [${requestId}] Missing publicId`);
+      console.groupEnd();
       return res.status(400).json({
         success: false,
-        error: "Missing required parameters: userId, publicId",
+        error: "Public ID is required",
       });
     }
 
-    console.log(`Generating signed URL for: ${publicId} for user: ${userId}`);
+    console.log(
+      `🔑 [${requestId}] Generating signed URL for publicId: ${publicId}`
+    );
 
-    // Try to generate a signed URL for the resource
-    try {
-      // First try as raw resource
-      let signedUrl = cloudinary.url(publicId, {
-        resource_type: "raw",
-        type: "upload",
-        sign_url: true,
-        secure: true,
-      });
+    // Generate signed URL
+    console.log(
+      `⏰ [${requestId}] Step 2: Generating Cloudinary signed URL - ${
+        Date.now() - requestStart
+      }ms`
+    );
+    const signedUrlStart = Date.now();
 
-      // If the above doesn't work, we'll try as image
-      if (!signedUrl) {
-        signedUrl = cloudinary.url(publicId, {
-          resource_type: "image",
-          type: "upload",
-          sign_url: true,
-          secure: true,
-        });
-      }
+    const signedUrl = cloudinary.url(publicId, {
+      sign_url: true,
+      resource_type: "auto",
+    });
 
-      res.json({
-        success: true,
-        url: signedUrl,
-        publicId: publicId,
-      });
-    } catch (cloudinaryError) {
-      console.error("Error generating signed URL:", cloudinaryError);
-      res.status(500).json({
-        success: false,
-        error: "Failed to generate signed URL",
-        details: cloudinaryError.message,
-      });
-    }
+    const signedUrlTime = Date.now() - signedUrlStart;
+    const totalTime = Date.now() - requestStart;
+
+    console.log(`✅ [${requestId}] Signed URL generated in ${signedUrlTime}ms`);
+    console.log(
+      `🎉 [${requestId}] Signed URL request completed in ${totalTime}ms`
+    );
+    console.groupEnd();
+
+    res.json({
+      success: true,
+      url: signedUrl,
+      publicId: publicId,
+    });
   } catch (error) {
-    console.error("Error in /signed-url route:", error);
+    const totalTime = Date.now() - requestStart;
+    console.error(
+      `❌ [${requestId}] Signed URL generation failed after ${totalTime}ms:`,
+      error.message
+    );
+    console.groupEnd();
+
     res.status(500).json({
       success: false,
       error: error.message || "Signed URL generation failed",

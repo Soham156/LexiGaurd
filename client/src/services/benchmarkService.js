@@ -19,6 +19,11 @@ export const analyzeFairnessById = async (
   }
 
   try {
+    console.log(`🔍 Starting fairness analysis for document ${documentId}`);
+    console.log(
+      `🌐 API URL: ${API_BASE_URL}/benchmark/analyze-document/${documentId}`
+    );
+
     // First, get the document details from Firebase
     const documentService = await import("./documentService.js");
     const docResult = await documentService.default.getById(documentId);
@@ -28,6 +33,11 @@ export const analyzeFairnessById = async (
     }
 
     const document = docResult.document;
+    console.log(`📄 Document details:`, {
+      fileName: document.fileName,
+      hasCloudinaryUrl: !!document.cloudinaryUrl,
+      selectedRole: document.selectedRole,
+    });
 
     // Check if document has a Cloudinary URL for text extraction
     if (!document.cloudinaryUrl) {
@@ -45,8 +55,23 @@ export const analyzeFairnessById = async (
         cloudinaryUrl: document.cloudinaryUrl,
         fileSize: document.fileSize,
         mimeType: document.fileType,
+        extractedText: document.extractedText, // CRITICAL: Include extracted text for fallback
       },
     };
+
+    console.log(`📤 Sending request to:`, url);
+    console.log(`📋 Request body:`, {
+      userId: requestBody.userId,
+      jurisdiction: requestBody.jurisdiction,
+      userRole: requestBody.userRole,
+      hasDocumentDetails: !!requestBody.documentDetails,
+      hasExtractedText: !!requestBody.documentDetails?.extractedText,
+      extractedTextLength:
+        requestBody.documentDetails?.extractedText?.length || 0,
+    });
+
+    console.log(`⏰ Starting fetch request at ${new Date().toISOString()}`);
+    const fetchStart = Date.now();
 
     const response = await fetch(url, {
       method: "POST",
@@ -56,21 +81,96 @@ export const analyzeFairnessById = async (
       body: JSON.stringify(requestBody),
     });
 
+    const fetchTime = Date.now() - fetchStart;
+    console.log(
+      `✅ Fetch completed in ${fetchTime}ms with status: ${response.status}`
+    );
+
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Analysis failed: ${response.status} - ${errorText}`);
+      // For 400 errors, try to parse JSON response first to get detailed error info
+      if (response.status === 400) {
+        try {
+          const errorResult = await response.json();
+          console.error(`❌ Server returned 400 with details:`, errorResult);
+
+          if (errorResult.needsReupload) {
+            console.log(`📋 Document needs re-upload:`, errorResult.error);
+            return {
+              success: false,
+              error: errorResult.error,
+              needsReupload: true,
+              documentId: errorResult.documentId,
+              hasFairnessAnalysis: false,
+              suggestion: errorResult.suggestion,
+              cloudinaryError: errorResult.cloudinaryError,
+            };
+          }
+
+          throw new Error(errorResult.error || "Analysis failed");
+        } catch (jsonParseError) {
+          // If JSON parsing fails, fall back to text response
+          console.error(
+            `❌ Failed to parse JSON error response:`,
+            jsonParseError.message
+          );
+          const errorText = await response.text();
+          console.error(`❌ Server error response:`, errorText);
+          throw new Error(`Analysis failed: ${response.status} - ${errorText}`);
+        }
+      } else {
+        const errorText = await response.text();
+        console.error(`❌ Server error response:`, errorText);
+        throw new Error(`Analysis failed: ${response.status} - ${errorText}`);
+      }
     }
 
+    console.log(`⏰ Parsing response...`);
     const result = await response.json();
+    console.log(`📊 Response received:`, {
+      success: result.success,
+      hasFairnessAnalysis: !!result.fairnessAnalysis,
+      documentId: result.documentId,
+      fullResult: result,
+    });
+    console.log(`📋 Full response data:`, result);
 
     if (result.success) {
-      return {
+      const returnData = {
         success: true,
         fairnessAnalysis: result.fairnessAnalysis,
         analyzedAt: result.analyzedAt,
+        documentId: result.documentId,
+        contractType: result.contractType,
+        analysisSource: result.analysisSource,
+        hasFairnessAnalysis: !!result.fairnessAnalysis,
+        analysisType: result.fairnessAnalysis?.analysisType,
       };
+
+      console.log(`✅ Returning analysis data:`, {
+        success: returnData.success,
+        hasFairnessAnalysis: returnData.hasFairnessAnalysis,
+        documentId: returnData.documentId,
+        analysisType: returnData.analysisType,
+      });
+
+      return returnData;
     } else {
-      throw new Error(result.error || "Fairness analysis failed");
+      // Handle server-side errors (like missing extracted text)
+      console.error(`❌ Server returned error:`, result);
+
+      if (result.needsReupload) {
+        console.log(`📋 Document needs re-upload:`, result.error);
+        return {
+          success: false,
+          error: result.error,
+          needsReupload: true,
+          documentId: result.documentId,
+          hasFairnessAnalysis: false,
+          suggestion: result.suggestion,
+        };
+      }
+
+      throw new Error(result.error || "Analysis failed");
     }
   } catch (error) {
     console.error("Fairness analysis error:", error);

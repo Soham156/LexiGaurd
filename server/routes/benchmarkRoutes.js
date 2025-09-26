@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const FairnessBenchmarkService = require("../services/fairnessBenchmarkService");
+const SimpleFairnessService = require("../services/simpleFairnessService");
 
-const fairnessBenchmarkService = new FairnessBenchmarkService();
+const simpleFairnessService = new SimpleFairnessService();
 
 // Analyze contract fairness
 router.post("/analyze-fairness", async (req, res) => {
@@ -22,10 +22,10 @@ router.post("/analyze-fairness", async (req, res) => {
     }
 
     console.log(
-      `Analyzing fairness for ${contractType} in ${jurisdiction} for ${userRole}`
+      `Quick fairness analysis for ${contractType} in ${jurisdiction} for ${userRole}`
     );
 
-    const fairnessAnalysis = await fairnessBenchmarkService.analyzeFairness(
+    const fairnessAnalysis = await simpleFairnessService.quickFairnessAnalysis(
       contractText,
       contractType,
       jurisdiction,
@@ -87,66 +87,166 @@ router.post("/analyze-document/:id", async (req, res) => {
       analyzeDocumentFromCloudinaryUrl,
     } = require("../services/documentAnalysisService");
 
+    // Contract type detection function
+    const determineContractType = (fileName, extractedText) => {
+      const fileNameLower = fileName.toLowerCase();
+      const textLower = extractedText.toLowerCase();
+
+      if (
+        fileNameLower.includes("rental") ||
+        fileNameLower.includes("lease") ||
+        textLower.includes("rental") ||
+        textLower.includes("lease")
+      ) {
+        return "rental agreement";
+      } else if (
+        fileNameLower.includes("sale") ||
+        fileNameLower.includes("purchase") ||
+        textLower.includes("sale") ||
+        textLower.includes("purchase")
+      ) {
+        return "sale agreement";
+      } else if (
+        fileNameLower.includes("employment") ||
+        textLower.includes("employment")
+      ) {
+        return "employment contract";
+      }
+      return "contract";
+    };
+
     try {
-      // Analyze document from Cloudinary URL to get extracted text and regular analysis
-      const analysisResult = await analyzeDocumentFromCloudinaryUrl(
-        documentDetails.cloudinaryUrl,
-        documentDetails.fileName,
-        userRole,
-        jurisdiction
+      let analysisResult = null;
+      let extractedText = null;
+
+      // Try Cloudinary analysis first
+      try {
+        console.log(`🔄 [${documentId}] Attempting Cloudinary analysis...`);
+        analysisResult = await analyzeDocumentFromCloudinaryUrl(
+          documentDetails.cloudinaryUrl,
+          documentDetails.fileName,
+          userRole,
+          jurisdiction
+        );
+
+        if (analysisResult.success) {
+          extractedText = analysisResult.extractedText;
+          console.log(`✅ [${documentId}] Cloudinary analysis successful`);
+        }
+      } catch (cloudinaryError) {
+        console.warn(
+          `⚠️ [${documentId}] Cloudinary analysis failed:`,
+          cloudinaryError.message
+        );
+        console.log(`🔄 [${documentId}] Will attempt fallback analysis...`);
+      }
+
+      // If Cloudinary failed and we have cached text, use that for fresh analysis
+      if (!analysisResult?.success && documentDetails.extractedText) {
+        console.log(
+          `📋 [${documentId}] Using cached extracted text for fresh analysis`
+        );
+        extractedText = documentDetails.extractedText;
+
+        // Create a minimal successful result for consistency
+        analysisResult = {
+          success: true,
+          extractedText: extractedText,
+          fileName: documentDetails.fileName,
+          analysis: { riskLevel: "unknown" }, // placeholder
+        };
+      }
+
+      // Debug what's available in documentDetails
+      if (!extractedText) {
+        console.log(
+          `📋 [${documentId}] No cached text found. Document details:`,
+          {
+            fileName: documentDetails?.fileName,
+            hasCloudinaryUrl: !!documentDetails?.cloudinaryUrl,
+            hasExtractedText: !!documentDetails?.extractedText,
+            availableFields: Object.keys(documentDetails || {}),
+          }
+        );
+
+        // Return a proper error response instead of throwing
+        return res.status(400).json({
+          success: false,
+          error:
+            "Document text not available. Please re-upload the document or contact support if Cloudinary access issues persist.",
+          documentId: documentId,
+          hasFairnessAnalysis: false,
+          needsReupload: true,
+          cloudinaryError: "Unauthorized",
+          suggestion:
+            "Try uploading the document again to generate fresh analysis",
+        });
+      }
+
+      console.log(
+        `📝 [${documentId}] Text length: ${extractedText.length} characters`
+      );
+      console.log(
+        `⚡ [${documentId}] Performing FRESH SimpleFairnessService analysis...`
       );
 
-      if (!analysisResult.success) {
-        throw new Error(
-          analysisResult.error || "Failed to extract and analyze document"
-        );
-      }
-
-      // Get the fairness analysis from the result (it's already included in analyzeDocumentFromCloudinaryUrl)
-      let fairnessAnalysis = analysisResult.fairnessBenchmark;
-
-      // If fairness analysis wasn't generated, create one using the extracted text
-      if (!fairnessAnalysis && analysisResult.extractedText) {
-        try {
-          fairnessAnalysis = await fairnessBenchmarkService.analyzeFairness(
-            analysisResult.extractedText,
-            analysisResult.contractType || "contract",
-            jurisdiction,
-            userRole
-          );
-        } catch (fairnessError) {
-          console.warn("Fairness analysis failed:", fairnessError.message);
-          // Fall back to mock data if real analysis fails
-          fairnessAnalysis = generateMockFairnessAnalysis(
-            jurisdiction,
-            userRole,
-            documentDetails.fileName
-          );
-        }
-      }
-
-      // If still no fairness analysis, generate mock data
-      if (!fairnessAnalysis) {
-        fairnessAnalysis = generateMockFairnessAnalysis(
+      // ALWAYS perform fresh fairness analysis regardless of source
+      const fairnessAnalysis =
+        await simpleFairnessService.quickFairnessAnalysis(
+          extractedText,
+          determineContractType(documentDetails.fileName, extractedText) ||
+            "contract",
           jurisdiction,
-          userRole,
-          documentDetails.fileName
+          userRole
         );
+
+      if (!fairnessAnalysis) {
+        throw new Error("SimpleFairnessService returned no analysis");
       }
 
-      res.json({
+      console.log(`✅ [${documentId}] Fresh fairness analysis completed:`, {
+        score: fairnessAnalysis.overallFairnessScore,
+        riskLevel: fairnessAnalysis.riskLevel,
+        analysisType: fairnessAnalysis.analysisType,
+        marketComparisons: fairnessAnalysis.marketComparisons?.length || 0,
+      });
+
+      console.log(
+        `✅ Document analysis completed successfully for ${documentId}`
+      );
+      console.log(`📊 Fairness analysis result:`, {
+        hasAnalysis: !!fairnessAnalysis,
+        overallScore: fairnessAnalysis?.overallFairnessScore,
+        riskLevel: fairnessAnalysis?.riskLevel,
+        analysisType: fairnessAnalysis?.analysisType,
+        marketComparisons: fairnessAnalysis?.marketComparisons?.length || 0,
+        isFreshAnalysis: true,
+      });
+
+      const responseData = {
         success: true,
         fairnessAnalysis,
         documentId,
-        contractType: analysisResult.contractType || "contract",
+        contractType:
+          analysisResult?.contractType ||
+          determineContractType(documentDetails.fileName, extractedText),
         jurisdiction,
         userRole,
         analyzedAt: new Date().toISOString(),
-        extractedTextLength: analysisResult.extractedText
-          ? analysisResult.extractedText.length
-          : 0,
-        realAnalysis: !!analysisResult.extractedText,
+        extractedTextLength: extractedText.length,
+        realAnalysis: true,
+        analysisSource: analysisResult?.success ? "cloudinary" : "cached",
+        hasFairnessAnalysis: true,
+      };
+
+      console.log(`📤 Sending response for ${documentId}:`, {
+        success: responseData.success,
+        hasFramingAnalysis: !!responseData.fairnessAnalysis,
+        documentId: responseData.documentId,
+        contractType: responseData.contractType,
       });
+
+      res.json(responseData);
     } catch (analysisError) {
       console.error("Document analysis error:", analysisError);
 

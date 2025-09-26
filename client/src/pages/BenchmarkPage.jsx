@@ -193,6 +193,16 @@ const FairnessResultCard = ({ analysis }) => {
     return 'text-red-600 dark:text-red-400';
   };
 
+  // Handle both riskLevel (SimpleFairnessService) and marketPosition (full service)
+  const getRiskLevelColor = (riskLevel) => {
+    switch (riskLevel?.toLowerCase()) {
+      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+    }
+  };
+
   const getPositionColor = (position) => {
     switch (position) {
       case 'above_average': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
@@ -203,63 +213,209 @@ const FairnessResultCard = ({ analysis }) => {
     }
   };
 
+  // Support both data formats
+  const displayText = analysis.marketPosition ? 
+    analysis.marketPosition.replace('_', ' ').toUpperCase() : 
+    (analysis.riskLevel || 'UNKNOWN').toUpperCase();
+  
+  const positionColorClass = analysis.marketPosition ? 
+    getPositionColor(analysis.marketPosition) : 
+    getRiskLevelColor(analysis.riskLevel);
+
+  const assessmentText = analysis.overallAssessment || analysis.summary || 'Analysis completed successfully.';
+  const findings = analysis.keyFindings || analysis.keyIssues || [];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700"
+      className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 p-8 rounded-2xl shadow-2xl border-0 overflow-hidden relative"
     >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Fairness Analysis Results
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-100/30 to-transparent dark:from-blue-900/20 rounded-full -mr-16 -mt-16"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-100/30 to-transparent dark:from-purple-900/20 rounded-full -ml-12 -mb-12"></div>
+      
+      {/* Header with medium score display */}
+      <div className="text-center mb-6">
+        <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mb-3">
+          ⚖️ Fairness Analysis Results
         </h3>
-        <div className="flex items-center gap-2">
-          <span className={`text-2xl font-bold ${getScoreColor(analysis.overallFairnessScore)}`}>
-            {analysis.overallFairnessScore}/100
-          </span>
-          <span className={`px-2 py-1 text-xs rounded-full ${getPositionColor(analysis.marketPosition)}`}>
-            {analysis.marketPosition?.replace('_', ' ').toUpperCase()}
-          </span>
+        
+        {/* Medium Score Card */}
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="relative">
+            <div className={`text-3xl font-bold ${getScoreColor(analysis.overallFairnessScore)} drop-shadow-lg`}>
+              {analysis.overallFairnessScore}
+            </div>
+            <div className="text-sm font-medium text-gray-500 dark:text-gray-400 text-center">
+              out of 100
+            </div>
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <span className={`px-4 py-2 text-sm font-bold rounded-xl shadow-md ${positionColorClass} border border-white/50`}>
+              {displayText} RISK
+            </span>
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Overall Assessment
+            </div>
+          </div>
         </div>
       </div>
 
-      <p className="text-gray-700 dark:text-gray-300 mb-6">
-        {analysis.overallAssessment}
-      </p>
+      {/* Summary with medium styling */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-l-4 border-blue-500 mb-6">
+        <h4 className="text-lg font-bold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+          📋 Executive Summary
+        </h4>
+        <p className="text-sm leading-relaxed text-blue-800 dark:text-blue-200">
+          {assessmentText}
+        </p>
+      </div>
 
-      {/* Key Findings */}
-      {analysis.keyFindings && analysis.keyFindings.length > 0 && (
+      {/* Market Comparisons - Main Feature */}
+      {analysis.marketComparisons && analysis.marketComparisons.length > 0 && (
         <div className="mb-6">
-          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Key Findings</h4>
-          <div className="space-y-3">
-            {analysis.keyFindings.slice(0, 3).map((finding, index) => (
-              <div key={index} className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
-                <div className="flex items-start gap-2 mb-2">
-                  {finding.riskLevel === 'HIGH_RISK' && <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />}
-                  {finding.riskLevel === 'CAUTION' && <Info className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />}
-                  {finding.riskLevel === 'STANDARD' && <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        finding.riskLevel === 'HIGH_RISK' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' :
-                        finding.riskLevel === 'CAUTION' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300' :
-                        'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                      }`}>
-                        {finding.riskLevel}
+          <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            📊 Contract vs Market Standards
+          </h4>
+          <div className="space-y-4">
+            {analysis.marketComparisons.map((comparison, index) => {
+              const getAssessmentColor = (assessment) => {
+                switch (assessment?.toLowerCase()) {
+                  case 'favorable': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300 border-green-300';
+                  case 'standard': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 border-blue-300';
+                  case 'unfavorable': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300 border-red-300';
+                  default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300 border-gray-300';
+                }
+              };
+              
+              return (
+                <div key={index} className="group hover:scale-[1.01] transition-all duration-200">
+                  <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-md">
+                    <div className="flex items-center justify-between mb-3">
+                      <h5 className="text-md font-semibold text-gray-900 dark:text-gray-100 capitalize">
+                        {comparison.clause}
+                      </h5>
+                      <span className={`px-3 py-1 text-sm font-medium rounded-full border ${getAssessmentColor(comparison.assessment)}`}>
+                        {comparison.assessment}
                       </span>
-                      {finding.percentile && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {finding.percentile}
-                        </span>
-                      )}
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                      {finding.explanation}
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Your Contract</div>
+                        <div className="text-sm font-bold text-gray-900 dark:text-gray-100">{comparison.contractValue}</div>
+                      </div>
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                        <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">Market Standard</div>
+                        <div className="text-sm font-bold text-blue-800 dark:text-blue-200">{comparison.marketStandard}</div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                      <span className="font-medium">Analysis:</span> {comparison.explanation}
                     </p>
-                    {finding.recommendation && (
-                      <p className="text-xs text-blue-600 dark:text-blue-400">
-                        💡 {finding.recommendation}
-                      </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Key Findings - support both keyFindings and keyIssues */}
+      {findings && findings.length > 0 && (
+        <div className="mb-6">
+          <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            🔍 Key Findings
+          </h4>
+          <div className="grid gap-3">
+            {findings.slice(0, 3).map((finding, index) => {
+              // Handle both full findings objects and simple strings from SimpleFairnessService
+              const findingText = typeof finding === 'string' ? finding : finding.explanation;
+              const riskLevel = typeof finding === 'string' ? 'CAUTION' : finding.riskLevel;
+              
+              return (
+                <div key={index} className="group hover:scale-[1.01] transition-all duration-200">
+                  <div className="p-4 rounded-lg bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-l-4 border-red-400 shadow-md">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 p-1.5 bg-red-100 dark:bg-red-900/30 rounded-full">
+                        {riskLevel === 'HIGH_RISK' && <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />}
+                        {riskLevel === 'CAUTION' && <Info className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />}
+                        {riskLevel === 'STANDARD' && <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-3 py-1 text-xs font-bold rounded-full shadow-sm ${
+                            riskLevel === 'HIGH_RISK' ? 'bg-red-500 text-white' :
+                            riskLevel === 'CAUTION' ? 'bg-yellow-500 text-white' :
+                            'bg-green-500 text-white'
+                          }`}>
+                            ⚠️ {riskLevel}
+                          </span>
+                          {finding.percentile && (
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                              {finding.percentile}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200 mb-2">
+                          {findingText}
+                        </p>
+                        {finding.recommendation && (
+                          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg border border-blue-200 dark:border-blue-700">
+                            <p className="text-xs font-medium text-blue-800 dark:text-blue-200 flex items-start gap-1">
+                              💡 <span>{finding.recommendation}</span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Benchmark Metrics */}
+      {analysis.benchmarkMetrics && Object.keys(analysis.benchmarkMetrics).length > 0 && (
+        <div className="mb-6">
+          <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            📊 Market Benchmarks
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(analysis.benchmarkMetrics).map(([key, metric]) => (
+              <div key={key} className="group hover:scale-[1.01] transition-all duration-200">
+                <div className="p-4 rounded-lg bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border border-indigo-200 dark:border-indigo-700 shadow-md">
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="text-md font-semibold text-indigo-900 dark:text-indigo-100 capitalize">
+                      {key.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm ${
+                      metric.assessment?.includes('HIGH_RISK') ? 'bg-red-500 text-white' :
+                      metric.assessment?.includes('CAUTION') ? 'bg-yellow-500 text-white' :
+                      'bg-green-500 text-white'
+                    }`}>
+                      {metric.percentile || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-xs text-indigo-800 dark:text-indigo-200">
+                    <div className="flex justify-between">
+                      <span>Your contract:</span> 
+                      <span className="font-semibold">{metric.contractValue}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Market standard:</span> 
+                      <span className="font-semibold">{metric.marketMedian}</span>
+                    </div>
+                    {metric.marketRange && (
+                      <div className="flex justify-between">
+                        <span>Typical range:</span> 
+                        <span className="font-semibold">{metric.marketRange}</span>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -269,29 +425,24 @@ const FairnessResultCard = ({ analysis }) => {
         </div>
       )}
 
-      {/* Benchmark Metrics */}
-      {analysis.benchmarkMetrics && Object.keys(analysis.benchmarkMetrics).length > 0 && (
+      {/* Positive Aspects - only for SimpleFairnessService */}
+      {analysis.positives && analysis.positives.length > 0 && (
         <div className="mb-6">
-          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Market Benchmarks</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {Object.entries(analysis.benchmarkMetrics).map(([key, metric]) => (
-              <div key={key} className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
-                <div className="flex justify-between items-start mb-1">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
-                    {key.replace(/([A-Z])/g, ' $1').trim()}
-                  </span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    metric.assessment?.includes('HIGH_RISK') ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' :
-                    metric.assessment?.includes('CAUTION') ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300' :
-                    'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                  }`}>
-                    {metric.percentile || 'N/A'}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">
-                  <div>Your contract: <span className="font-medium">{metric.contractValue}</span></div>
-                  <div>Market standard: <span className="font-medium">{metric.marketMedian}</span></div>
-                  {metric.marketRange && <div>Typical range: <span className="font-medium">{metric.marketRange}</span></div>}
+          <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            ✨ Positive Aspects
+          </h4>
+          <div className="grid gap-3">
+            {analysis.positives.map((positive, index) => (
+              <div key={index} className="group hover:scale-[1.01] transition-all duration-200">
+                <div className="p-4 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-l-4 border-green-400 shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 p-1.5 bg-green-100 dark:bg-green-900/30 rounded-full">
+                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-relaxed">
+                      {positive}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -301,37 +452,51 @@ const FairnessResultCard = ({ analysis }) => {
 
       {/* Negotiation Opportunities */}
       {analysis.negotiationOpportunities && analysis.negotiationOpportunities.length > 0 && (
-        <div>
-          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-            <Target className="w-4 h-4" />
-            Negotiation Opportunities
+        <div className="mb-6">
+          <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            🎯 Negotiation Opportunities
           </h4>
-          <div className="space-y-2">
+          <div className="space-y-4">
             {analysis.negotiationOpportunities.slice(0, 3).map((opportunity, index) => (
-              <div key={index} className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    opportunity.priority === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' :
-                    opportunity.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300' :
-                    'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                  }`}>
-                    {opportunity.priority?.toUpperCase()} PRIORITY
-                  </span>
-                  {opportunity.likelihood && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {opportunity.likelihood} likelihood
-                    </span>
-                  )}
+              <div key={index} className="group hover:scale-[1.01] transition-all duration-200">
+                <div className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-l-4 border-purple-400 shadow-md">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex-shrink-0 p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                      <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 text-xs font-bold rounded-full shadow-sm ${
+                        opportunity.priority === 'high' ? 'bg-red-500 text-white' :
+                        opportunity.priority === 'medium' ? 'bg-yellow-500 text-white' :
+                        'bg-green-500 text-white'
+                      }`}>
+                        🚀 {opportunity.priority?.toUpperCase()} PRIORITY
+                      </span>
+                      {opportunity.likelihood && (
+                        <span className="text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
+                          {opportunity.likelihood} likelihood
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mb-3">
+                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Current Term:</p>
+                      <p className="text-sm text-gray-800 dark:text-gray-200">{opportunity.currentTerm}</p>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-600">
+                      <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">Suggested Improvement:</p>
+                      <p className="text-sm text-green-800 dark:text-green-200">{opportunity.suggestedTerm}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg border border-blue-200 dark:border-blue-600">
+                    <p className="text-xs font-medium text-blue-800 dark:text-blue-200 flex items-start gap-1">
+                      💡 <span>{opportunity.justification}</span>
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                  <strong>Current:</strong> {opportunity.currentTerm}
-                </p>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                  <strong>Suggested:</strong> {opportunity.suggestedTerm}
-                </p>
-                <p className="text-xs text-blue-600 dark:text-blue-400">
-                  {opportunity.justification}
-                </p>
               </div>
             ))}
           </div>
@@ -503,23 +668,42 @@ export default function BenchmarkPage() {
   };
 
   const handleAnalyzeDocument = async (document) => {
+    console.log(`🚀 [UI] Starting analysis for document:`, document.id);
     setIsAnalyzing(true);
     setAnalysisError(null);
     setFairnessAnalysis(null);
 
     try {
+      console.log(`⏰ [UI] Calling benchmarkService.analyzeFairnessById...`);
       const result = await benchmarkService.analyzeFairnessById(
         document.id,
         selectedJurisdiction
       );
 
-      if (result.success) {
+      console.log(`📊 [UI] Analysis result received:`, {
+        success: result.success,
+        hasFairnessAnalysis: !!result.fairnessAnalysis,
+        analysisType: result.fairnessAnalysis?.analysisType,
+        overallScore: result.fairnessAnalysis?.overallFairnessScore,
+        riskLevel: result.fairnessAnalysis?.riskLevel
+      });
+
+      if (result.success && result.fairnessAnalysis) {
+        console.log(`✅ [UI] Setting fairness analysis state...`);
         setFairnessAnalysis(result.fairnessAnalysis);
+        console.log(`🎉 [UI] State should be updated with fairness analysis`);
+      } else if (result.needsReupload) {
+        console.log(`📋 [UI] Document needs re-upload:`, result.error);
+        setAnalysisError(`${result.error} ${result.suggestion || ''}`);
+      } else {
+        console.error(`❌ [UI] Analysis result not successful:`, result);
+        setAnalysisError(result.error || 'Analysis failed');
       }
     } catch (error) {
-      console.error('Analysis failed:', error);
+      console.error('❌ [UI] Analysis failed:', error);
       setAnalysisError(`Analysis failed: ${error.message}`);
     } finally {
+      console.log(`🏁 [UI] Setting isAnalyzing to false`);
       setIsAnalyzing(false);
     }
   };
@@ -820,8 +1004,37 @@ export default function BenchmarkPage() {
 
                 {/* Analysis Results */}
                 {fairnessAnalysis && (
-                  <FairnessResultCard analysis={fairnessAnalysis} />
+                  <>
+                    {console.log('🎨 [RENDER] Rendering FairnessResultCard with:', fairnessAnalysis)}
+                    <FairnessResultCard analysis={fairnessAnalysis} />
+                  </>
                 )}
+                
+                {/* Debug: Show if fairnessAnalysis exists */}
+                {console.log('🔍 [RENDER DEBUG] fairnessAnalysis state:', {
+                  hasFairnessAnalysis: !!fairnessAnalysis,
+                  analysisType: fairnessAnalysis?.analysisType,
+                  overallScore: fairnessAnalysis?.overallFairnessScore,
+                  isAnalyzing,
+                  analysisError
+                })}
+                
+                {/* Debug Panel - Remove this after fixing */}
+                <div className="mt-4 p-4 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+                  <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Debug Info</h4>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Has Analysis: {fairnessAnalysis ? 'YES' : 'NO'} | 
+                    Is Analyzing: {isAnalyzing ? 'YES' : 'NO'} | 
+                    Has Error: {analysisError ? 'YES' : 'NO'}
+                  </p>
+                  {fairnessAnalysis && (
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      Score: {fairnessAnalysis.overallFairnessScore} | 
+                      Risk: {fairnessAnalysis.riskLevel} |
+                      Type: {fairnessAnalysis.analysisType}
+                    </p>
+                  )}
+                </div>
               </motion.div>
             </motion.div>
           )}

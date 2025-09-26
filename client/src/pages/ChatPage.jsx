@@ -129,6 +129,7 @@ const ChatPage = () => {
     );
   };
 
+  // Quick actions (restored)
   const quickActions = [
     { name: 'Document Analysis', icon: FileText, color: 'from-blue-500 to-blue-600', description: 'Analyze uploaded documents' },
     { name: 'Risk Assessment', icon: AlertTriangle, color: 'from-red-500 to-red-600', description: 'Identify potential risks' },
@@ -138,29 +139,22 @@ const ChatPage = () => {
     { name: 'What-If Analysis', icon: Zap, color: 'from-indigo-500 to-indigo-600', description: 'Scenario planning' }
   ];
 
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  // State variables
+  // Core state
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isContextPanelOpen, setIsContextPanelOpen] = useState(true);
-  const [userDocuments, setUserDocuments] = useState([]);
-  const [selectedDocument, setSelectedDocument] = useState(null);
-  const [loadingDocuments, setLoadingDocuments] = useState(false);
-  const [analysisStatus, setAnalysisStatus] = useState('idle'); // idle, analyzing, complete
-  
-  // Voice recording states
+  const [selectedDocument, setSelectedDocument] = useState(null); // kept for BotMessage context
+  const [uploadedDocuments, setUploadedDocuments] = useState([
+    // Sample documents - replace with actual data from your backend
+    { id: 1, name: 'Contract_Agreement_2024.pdf', type: 'contract', uploadDate: '2024-09-20', size: '2.4 MB', status: 'analyzed' },
+    { id: 2, name: 'Risk_Assessment_Report.docx', type: 'report', uploadDate: '2024-09-19', size: '1.8 MB', status: 'analyzed' },
+    { id: 3, name: 'Compliance_Checklist.xlsx', type: 'checklist', uploadDate: '2024-09-18', size: '856 KB', status: 'processing' },
+  ]);
+
+  // Voice recording states (kept for mic button functionality)
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [audioChunks, setAudioChunks] = useState([]);
   const [recordingDuration, setRecordingDuration] = useState(0);
 
   const messagesEndRef = useRef(null);
@@ -174,25 +168,217 @@ const ChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
-  const getAnalysisStatusText = () => {
-    switch (analysisStatus) {
-      case 'analyzing': return 'Analyzing...';
-      case 'complete': return 'Analysis Complete';
-      default: return 'Ready';
+  // Intelligent response generation
+  const generateIntelligentResponse = (input, document) => {
+    const lowerInput = input.toLowerCase();
+    
+    // Document analysis responses
+    if (lowerInput.includes('document analysis') || lowerInput.includes('analyze document')) {
+      if (document) {
+        return `I'm analyzing **${document.name}** for you. Here's what I found:
+
+📊 **Document Overview:**
+- Type: ${document.type.charAt(0).toUpperCase() + document.type.slice(1)} document
+- Size: ${document.size}
+- Upload Date: ${document.uploadDate}
+- Status: ${document.status}
+
+🔍 **Key Analysis Areas:**
+- **Risk Assessment**: Identifying potential legal and compliance risks
+- **Contract Terms**: Extracting key clauses and obligations
+- **Compliance Check**: Verifying adherence to regulations
+- **Financial Impact**: Analyzing cost implications
+
+Would you like me to focus on a specific aspect of the analysis?`;
+      } else {
+        return `I'd be happy to analyze a document for you! Please upload a document using the attachment button 📎, or select one from your uploaded documents in the sidebar.
+
+**I can analyze:**
+- Contracts and agreements
+- Legal documents
+- Compliance reports
+- Risk assessments
+- Financial documents
+
+Once uploaded, I'll provide detailed insights on risks, compliance, key clauses, and recommendations.`;
+      }
     }
+
+    // Risk assessment responses
+    if (lowerInput.includes('risk') || lowerInput.includes('assessment')) {
+      return `🚨 **Risk Assessment Analysis**
+
+I can help identify various types of risks in your documents:
+
+**Legal Risks:**
+- Contract violations
+- Liability exposure
+- Regulatory non-compliance
+
+**Financial Risks:**
+- Payment defaults
+- Cost overruns
+- Currency fluctuations
+
+**Operational Risks:**
+- Performance failures
+- Timeline delays
+- Resource constraints
+
+${document ? `For **${document.name}**, I'll need to perform a detailed scan. ` : 'Upload a document and '}Would you like me to generate a comprehensive risk matrix?`;
+    }
+
+    // Compliance check responses
+    if (lowerInput.includes('compliance') || lowerInput.includes('legal')) {
+      return `⚖️ **Compliance Analysis**
+
+I'll help ensure your documents meet regulatory standards:
+
+**Compliance Areas I Check:**
+- Industry regulations (GDPR, HIPAA, SOX, etc.)
+- Contract law requirements
+- Employment law compliance
+- Financial reporting standards
+- Data protection requirements
+
+**Compliance Report Includes:**
+- ✅ Compliant sections
+- ⚠️ Areas needing attention
+- ❌ Non-compliant items
+- 📋 Recommended actions
+
+${document ? `Analyzing **${document.name}** for compliance issues...` : 'Upload a document to start compliance checking.'}`;
+    }
+
+    // Contract summary responses
+    if (lowerInput.includes('summary') || lowerInput.includes('contract')) {
+      return `📄 **Document Summary Generator**
+
+I can create comprehensive summaries including:
+
+**Executive Summary:**
+- Key parties and roles
+- Main objectives
+- Critical dates and milestones
+
+**Terms & Conditions:**
+- Payment terms
+- Performance obligations
+- Termination clauses
+
+**Risk Highlights:**
+- Potential issues
+- Recommended actions
+- Priority items
+
+${document ? `Generating summary for **${document.name}**...` : 'Select a document to summarize from the sidebar or upload a new one.'}`;
+    }
+
+    // Clause extraction responses
+    if (lowerInput.includes('clause') || lowerInput.includes('extract')) {
+      return `🔍 **Clause Extraction Service**
+
+I can identify and extract key clauses:
+
+**Standard Clauses:**
+- Termination conditions
+- Payment schedules
+- Liability limitations
+- Confidentiality terms
+
+**Special Provisions:**
+- Force majeure
+- Indemnification
+- Intellectual property
+- Dispute resolution
+
+**Output Format:**
+- Clause text with location
+- Plain English explanation
+- Risk level assessment
+- Recommendations
+
+${document ? `Extracting clauses from **${document.name}**...` : 'Upload a document to extract important clauses.'}`;
+    }
+
+    // What-if analysis responses
+    if (lowerInput.includes('what-if') || lowerInput.includes('scenario')) {
+      return `🎯 **What-If Scenario Analysis**
+
+I can simulate various scenarios and their impacts:
+
+**Scenario Types:**
+- Contract breach consequences
+- Payment delay impacts
+- Regulatory changes
+- Market fluctuations
+
+**Analysis Includes:**
+- Probability assessments
+- Financial impact calculations
+- Timeline effects
+- Mitigation strategies
+
+**Sample Scenarios:**
+- "What if payment is delayed by 30 days?"
+- "What if the vendor fails to deliver?"
+- "What if new regulations are introduced?"
+
+${document ? `Ready to analyze scenarios for **${document.name}**` : 'Upload a document and'} tell me what scenario you'd like to explore!`;
+    }
+
+    // General help and capabilities
+    if (lowerInput.includes('help') || lowerInput.includes('what can you do')) {
+      return `🤖 **LexiGuard AI Assistant - Your Document Intelligence Partner**
+
+**Core Capabilities:**
+- 📊 Document Analysis & Insights
+- 🚨 Risk Assessment & Identification
+- ⚖️ Legal Compliance Checking
+- 📄 Contract Summarization
+- 🔍 Clause Extraction & Analysis
+- 🎯 What-If Scenario Modeling
+
+**Quick Actions Available:**
+${quickActions.map(action => `- ${action.name}: ${action.description}`).join('\n')}
+
+**How to Get Started:**
+1. Upload a document using the 📎 button
+2. Select from your uploaded documents
+3. Choose a quick action or ask specific questions
+
+I'm here to help with legal document analysis, compliance checking, and risk assessment. What would you like to explore?`;
+    }
+
+    // Default intelligent response
+    return `Thank you for your question: "${input}"
+
+I'm LexiGuard's AI assistant, specialized in legal document analysis and compliance. I can help you with:
+
+• **Document Analysis** - Deep insights into your contracts and legal documents
+• **Risk Assessment** - Identify potential legal and financial risks
+• **Compliance Checking** - Ensure regulatory adherence
+• **Contract Summaries** - Executive summaries of complex documents
+• **Clause Extraction** - Find and analyze specific contract terms
+• **Scenario Analysis** - "What-if" impact assessments
+
+${uploadedDocuments.length > 0 ? `You have ${uploadedDocuments.length} uploaded document${uploadedDocuments.length > 1 ? 's' : ''} ready for analysis. ` : 'Upload a document to begin analysis, or '}try asking me about document analysis, risk assessment, or compliance checking!
+
+What would you like me to help you with today?`;
   };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isTyping) return;
 
     const userMessage = {
-      id: messages.length + 1,
+      id: Date.now() + Math.random(), // Use timestamp + random for unique ID
       type: 'user',
       content: inputMessage,
       timestamp: new Date()
     };
 
-    setMessages([...messages, userMessage]);
+    const currentInputMessage = inputMessage; // Store input before clearing
+    setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsTyping(true);
 
@@ -201,9 +387,9 @@ const ChatPage = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const botResponse = {
-        id: messages.length + 2,
+        id: Date.now() + Math.random() + 1, // Use timestamp + random + 1 for unique ID
         type: 'bot',
-        content: `I understand you're asking about: "${inputMessage}"\n\nI'm here to help you with document analysis, legal compliance, and risk assessment. Would you like me to analyze a specific document or provide more information about our capabilities?`,
+        content: generateIntelligentResponse(currentInputMessage, selectedDocument),
         timestamp: new Date(),
         documentContext: selectedDocument
       };
@@ -212,7 +398,7 @@ const ChatPage = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       const errorResponse = {
-        id: messages.length + 2,
+        id: Date.now() + Math.random() + 2, // Use timestamp + random + 2 for unique ID
         type: 'bot',
         content: 'I apologize, but I encountered an error while processing your request. Please try again.',
         timestamp: new Date()
@@ -248,8 +434,7 @@ const ChatPage = () => {
         processAudioToText(audioBlob);
       };
 
-      setMediaRecorder(recorder);
-      setAudioChunks(chunks);
+  setMediaRecorder(recorder);
       setIsRecording(true);
       setRecordingDuration(0);
       
@@ -282,7 +467,7 @@ const ChatPage = () => {
     }
   };
 
-  const processAudioToText = async (audioBlob) => {
+  const processAudioToText = async () => {
     setIsProcessingAudio(true);
     
     try {
@@ -348,465 +533,439 @@ const ChatPage = () => {
     }
   };
 
-  const formatRecordingTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  // formatRecordingTime removed (not currently displayed)
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       const fileMessage = {
-        id: messages.length + 1,
+        id: Date.now() + Math.random(), // Use timestamp + random for unique ID
         type: 'user',
         content: `📎 Uploaded: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`,
         timestamp: new Date(),
         isFile: true
       };
-      setMessages([...messages, fileMessage]);
+      setMessages(prev => [...prev, fileMessage]);
+      
+      // Add to uploaded documents list
+      const newDocument = {
+        id: Date.now(), // Simple ID generation
+        name: file.name,
+        type: file.type.includes('pdf') ? 'pdf' : file.type.includes('word') ? 'document' : file.type.includes('sheet') ? 'spreadsheet' : 'document',
+        uploadDate: new Date().toISOString().split('T')[0],
+        size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+        status: 'processing'
+      };
+      setUploadedDocuments(prev => [newDocument, ...prev]);
       
       setIsTyping(true);
       // Simulate file processing
       setTimeout(() => {
         const response = {
-          id: messages.length + 2,
+          id: Date.now() + Math.random(), // Use timestamp + random for unique ID
           type: 'bot',
-          content: `I've received your file "${file.name}". I'm now analyzing the document for key information, potential risks, and compliance issues. This may take a few moments.`,
+          content: `📎 **Document Received: ${file.name}**
+
+✅ **Upload Successful**
+- File Size: ${(file.size / 1024 / 1024).toFixed(2)} MB
+- File Type: ${file.type || 'Unknown'}
+- Upload Time: ${new Date().toLocaleTimeString()}
+
+🔄 **Processing Status**: Analyzing document structure and content...
+
+**What I'm Analyzing:**
+- Document type and structure
+- Key clauses and terms  
+- Potential risks and issues
+- Compliance requirements
+- Financial implications
+
+⏱️ **Estimated Analysis Time**: 30-60 seconds
+
+Once analysis is complete, I'll provide:
+- Executive summary
+- Risk assessment
+- Compliance check results
+- Key findings and recommendations
+
+You can ask me specific questions about the document or request detailed analysis of particular sections.`,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, response]);
         setIsTyping(false);
+        
+        // Update document status to analyzed after processing
+        setTimeout(() => {
+          setUploadedDocuments(prev => 
+            prev.map(doc => 
+              doc.id === newDocument.id 
+                ? { ...doc, status: 'analyzed' }
+                : doc
+            )
+          );
+          
+          // Add analysis complete message
+          const analysisComplete = {
+            id: Date.now() + Math.random(),
+            type: 'bot',
+            content: `✅ **Analysis Complete for ${file.name}**
+
+📊 **Document Analysis Results:**
+
+**Document Type:** ${newDocument.type.charAt(0).toUpperCase() + newDocument.type.slice(1)} document
+**Analysis Status:** Complete
+**Processing Time:** ~30 seconds
+
+**Key Findings:**
+🔍 Document structure analyzed
+⚖️ Legal terms identified
+🚨 Risk factors assessed  
+✅ Compliance status checked
+
+**Available Actions:**
+- Ask me specific questions about the document
+- Request a detailed summary
+- Get risk assessment report
+- Check compliance status
+- Extract specific clauses
+
+**Example Questions:**
+- "What are the main risks in this document?"
+- "Summarize the key terms"
+- "Are there any compliance issues?"
+- "What happens if payment is delayed?"
+
+The document is now ready for detailed analysis. What would you like to know?`,
+            timestamp: new Date(),
+            documentContext: newDocument
+          };
+          
+          setMessages(prev => [...prev, analysisComplete]);
+        }, 3000);
       }, 2000);
     }
   };
-
-  const handleQuickAction = async (actionName) => {
-    const userMessage = {
-      id: messages.length + 1,
-      type: 'user',
-      content: `Requesting: ${actionName}`,
-      timestamp: new Date()
-    };
-
-    setMessages([...messages, userMessage]);
-    setIsTyping(true);
-
-    // Simulate processing
-    setTimeout(() => {
-      const response = {
-        id: messages.length + 2,
-        type: 'bot',
-        content: `I'll help you with ${actionName.toLowerCase()}. ${selectedDocument ? `I'll analyze your selected document "${selectedDocument.fileName}"` : 'Please upload a document first for the best analysis.'} What specific aspects would you like me to focus on?`,
-        timestamp: new Date(),
-        documentContext: selectedDocument
-      };
-      setMessages(prev => [...prev, response]);
-      setIsTyping(false);
-    }, 1500);
-  };
-
+  // ----------- RENDER -------------
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-full bg-gray-50 dark:bg-gray-900">
+      {/* Assistant Sidebar */}
       <Motion.div
-        initial={{ x: -300, opacity: 0 }}
+        initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full shadow-sm"
+        transition={{ type: 'spring', stiffness: 140, damping: 18 }}
+        className="w-80 hidden lg:flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-800 shadow-sm"
       >
-        {/* Sidebar Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                  <Brain className="h-5 w-5 text-white" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <Brain className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <h2 className="font-semibold text-gray-900 dark:text-white">LexiGuard Assistant</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Always ready to help</p>
-              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800" />
             </div>
-            <Motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <Plus className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-            </Motion.button>
+            <div>
+              <h2 className="font-semibold text-gray-900 dark:text-white">LexiGuard Assistant</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Always ready</p>
+            </div>
           </div>
+          <Motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <Plus className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+          </Motion.button>
         </div>
-        
-        {/* Sidebar Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="p-6 overflow-y-auto custom-scrollbar">
+          {/* Uploaded Documents Section */}
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Quick Actions</h3>
-            <div className="space-y-2">
-              {quickActions.map((action, index) => (
-                <Motion.button
-                  key={index}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleQuickAction(action.name)}
-                  className="w-full flex items-center space-x-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group text-left"
-                >
-                  <div className={`w-8 h-8 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <action.icon className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{action.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{action.description}</p>
-                  </div>
-                </Motion.button>
-              ))}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Uploaded Documents</h3>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{uploadedDocuments.length}</span>
             </div>
+            <div className="space-y-2">
+              {uploadedDocuments.length === 0 ? (
+                <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                  <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">No documents uploaded yet</p>
+                </div>
+              ) : (
+                uploadedDocuments.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className={`w-full flex items-center space-x-3 p-3 rounded-lg group transition-colors relative ${
+                      selectedDocument?.id === doc.id 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
+                        : 'bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700 border border-transparent'
+                    }`}
+                  >
+                    <Motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSelectedDocument(doc);
+                        setInputMessage(`Tell me about the document: ${doc.name}`);
+                      }}
+                      className="flex items-center space-x-3 flex-1 text-left"
+                    >
+                      <div className="flex-shrink-0">
+                        <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                          doc.status === 'analyzed' 
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                            : doc.status === 'processing'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                        }`}>
+                          {doc.status === 'processing' ? (
+                            <Motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
+                              <RefreshCw className="h-3 w-3" />
+                            </Motion.div>
+                          ) : (
+                            <FileText className="h-3 w-3" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{doc.name}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400">{doc.size} • {doc.uploadDate}</p>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                            doc.status === 'analyzed' 
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                              : doc.status === 'processing'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          }`}>
+                            {doc.status}
+                          </span>
+                        </div>
+                      </div>
+                    </Motion.button>
+                    <Motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setUploadedDocuments(prev => prev.filter(d => d.id !== doc.id));
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded text-gray-400 hover:text-red-500 transition-all absolute top-2 right-2"
+                      title="Remove document"
+                    >
+                      <X className="h-3 w-3" />
+                    </Motion.button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">Quick Actions</h3>
+          <div className="space-y-2">
+            {quickActions.map((action) => (
+              <Motion.button
+                key={action.name}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setInputMessage(`${action.name}: ${action.description}`);
+                }}
+                className="w-full flex items-center space-x-3 p-3 rounded-lg group bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+              >
+                <div className={`w-8 h-8 rounded-md bg-gradient-to-br ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <action.icon className="h-4 w-4 text-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{action.name}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{action.description}</p>
+                </div>
+              </Motion.button>
+            ))}
           </div>
         </div>
       </Motion.div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full">
-        {/* Chat Header */}
-        <Motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                  <MessageSquare className="h-6 w-6 text-white" />
-                </div>
-                <Motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"
-                />
+      {/* Main Column */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <MessageSquare className="h-6 w-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  LexiGuard Chat Assistant
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                  Online • Ready to help with your documents
-                </p>
-              </div>
+              <Motion.span
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white dark:border-gray-900"
+              />
             </div>
-            <div className="flex items-center space-x-2">
-              <Motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                title="Settings"
-              >
-                <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-              </Motion.button>
-              <Motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsContextPanelOpen(!isContextPanelOpen)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                title="Toggle context panel"
-              >
-                <MoreVertical className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-              </Motion.button>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">LexiGuard Chat Assistant</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-1" />
+                Online • Document intelligence
+                {selectedDocument && (
+                  <span className="ml-2 text-blue-600 dark:text-blue-400">• Analyzing: {selectedDocument.name}</span>
+                )}
+              </p>
             </div>
           </div>
-        </Motion.div>
+          <div className="flex items-center space-x-2">
+            <Motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+              <Settings className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </Motion.button>
+            <Motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+              <MoreVertical className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </Motion.button>
+          </div>
+        </div>
 
-        {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 messages-container">
-          <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-            <style>{`
-              .messages-container::-webkit-scrollbar {
-                width: 6px;
-              }
-              .messages-container::-webkit-scrollbar-track {
-                background: transparent;
-              }
-              .messages-container::-webkit-scrollbar-thumb {
-                background-color: rgba(156, 163, 175, 0.3);
-                border-radius: 3px;
-              }
-              .messages-container::-webkit-scrollbar-thumb:hover {
-                background-color: rgba(156, 163, 175, 0.5);
-              }
-            `}</style>
-          
-          {/* Welcome Message */}
+        {/* Messages Area */}
+        <div className={`flex-1 overflow-y-auto px-4 py-6 messages-container ${messages.length === 0 ? 'flex items-center justify-center' : ''}`}>
           {messages.length === 0 && (
-            <Motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center min-h-full text-center py-12"
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6">
-                <Sparkles className="h-10 w-10 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-                Welcome to LexiGuard
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md">
-                I'm here to help you analyze documents, check compliance, assess risks, and answer any questions you might have.
-              </p>
-              <div className="grid grid-cols-2 gap-4 max-w-lg">
-                {quickActions.slice(0, 4).map((action, index) => (
+            <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-xl mx-auto">
+              <Sparkles className="h-12 w-12 mx-auto mb-6 text-blue-500" />
+              <h2 className="text-2xl font-semibold mb-3 text-gray-800 dark:text-gray-100">Welcome to LexiGuard</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Ask about risks, compliance, summaries, or upload a file to begin advanced analysis.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {quickActions.slice(0, 6).map(a => (
                   <Motion.button
-                    key={index}
+                    key={a.name}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleQuickAction(action.name)}
-                    className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all group"
+                    onClick={() => setInputMessage(`${a.name}: ${a.description}`)}
+                    className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
                   >
-                    <div className={`w-8 h-8 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform`}>
-                      <action.icon className="h-4 w-4 text-white" />
+                    <div className={`w-8 h-8 mb-3 rounded-md bg-gradient-to-br ${a.color} flex items-center justify-center mx-auto`}>
+                      <a.icon className="h-4 w-4 text-white" />
                     </div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{action.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{action.description}</p>
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-200">{a.name}</p>
                   </Motion.button>
                 ))}
               </div>
             </Motion.div>
           )}
 
-          <AnimatePresence>
-            {messages.map((message, index) => (
-              <Motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: index * 0.05 }}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} group mb-4`}
-              >
-                <div className={`flex ${message.type === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3 max-w-[85%]`}>
-                  {/* Avatar */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    message.type === 'user' 
-                      ? 'bg-gradient-to-br from-blue-500 to-purple-600' 
-                      : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                  }`}>
-                    {message.type === 'user' ? (
-                      <User className="h-5 w-5 text-white" />
-                    ) : (
+          {messages.length > 0 && (
+            <div className="max-w-4xl mx-auto space-y-5">
+              <AnimatePresence>
+                {messages.map((m, idx) => (
+                  <Motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -16 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className={`flex ${m.type === 'user' ? 'justify-end' : 'justify-start'} group`}
+                  >
+                    <div className={`flex items-start space-x-3 max-w-[85%] ${m.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${m.type === 'user' ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
+                        {m.type === 'user' ? <User className="h-5 w-5 text-white" /> : <Bot className="h-5 w-5 text-white" />}
+                      </div>
+                      <div className={`px-5 py-4 rounded-2xl shadow-sm border text-sm leading-relaxed break-words ${m.type === 'user' ? 'bg-blue-500 text-white border-blue-500 rounded-br-md' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 rounded-bl-md'}`}>
+                        {m.type === 'user' ? (
+                          m.content
+                        ) : (
+                          <BotMessage content={m.content} documentContext={m.documentContext} responseType={m.responseType} />
+                        )}
+                      </div>
+                    </div>
+                  </Motion.div>
+                ))}
+              </AnimatePresence>
+              {isTyping && (
+                <Motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
+                  <div className="flex items-center space-x-3 max-w-[70%]">
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center">
                       <Bot className="h-5 w-5 text-white" />
-                    )}
-                  </div>
-                  
-                  {/* Message Content */}
-                  <div className="flex flex-col space-y-1 min-w-0 flex-1">
-                    <div className={`px-6 py-4 rounded-2xl shadow-sm border ${
-                      message.type === 'user'
-                        ? 'bg-blue-500 text-white rounded-br-md'
-                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700 rounded-bl-md'
-                    }`}>
-                      {message.type === 'user' ? (
-                        <p className="break-words">{message.content}</p>
-                      ) : (
-                        <BotMessage 
-                          content={message.content} 
-                          documentContext={message.documentContext}
-                          responseType={message.responseType}
-                        />
-                      )}
                     </div>
-                    <div className={`flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400 ${
-                      message.type === 'user' ? 'justify-end' : 'justify-start'
-                    }`}>
-                      <span>{message.timestamp.toLocaleTimeString()}</span>
-                      {message.type === 'bot' && (
-                        <div className="flex items-center space-x-1">
-                          <Motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-                            title="Copy message"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Motion.button>
-                        </div>
-                      )}
+                    <div className="bg-white dark:bg-gray-800 px-5 py-3 rounded-2xl rounded-bl-md shadow-sm border border-gray-200 dark:border-gray-700 flex space-x-2">
+                      {[0,1,2].map(i => (
+                        <Motion.span key={i} className="w-2 h-2 rounded-full bg-emerald-500"
+                          animate={{ opacity: [0.3,1,0.3], y:[0, -3,0] }} transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.25 }} />
+                      ))}
+                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">AI is thinking...</span>
                     </div>
                   </div>
-                </div>
-              </Motion.div>
-            ))}
-          </AnimatePresence>
-
-          {/* Typing indicator */}
-          {isTyping && (
-            <Motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex justify-start mb-4"
-            >
-              <div className="flex items-start space-x-3 max-w-[85%]">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center">
-                  <Bot className="h-5 w-5 text-white" />
-                </div>
-                <div className="bg-white dark:bg-gray-800 px-6 py-4 rounded-2xl rounded-bl-md shadow-sm border border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      <Motion.div 
-                        className="w-2 h-2 bg-emerald-500 rounded-full"
-                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
-                      />
-                      <Motion.div 
-                        className="w-2 h-2 bg-emerald-500 rounded-full"
-                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
-                      />
-                      <Motion.div 
-                        className="w-2 h-2 bg-emerald-500 rounded-full"
-                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
-                      />
-                    </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">AI is thinking...</span>
-                  </div>
-                </div>
-              </div>
-            </Motion.div>
+                </Motion.div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
           )}
-          <div ref={messagesEndRef} />
-          </div>
         </div>
 
-        {/* Input Area */}
-        <Motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4"
-        >
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-end space-x-3">
+        {/* Input Bar */}
+        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-4">
+          <div className="max-w-5xl mx-auto flex items-end space-x-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.jpg,.png"
+              className="hidden"
+            />
+            <Motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => fileInputRef.current?.click()} className="h-9 w-9 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg flex items-center justify-center" title="Attach file">
+              <Paperclip className="h-4 w-4" />
+            </Motion.button>
+            <Motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="h-9 w-9 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg flex items-center justify-center" title="Add image">
+              <Image className="h-4 w-4" />
+            </Motion.button>
+            <div className="flex-1 relative h-9 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center">
               <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.jpg,.png"
-                className="hidden"
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                className="w-full h-full px-3 pr-9 bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none"
               />
-              
-              {/* Attachment Button */}
-              <Motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => fileInputRef.current?.click()}
-                className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-xl transition-colors flex-shrink-0"
-                title="Attach file"
+              <button
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim() || isTyping}
+                className={`absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded-md flex items-center justify-center text-white text-[11px] font-medium transition-colors ${inputMessage.trim() && !isTyping ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'}`}
+                title={inputMessage.trim() ? 'Send message' : 'Type a message to send'}
               >
-                <Paperclip className="h-5 w-5" />
-              </Motion.button>
-              
-              {/* Image Button */}
-              <Motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-xl transition-colors flex-shrink-0"
-                title="Add image"
-              >
-                <Image className="h-5 w-5" />
-              </Motion.button>
-              
-              {/* Input Field */}
-              <div className="flex-1 relative">
-                <textarea
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={selectedDocument ? "Ask anything about your document..." : "Type your message or click the mic to record..."}
-                  className="w-full px-4 py-3 pr-12 rounded-2xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all min-h-[48px] max-h-[120px]"
-                  rows="1"
-                />
-                
-                {/* Send Button */}
-                <Motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isTyping}
-                  className={`absolute right-2 bottom-2 p-2 rounded-xl transition-all flex-shrink-0 ${
-                    inputMessage.trim() && !isTyping
-                      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  <Send className="h-4 w-4" />
-                </Motion.button>
-              </div>
-              
-              {/* Voice Button */}
-              <Motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={isRecording ? stopRecording : startRecording}
-                disabled={isProcessingAudio}
-                className={`p-3 rounded-xl transition-all flex-shrink-0 ${
-                  isRecording 
-                    ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                    : isProcessingAudio
-                    ? 'bg-yellow-500 text-white cursor-not-allowed'
-                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300'
-                }`}
-                title={isRecording ? 'Stop recording' : isProcessingAudio ? 'Processing audio...' : 'Voice input'}
-              >
-                {isProcessingAudio ? (
-                  <Motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  >
-                    <RefreshCw className="h-5 w-5" />
-                  </Motion.div>
-                ) : isRecording ? (
-                  <MicOff className="h-5 w-5" />
-                ) : (
-                  <Mic className="h-5 w-5" />
-                )}
-              </Motion.button>
+                <Send className="h-3 w-3" />
+              </button>
             </div>
-
-            {/* Recording Status */}
-            {isRecording && (
-              <Motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="mt-3 flex items-center justify-center space-x-2 text-red-600 dark:text-red-400"
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium">Recording: {formatRecordingTime(recordingDuration)}</span>
-                  <button
-                    onClick={stopRecording}
-                    className="ml-4 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-full transition-colors"
-                  >
-                    Stop
-                  </button>
-                </div>
-              </Motion.div>
-            )}
-
-            {/* Processing Status */}
-            {isProcessingAudio && (
-              <Motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="mt-3 flex items-center justify-center space-x-2 text-yellow-600 dark:text-yellow-400"
-              >
-                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium">Converting speech to text...</span>
-              </Motion.div>
-            )}
+            <Motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={isRecording ? stopRecording : startRecording} disabled={isProcessingAudio} className={`h-9 w-9 rounded-lg flex items-center justify-center transition-colors ${isRecording ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : isProcessingAudio ? 'bg-yellow-500 text-white' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}`} title={isRecording ? 'Stop recording' : isProcessingAudio ? 'Processing audio...' : 'Voice input'}>
+              {isProcessingAudio ? (
+                <Motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
+                  <RefreshCw className="h-4 w-4" />
+                </Motion.div>
+              ) : isRecording ? (
+                <MicOff className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </Motion.button>
           </div>
-        </Motion.div>
+          {inputMessage.length === 0 && (
+            <div className="max-w-5xl mx-auto mt-2 flex flex-wrap gap-1">
+              {[
+                'What are the main risks in my document?', 
+                'Provide a detailed summary', 
+                'Check for compliance issues', 
+                'Extract key contract clauses', 
+                'Generate a risk assessment matrix', 
+                'What-if analysis: payment delay scenario'
+              ].map(q => (
+                <button key={q} onClick={() => setInputMessage(q)} className="px-2 py-0.5 text-[11px] bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded transition-colors">
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
+          {isRecording && (
+            <div className="mt-3 flex items-center justify-center space-x-3 text-xs text-red-600 dark:text-red-400">
+              <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+              <span>Recording {recordingDuration}s</span>
+              <button onClick={stopRecording} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-full text-[11px]">Stop</button>
+            </div>
+          )}
+          {isProcessingAudio && (
+            <div className="mt-3 flex items-center justify-center space-x-2 text-xs text-yellow-600 dark:text-yellow-400">
+              <span className="w-3 h-3 rounded-full bg-yellow-500 animate-pulse" />
+              <span>Converting speech to text...</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -37,7 +37,7 @@ const DashboardLayout = ({ children }) => {
           </motion.div>
         ) : (
           // For other pages, use the original layout with padding
-          <div className="h-screen overflow-y-auto">
+          <div className="h-screen" style={{ height: 'calc(100vh - 4rem)', overflowY: 'auto' }}>
             <div className="p-8">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}

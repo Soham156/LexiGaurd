@@ -31,35 +31,116 @@ export const uploadAndAnalyze = async (file, selectedRole = "user") => {
     throw new Error("Authentication required");
   }
 
+  const startTime = Date.now();
+  console.group("🚀 Document Upload Debug - FIXED VERSION 2.0");
+  console.log(
+    "🔧 This should use upload-and-analyze endpoint with text extraction"
+  );
+  console.log("📁 File details:", {
+    name: file.name,
+    size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+    type: file.type,
+    lastModified: new Date(file.lastModified).toISOString(),
+  });
+  console.log("👤 User details:", {
+    uid: auth.currentUser.uid,
+    email: auth.currentUser.email,
+    role: selectedRole,
+  });
+  console.log(
+    "🌐 API endpoint:",
+    `${API_BASE_URL}/document/upload-and-analyze`
+  );
+  console.log("🔧 CACHE BUSTER - Using upload-and-analyze endpoint - v2.0");
+
   try {
-    console.log("Starting file upload and analysis...");
+    console.log("⏰ Step 1: Creating FormData...", new Date().toISOString());
+    const formDataStart = Date.now();
 
     // Create FormData for file upload
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("selectedRole", selectedRole);
+    formData.append("userRole", selectedRole); // Backend expects userRole
+    formData.append("jurisdiction", "India"); // Default jurisdiction
     formData.append("userId", auth.currentUser.uid);
     formData.append("userEmail", auth.currentUser.email);
 
-    // Upload file to backend for processing
+    console.log(`✅ FormData created in ${Date.now() - formDataStart}ms`);
+
+    console.log(
+      "⏰ Step 2: Initiating fetch request...",
+      new Date().toISOString()
+    );
+    const fetchStart = Date.now();
+
+    // Upload file to backend with analysis and text extraction
     const response = await fetch(
       `${API_BASE_URL}/document/upload-and-analyze`,
       {
         method: "POST",
         body: formData,
+        // Add timeout for debugging
+        signal: AbortSignal.timeout(180000), // 3 minutes timeout
       }
     );
 
+    const fetchEnd = Date.now();
+    console.log(`✅ Fetch completed in ${fetchEnd - fetchStart}ms`);
+    console.log("📊 Response details:", {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+    });
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error("❌ HTTP Error:", {
+        status: response.status,
+        statusText: response.statusText,
+        errorBody: errorText,
+        totalTime: `${Date.now() - startTime}ms`,
+      });
       throw new Error(`Upload failed: ${response.status} - ${errorText}`);
     }
 
+    console.log("⏰ Step 3: Parsing response...", new Date().toISOString());
+    const parseStart = Date.now();
+
     const result = await response.json();
-    console.log("Backend analysis completed:", result);
+
+    const parseEnd = Date.now();
+    console.log(`✅ Response parsed in ${parseEnd - parseStart}ms`);
+    console.log("📋 Response data:", {
+      success: result.success,
+      hasFileUrl: !!result.data?.fileUrl,
+      fileName: result.data?.fileName,
+      publicId: result.data?.publicId,
+    });
+
+    console.log("Backend upload completed:", result);
+    console.log("🔍 DETAILED RESULT INSPECTION:");
+    console.log("result.success:", result.success);
+    console.log("result.data:", result.data);
+    console.log("result.data.analysis:", result.data?.analysis);
+    console.log(
+      "result.data.extractedText:",
+      result.data?.extractedText
+        ? `${result.data.extractedText.length} characters`
+        : "null"
+    );
+    console.log(
+      "result.data.fairnessBenchmark:",
+      result.data?.fairnessBenchmark
+    );
 
     if (result.success) {
-      // Store document metadata in Firestore
+      console.log(
+        "⏰ Step 4: Storing in Firestore...",
+        new Date().toISOString()
+      );
+      const firestoreStart = Date.now();
+
+      // Store document metadata in Firestore (handle both old and new response formats)
       const docData = {
         userId: auth.currentUser.uid,
         userEmail: auth.currentUser.email,
@@ -69,32 +150,70 @@ export const uploadAndAnalyze = async (file, selectedRole = "user") => {
         fileType: file.type,
         selectedRole: selectedRole,
         uploadDate: serverTimestamp(),
-        analysisCompleted: !!result.analysis,
-        analysis: result.analysis || null,
-        status: "active",
+        // Handle both response formats (upload-only-fix vs upload-and-analyze)
+        analysisCompleted: !!(
+          result.data?.analysis || result.data?.extractedText
+        ),
+        analysis: result.data?.analysis || null,
+        fairnessBenchmark: result.data?.fairnessBenchmark || null,
+        extractedText: result.data?.extractedText || null,
+        status: result.data?.extractedText ? "processed" : "active",
         // Cloudinary file information
-        cloudinaryUrl: result.fileUrl || null,
-        cloudinaryPublicId: result.publicId || null,
-        processingMethod: "cloudinary-direct",
-        riskLevel: result.analysis?.riskLevel || "unknown",
+        cloudinaryUrl: result.data?.fileUrl || null,
+        cloudinaryPublicId: result.data?.publicId || null,
+        processingMethod:
+          result.data?.metadata?.processingMethod || "upload-and-analyze",
+        riskLevel: result.data?.analysis?.riskLevel || "pending",
       };
 
+      console.log("🔍 FIRESTORE DATA TO SAVE:");
+      console.log(
+        "docData.extractedText:",
+        docData.extractedText
+          ? `${docData.extractedText.length} characters`
+          : "null"
+      );
+      console.log("docData.analysis:", !!docData.analysis);
+      console.log("docData.analysisCompleted:", docData.analysisCompleted);
+      console.log("docData.status:", docData.status);
       const docRef = await addDoc(collection(db, "documents"), docData);
 
+      const firestoreEnd = Date.now();
+      console.log(
+        `✅ Firestore save completed in ${firestoreEnd - firestoreStart}ms`
+      );
       console.log("Document metadata stored in Firestore:", docRef.id);
+
+      const totalTime = Date.now() - startTime;
+      console.log(
+        `🎉 TOTAL UPLOAD TIME: ${totalTime}ms (${(totalTime / 1000).toFixed(
+          2
+        )}s)`
+      );
+      console.groupEnd();
 
       return {
         success: true,
         documentId: docRef.id,
         fileName: file.name,
-        analysis: result.analysis,
-        fileUrl: result.fileUrl,
+        analysis: result.data?.analysis,
+        fairnessBenchmark: result.data?.fairnessBenchmark,
+        fileUrl: result.data?.fileUrl,
       };
     } else {
+      console.error("❌ Backend returned failure:", result);
       throw new Error(result.error || "Analysis failed");
     }
   } catch (error) {
-    console.error("Upload and analyze error:", error);
+    const totalTime = Date.now() - startTime;
+    console.error("❌ Upload and analyze error:", {
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+      totalTime: `${totalTime}ms`,
+      timestamp: new Date().toISOString(),
+    });
+    console.groupEnd();
     throw new Error(`Upload failed: ${error.message}`);
   }
 };

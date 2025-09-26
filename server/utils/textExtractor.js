@@ -103,12 +103,15 @@ class TextExtractor {
   }
 
   /**
-   * Extract text from PDF buffer
+   * Extract text from PDF buffer with multiple fallback methods
    * @param {Buffer} buffer - PDF file buffer
    * @returns {Promise<string>} Extracted text
    */
   static async extractFromPDFBuffer(buffer) {
+    let lastError = null;
+
     try {
+      console.log("🔍 Attempting PDF extraction - Method 1: pdf-parse default");
       const data = await pdf(buffer);
 
       // Clean up the extracted text
@@ -122,12 +125,69 @@ class TextExtractor {
         throw new Error("No readable text found in PDF buffer");
       }
 
+      console.log("✅ PDF extraction successful with default method");
       return text;
     } catch (error) {
-      console.error("PDF buffer extraction error:", error);
-      throw new Error(
-        `Failed to extract text from PDF buffer: ${error.message}`
-      );
+      console.warn("📄 PDF default extraction failed:", error.message);
+      lastError = error;
+
+      // Try fallback method with different options
+      try {
+        console.log(
+          "🔍 Attempting PDF extraction - Method 2: pdf-parse with recovery options"
+        );
+        const data = await pdf(buffer, {
+          // Use recovery mode for corrupted PDFs
+          verbosity: 0,
+          normalizeWhitespace: true,
+          disableCombineTextItems: false,
+        });
+
+        let text = data.text || "";
+
+        // More aggressive text cleaning for problematic PDFs
+        text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ""); // Remove control chars
+        text = text.replace(/\s+/g, " ").trim();
+        text = text.replace(/\n\s*\n/g, "\n\n");
+
+        if (!text || text.length < 5) {
+          throw new Error("Fallback method also returned no readable text");
+        }
+
+        console.log("✅ PDF extraction successful with fallback method");
+        return text;
+      } catch (fallbackError) {
+        console.warn(
+          "📄 PDF fallback extraction also failed:",
+          fallbackError.message
+        );
+
+        // Final attempt - try to extract any available info
+        try {
+          console.log(
+            "🔍 Attempting PDF extraction - Method 3: basic info extraction"
+          );
+          const data = await pdf(buffer, { max: 1 }); // Try just first page
+
+          let text = data.text || data.info?.Title || data.info?.Subject || "";
+
+          if (text && text.length >= 3) {
+            console.log(
+              "⚠️ PDF extraction with minimal content - using basic info"
+            );
+            return `PDF Content (partial): ${text}`;
+          }
+
+          throw new Error("No extractable content found");
+        } catch (finalError) {
+          console.error("❌ All PDF extraction methods failed");
+          throw new Error(
+            `Failed to extract text from PDF buffer: ${
+              lastError?.message || finalError.message
+            }`
+          );
+        }
+      }
     }
   }
 
