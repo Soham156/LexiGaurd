@@ -497,33 +497,37 @@ const DocumentsPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="h-full bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
-          <p className="text-gray-600">Manage and analyze your legal documents</p>
-        </div>
-        
-        {/* Upload Button */}
-        <div className="relative">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept=".pdf,.doc,.docx,.txt"
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-          >
-            <Upload className="w-4 h-4" />
-            <span>{uploading ? 'Uploading...' : 'Upload Document'}</span>
-          </button>
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Documents</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage and analyze your legal documents</p>
+          </div>
+          
+          {/* Upload Button */}
+          <div className="relative">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".pdf,.doc,.docx,.txt"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+              <span>{uploading ? 'Uploading...' : 'Upload Document'}</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      <div className="flex-1 overflow-y-auto p-8 space-y-6">
 
       {/* Alert Messages */}
       {uploadError && (
@@ -568,22 +572,22 @@ const DocumentsPage = () => {
       {/* Search and Filter */}
       <div className="flex space-x-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search documents..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         
         <div className="relative">
-          <Filter className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Filter className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+            className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="all">All Status</option>
             <option value="processed">Processed</option>
@@ -614,7 +618,7 @@ const DocumentsPage = () => {
                 const duplicateCount = fileNames.length - uniqueNames.length;
                 
                 return (
-                  <div className="flex items-center justify-between bg-white p-3 rounded-lg">
+                  <div className="flex items-center justify-between bg-white dark:bg-gray-700 p-3 rounded-lg">
                     <div>
                       <strong>Unique:</strong> {uniqueNames.length} | 
                       <strong className={duplicateCount > 0 ? " text-red-600" : " text-green-600"}> 
@@ -635,7 +639,7 @@ const DocumentsPage = () => {
               })()}
               
               {/* Show file names with upload dates - collapsed by default */}
-              <details className="bg-white p-3 rounded-lg">
+              <details className="bg-white dark:bg-gray-700 p-3 rounded-lg">
                 <summary className="cursor-pointer text-xs font-medium text-gray-700">Document Details ({documents.length} files)</summary>
                 <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
                   {documents.slice(0, 10).map((doc, index) => (
@@ -663,9 +667,9 @@ const DocumentsPage = () => {
       {/* Documents Grid */}
       {filteredDocuments.length === 0 ? (
         <div className="text-center py-12">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
-          <p className="text-gray-500">
+          <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">No documents found</h3>
+          <p className="text-gray-500 dark:text-gray-400">
             {documents.length === 0 
               ? "Upload your first document to get started" 
               : "Try adjusting your search or filter criteria"}
@@ -678,7 +682,7 @@ const DocumentsPage = () => {
               key={doc.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-xl transition-all duration-200 hover:border-blue-300"
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-200 hover:border-blue-300 dark:hover:border-blue-600"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -768,7 +772,7 @@ const DocumentsPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4"
           >
             <div className="flex items-center mb-4">
               <AlertTriangle className="w-6 h-6 text-red-500 mr-3" />
@@ -796,6 +800,7 @@ const DocumentsPage = () => {
           </motion.div>
         </div>
       )}
+      </div>
     </div>
   );
 };

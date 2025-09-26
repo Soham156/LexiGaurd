@@ -144,20 +144,19 @@ const SummaryPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Page Header */}
+    <div className="h-full bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
         >
           <div className="flex items-center space-x-4">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg">
-              <Globe className="h-8 w-8 text-white" />
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+              <Globe className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
                 Multilingual Document Summarizer
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -166,6 +165,10 @@ const SummaryPage = () => {
             </div>
           </div>
         </motion.div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-7xl mx-auto">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Upload Section */}
@@ -328,6 +331,7 @@ const SummaryPage = () => {
               <MultilingualSummary uploadedDocument={uploadedDocument} />
             </motion.div>
           </div>
+        </div>
         </div>
       </div>
     </div>
