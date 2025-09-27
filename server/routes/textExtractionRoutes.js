@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const {
   analyzeDocumentFromCloudinaryUrl,
 } = require("../services/documentAnalysisService");
@@ -12,16 +12,11 @@ router.post("/extract-text/:documentId", async (req, res) => {
   const { documentId } = req.params;
   const { userId } = req.body;
 
-  console.group(`🔧 [${requestId}] Text Extraction Request Started`);
-  console.log(`📄 [${requestId}] Document ID: ${documentId}`);
-  console.log(`👤 [${requestId}] User ID: ${userId}`);
+  console.group(`ðŸ”§ [${requestId}] Text Extraction Request Started`);
 
   try {
     // This will attempt to extract text from Cloudinary and save to database
     // The analyzeDocumentFromCloudinaryUrl function should handle the text extraction
-    console.log(
-      `⏰ [${requestId}] Starting text extraction for existing document`
-    );
 
     const result = {
       success: true,
@@ -30,16 +25,13 @@ router.post("/extract-text/:documentId", async (req, res) => {
     };
 
     const totalTime = Date.now() - requestStart;
-    console.log(
-      `✅ [${requestId}] Text extraction completed in ${totalTime}ms`
-    );
     console.groupEnd();
 
     res.json(result);
   } catch (error) {
     const totalTime = Date.now() - requestStart;
     console.error(
-      `❌ [${requestId}] Text extraction failed after ${totalTime}ms:`,
+      `âŒ [${requestId}] Text extraction failed after ${totalTime}ms:`,
       error.message
     );
     console.groupEnd();

@@ -1,12 +1,11 @@
 import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Shield, ArrowRight, FileText, Zap, Users, Award, Mail, Phone, MapPin, Github, Twitter, Linkedin, Star, CheckCircle, Brain, Lock, Clock, BarChart3, MessageSquare, Eye } from 'lucide-react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
+import { Shield, ArrowRight, FileText, Zap, Users, Award, Github, Twitter, Linkedin, Star, CheckCircle, Brain, Lock, Clock, BarChart3, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { scrollYProgress } = useScroll();
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -15,12 +14,12 @@ const LandingPage = () => {
         {/* Sophisticated Background Pattern */}
         <div className="absolute inset-0">
           {/* Grid Pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)]"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
           
-          {/* Gradient Orbs */}
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 rounded-full mix-blend-multiply filter blur-xl animate-blob dark:from-blue-600/10 dark:to-cyan-600/10"></div>
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000 dark:from-purple-600/10 dark:to-pink-600/10"></div>
-          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000 dark:from-yellow-600/10 dark:to-orange-600/10"></div>
+          {/* Gradient Orbs - Enhanced for light theme */}
+          <div className="absolute top-0 -left-4 w-72 h-72 bg-gradient-to-r from-blue-400/30 to-cyan-400/30 dark:from-blue-600/10 dark:to-cyan-600/10 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+          <div className="absolute top-0 -right-4 w-72 h-72 bg-gradient-to-r from-purple-400/30 to-pink-400/30 dark:from-purple-600/10 dark:to-pink-600/10 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-gradient-to-r from-yellow-400/25 to-orange-400/25 dark:from-yellow-600/10 dark:to-orange-600/10 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
         </div>
 
         {/* Main Hero Content */}
@@ -33,7 +32,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="inline-flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-full px-4 py-2"
+                className="inline-flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-800 rounded-full px-4 py-2 shadow-sm"
               >
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium text-blue-700 dark:text-blue-300">AI-Powered Legal Analysis</span>
@@ -92,8 +91,8 @@ const LandingPage = () => {
                 </motion.button>
                 
                 <motion.button
-                  onClick={() => navigate('/upload')}
-                  className="group px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  onClick={() => navigate('/dashboard/analysis')}
+                  className="group px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -134,9 +133,9 @@ const LandingPage = () => {
               className="relative"
             >
               {/* Modern Dashboard Container */}
-              <div className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden backdrop-blur-xl">
+              <div className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden backdrop-blur-xl hover:shadow-3xl transition-shadow duration-300">
                 {/* Modern Browser Header */}
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 px-6 py-4 border-b border-gray-300 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="flex space-x-2">
@@ -190,7 +189,7 @@ const LandingPage = () => {
                       transition={{ duration: 3, repeat: Infinity, delay: 0 }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-pink-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                      <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-red-100 dark:border-red-900/30 shadow-lg hover:shadow-xl transition-all duration-300">
+                      <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-red-200 dark:border-red-900/30 shadow-lg hover:shadow-xl transition-all duration-300">
                         <div className="flex items-center justify-between mb-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
                             <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center">
@@ -215,7 +214,7 @@ const LandingPage = () => {
                       transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                      <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-yellow-100 dark:border-yellow-900/30 shadow-lg hover:shadow-xl transition-all duration-300">
+                      <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-yellow-200 dark:border-yellow-900/30 shadow-lg hover:shadow-xl transition-all duration-300">
                         <div className="flex items-center justify-between mb-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
                             <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center">
@@ -240,7 +239,7 @@ const LandingPage = () => {
                       transition={{ duration: 3, repeat: Infinity, delay: 1 }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                      <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-green-100 dark:border-green-900/30 shadow-lg hover:shadow-xl transition-all duration-300">
+                      <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-green-200 dark:border-green-900/30 shadow-lg hover:shadow-xl transition-all duration-300">
                         <div className="flex items-center justify-between mb-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
                             <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center">
@@ -263,7 +262,7 @@ const LandingPage = () => {
                   {/* AI Insights Panel */}
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                    <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
+                    <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800/30">
                       <div className="flex items-start space-x-4">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
                           <Brain className="w-6 h-6 text-white" />
@@ -349,7 +348,7 @@ const LandingPage = () => {
       {/* Features Section */}
       <section className="py-24 bg-gray-50 dark:bg-gray-800/50 relative overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#f8fafc_1px,transparent_1px),linear-gradient(to_bottom,#f8fafc_1px,transparent_1px)] bg-[size:2rem_2rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:2rem_2rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
@@ -360,7 +359,7 @@ const LandingPage = () => {
             transition={{ duration: 0.8 }}
             className="text-center mb-20"
           >
-            <div className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-full px-4 py-2 mb-6">
+            <div className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-800 rounded-full px-4 py-2 mb-6 shadow-sm">
               <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Powerful Features</span>
             </div>
@@ -502,7 +501,7 @@ const LandingPage = () => {
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-700"
+            className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300"
           >
             <div className="text-center mb-12">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Complete Legal Workflow</h3>
@@ -542,8 +541,8 @@ const LandingPage = () => {
       <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
         {/* Background Elements */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-100/50 dark:bg-blue-900/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-100/50 dark:bg-indigo-900/20 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-100/70 dark:bg-blue-900/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-100/70 dark:bg-indigo-900/20 rounded-full blur-3xl"></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -555,7 +554,7 @@ const LandingPage = () => {
             transition={{ duration: 0.8 }}
             className="text-center mb-20"
           >
-            <div className="inline-flex items-center space-x-2 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-full px-4 py-2 mb-6">
+            <div className="inline-flex items-center space-x-2 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800 rounded-full px-4 py-2 mb-6 shadow-sm">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-green-700 dark:text-green-300">Proven Results</span>
             </div>
@@ -616,7 +615,7 @@ const LandingPage = () => {
                 className="group relative"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgColor} rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500`}></div>
-                <div className="relative bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700 group-hover:-translate-y-2">
+                <div className="relative bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 group-hover:-translate-y-2 hover:border-gray-300 dark:hover:border-gray-600">
                   <div className="flex items-center justify-between mb-4">
                     <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center shadow-lg`}>
                       <stat.icon className="w-6 h-6 text-white" />
@@ -640,7 +639,7 @@ const LandingPage = () => {
       {/* Testimonials Section */}
       <section className="py-24 bg-gray-50 dark:bg-gray-800/50 relative overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(59,130,246,0.1)_1px,transparent_0)] [background-size:20px_20px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(59,130,246,0.05)_1px,transparent_0)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(59,130,246,0.15)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(59,130,246,0.05)_1px,transparent_0)] [background-size:20px_20px]"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
@@ -651,7 +650,7 @@ const LandingPage = () => {
             transition={{ duration: 0.8 }}
             className="text-center mb-20"
           >
-            <div className="inline-flex items-center space-x-2 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-full px-4 py-2 mb-6">
+            <div className="inline-flex items-center space-x-2 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-800 rounded-full px-4 py-2 mb-6 shadow-sm">
               <Star className="w-4 h-4 text-yellow-600 dark:text-yellow-400 fill-current" />
               <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">Customer Stories</span>
             </div>
@@ -673,7 +672,7 @@ const LandingPage = () => {
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-12 shadow-2xl border border-gray-100 dark:border-gray-700 mb-16"
+            className="bg-white dark:bg-gray-800 rounded-3xl p-12 shadow-2xl border border-gray-200 dark:border-gray-700 mb-16 hover:shadow-3xl transition-shadow duration-300"
           >
             <div className="max-w-4xl mx-auto text-center">
               <div className="flex justify-center mb-8">
@@ -750,7 +749,7 @@ const LandingPage = () => {
                 className="group relative"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${testimonial.color} opacity-5 rounded-3xl blur-xl group-hover:opacity-10 transition-all duration-500`}></div>
-                <div className="relative bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700">
+                <div className="relative bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex">
@@ -790,11 +789,14 @@ const LandingPage = () => {
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 text-center text-white"
+            className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-600 dark:to-indigo-600 rounded-3xl p-8 text-center text-gray-900 dark:text-white shadow-2xl border border-blue-200 dark:border-blue-500/20 relative overflow-hidden"
           >
-            <div className="max-w-4xl mx-auto">
-              <h3 className="text-2xl font-bold mb-4">Join the Legal Innovation Movement</h3>
-              <p className="text-blue-100 mb-8 text-lg">
+            {/* Background Pattern for Enhanced Visual Appeal */}
+            <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(-45deg,rgba(59,130,246,0.05)_1px,transparent_1px)] dark:bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(-45deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:20px_20px] opacity-50 dark:opacity-30"></div>
+            
+            <div className="max-w-4xl mx-auto relative z-10">
+              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Join the Legal Innovation Movement</h3>
+              <p className="text-gray-700 dark:text-blue-100 mb-8 text-lg leading-relaxed">
                 Over 25,000 legal professionals trust LexiGuard to streamline their contract analysis and improve decision-making
               </p>
               
@@ -805,10 +807,22 @@ const LandingPage = () => {
                   { number: "500+", label: "Law Firms" },
                   { number: "50+", label: "Countries" }
                 ].map((stat, index) => (
-                  <div key={index} className="text-center">
-                    <div className="text-3xl font-bold text-white mb-1">{stat.number}</div>
-                    <div className="text-blue-200 text-sm">{stat.label}</div>
-                  </div>
+                  <motion.div 
+                    key={index} 
+                    className="text-center group"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1 group-hover:text-blue-700 dark:group-hover:text-blue-100 transition-colors duration-200">
+                      {stat.number}
+                    </div>
+                    <div className="text-gray-500 dark:text-blue-200 text-sm font-medium group-hover:text-blue-800 dark:group-hover:text-blue-100 transition-colors duration-200">
+                      {stat.label}
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -817,13 +831,13 @@ const LandingPage = () => {
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-24 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 text-gray-900 dark:text-white relative overflow-hidden">
         {/* Background Elements */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20"></div>
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30 dark:opacity-20"></div>
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-200/40 dark:bg-blue-500/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-200/40 dark:bg-indigo-500/20 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-blue-100/50 to-indigo-100/50 dark:from-blue-500/10 dark:to-indigo-500/10 rounded-full blur-3xl"></div>
         </div>
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -835,23 +849,23 @@ const LandingPage = () => {
             className="text-center"
           >
             {/* Badge */}
-            <div className="inline-flex items-center space-x-2 bg-blue-500/20 border border-blue-400/30 rounded-full px-6 py-3 mb-8">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-blue-200 font-medium">Ready to Get Started?</span>
+            <div className="inline-flex items-center space-x-2 bg-blue-100/80 dark:bg-blue-500/20 border border-blue-300/60 dark:border-blue-400/30 rounded-full px-6 py-3 mb-8 shadow-sm backdrop-blur-sm">
+              <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-blue-700 dark:text-blue-200 font-medium">Ready to Get Started?</span>
             </div>
 
             {/* Main Headline */}
             <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
               Transform Your
               <br />
-              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-cyan-400 dark:to-indigo-400 bg-clip-text text-transparent">
                 Legal Operations
               </span>
               <br />
               Today
             </h2>
             
-            <p className="text-xl md:text-2xl mb-12 text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl mb-12 text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
               Join 25,000+ legal professionals who trust LexiGuard to analyze contracts, identify risks, 
               and accelerate decision-making with enterprise-grade AI technology.
             </p>
@@ -860,11 +874,11 @@ const LandingPage = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16">
               <motion.button
                 onClick={() => navigate('/signup')}
-                className="group relative px-12 py-5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden min-w-[280px]"
+                className="group relative px-12 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden min-w-[280px]"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative flex items-center justify-center space-x-3">
                   <span>Start Free Trial</span>
                   <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-200" />
@@ -872,8 +886,8 @@ const LandingPage = () => {
               </motion.button>
               
               <motion.button
-                onClick={() => navigate('/upload')}
-                className="group px-12 py-5 bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white rounded-2xl font-bold text-xl hover:bg-white/20 hover:border-white/30 transition-all duration-300 min-w-[280px]"
+                onClick={() => navigate('/dashboard/analysis')}
+                className="group px-12 py-5 bg-white/90 dark:bg-white/10 backdrop-blur-sm border-2 border-gray-200 dark:border-white/20 text-gray-900 dark:text-white rounded-2xl font-bold text-xl hover:bg-white dark:hover:bg-white/20 hover:border-gray-300 dark:hover:border-white/30 transition-all duration-300 min-w-[280px] shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -911,11 +925,11 @@ const LandingPage = () => {
                   transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
                   className="flex flex-col items-center text-center"
                 >
-                  <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 border border-white/20">
-                    <item.icon className="w-8 h-8 text-blue-400" />
+                  <div className="w-16 h-16 bg-white/80 dark:bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 border border-gray-200/60 dark:border-white/30 shadow-lg">
+                    <item.icon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h3 className="font-bold text-white mb-2">{item.title}</h3>
-                  <p className="text-gray-300 text-sm">{item.desc}</p>
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-2">{item.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
@@ -926,165 +940,28 @@ const LandingPage = () => {
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.5 }}
-              className="flex flex-wrap items-center justify-center gap-12 text-gray-400"
+              className="flex flex-wrap items-center justify-center gap-12 text-gray-600 dark:text-gray-400"
             >
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">25K+</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">25K+</div>
                 <div className="text-sm">Active Users</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">500K+</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">500K+</div>
                 <div className="text-sm">Documents Processed</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">99.8%</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">99.8%</div>
                 <div className="text-sm">Accuracy Rate</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">50+</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">50+</div>
                 <div className="text-sm">Countries</div>
               </div>
             </motion.div>
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-12">
-            {/* Company Info */}
-            <div className="lg:col-span-2">
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-              >
-                <div className="flex items-center mb-6">
-                  <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg mr-4">
-                    <Shield className="h-8 w-8 text-white" />
-                  </div>
-                  <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                    LexiGuard
-                  </span>
-                </div>
-                <p className="text-gray-300 mb-8 leading-relaxed text-lg max-w-md">
-                  Revolutionizing legal document analysis with AI-powered insights, 
-                  enterprise-grade security, and intuitive collaboration tools.
-                </p>
-                <div className="flex space-x-4">
-                  {[
-                    { icon: Twitter, href: "#", label: "Twitter" },
-                    { icon: Linkedin, href: "#", label: "LinkedIn" },
-                    { icon: Github, href: "#", label: "GitHub" }
-                  ].map((social, index) => (
-                    <motion.a
-                      key={index}
-                      href={social.href}
-                      aria-label={social.label}
-                      className="p-3 bg-gray-800 hover:bg-gray-700 rounded-xl transition-all duration-300 hover:scale-110"
-                      whileHover={{ y: -3 }}
-                    >
-                      <social.icon className="w-6 h-6 text-gray-300 hover:text-white" />
-                    </motion.a>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Product Links */}
-            <div>
-              <h3 className="text-xl font-bold mb-6 text-white">Product</h3>
-              <div className="space-y-4">
-                {[
-                  { name: "Features", href: "#features" },
-                  { name: "Pricing", href: "#pricing" },
-                  { name: "Security", href: "#security" },
-                  { name: "Integrations", href: "#integrations" },
-                  { name: "API Docs", href: "#api" }
-                ].map((link, index) => (
-                  <motion.a
-                    key={index}
-                    href={link.href}
-                    className="block text-gray-400 hover:text-white transition-colors duration-300 text-lg"
-                    whileHover={{ x: 5 }}
-                  >
-                    {link.name}
-                  </motion.a>
-                ))}
-              </div>
-            </div>
-
-            {/* Company Links */}
-            <div>
-              <h3 className="text-xl font-bold mb-6 text-white">Company</h3>
-              <div className="space-y-4">
-                {[
-                  { name: "About Us", href: "#about" },
-                  { name: "Careers", href: "#careers" },
-                  { name: "Blog", href: "#blog" },
-                  { name: "Press", href: "#press" },
-                  { name: "Contact", href: "#contact" }
-                ].map((link, index) => (
-                  <motion.a
-                    key={index}
-                    href={link.href}
-                    className="block text-gray-400 hover:text-white transition-colors duration-300 text-lg"
-                    whileHover={{ x: 5 }}
-                  >
-                    {link.name}
-                  </motion.a>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Newsletter Signup */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="mt-16 pt-12 border-t border-gray-800"
-          >
-            <div className="max-w-md mx-auto text-center lg:text-left lg:max-w-none lg:mx-0">
-              <h3 className="text-2xl font-bold text-white mb-4">Stay Updated</h3>
-              <p className="text-gray-400 mb-6">Get the latest updates on new features and legal tech insights.</p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-6 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  Subscribe
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Bottom Bar */}
-          <div className="mt-16 pt-8 border-t border-gray-800 flex flex-col lg:flex-row justify-between items-center">
-            <p className="text-gray-400 text-center lg:text-left mb-4 lg:mb-0">
-              © 2025 LexiGuard. All rights reserved.
-            </p>
-            <div className="flex flex-wrap justify-center lg:justify-end gap-8">
-              <a href="#privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#terms" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
-              <a href="#cookies" className="text-gray-400 hover:text-white transition-colors">Cookie Policy</a>
-              <a href="#security" className="text-gray-400 hover:text-white transition-colors">Security</a>
-            </div>
-          </div>
-        </div>
-
-        {/* Decorative Elements */}
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-      </footer>
     </div>
   );
 };

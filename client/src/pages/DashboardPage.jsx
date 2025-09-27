@@ -9,6 +9,7 @@ import SettingsPage from './SettingsPage';
 import TeamPage from './TeamPage';
 import NotificationsPage from './NotificationsPage';
 import BenchmarkPage from './BenchmarkPage';
+import UploadPage from './UploadPage';
 
 export default function DashboardPage() {
   const location = useLocation();
@@ -17,7 +18,9 @@ export default function DashboardPage() {
   const renderDashboardContent = () => {
     const path = location.pathname;
     
-    if (path === '/dashboard/documents') {
+    if (path === '/dashboard/analysis') {
+      return <UploadPage />;
+    } else if (path === '/dashboard/documents') {
       return <DocumentsPage />;
     } else if (path === '/dashboard/summary') {
       return <SummaryPage />;

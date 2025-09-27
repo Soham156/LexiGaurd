@@ -1,24 +1,19 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+﻿const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 class SimpleFairnessService {
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY;
-    console.log(
-      `🔑 API Key status:`,
-      this.apiKey ? `Present (${this.apiKey.substring(0, 10)}...)` : "MISSING"
-    );
 
     if (!this.apiKey) {
-      console.warn("❌ GEMINI_API_KEY not found in environment variables");
+      console.warn("âŒ GEMINI_API_KEY not found in environment variables");
       return;
     }
 
     try {
       this.genAI = new GoogleGenerativeAI(this.apiKey);
       this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      console.log(`✅ SimpleFairnessService initialized with gemini-2.0-flash`);
     } catch (error) {
-      console.error(`❌ Failed to initialize SimpleFairnessService:`, error);
+      console.error(`âŒ Failed to initialize SimpleFairnessService:`, error);
     }
   }
 
@@ -39,14 +34,8 @@ class SimpleFairnessService {
     const fairnessStart = Date.now();
     const fairnessId = Math.random().toString(36).substr(2, 9);
 
-    console.group(`⚡ [${fairnessId}] Quick Fairness Analysis Started`);
-    console.log(
-      `📄 [${fairnessId}] Original contract length: ${contractText.length} characters`
-    );
-
     if (!this.model) {
-      console.error(`❌ [${fairnessId}] Gemini AI not properly initialized`);
-      console.groupEnd();
+      console.error(`âŒ [${fairnessId}] Gemini AI not properly initialized`);
       throw new Error("Gemini AI not properly initialized");
     }
 
@@ -54,15 +43,7 @@ class SimpleFairnessService {
     const limitedText =
       contractText.substring(0, 1000) +
       (contractText.length > 1000 ? "..." : "");
-    console.log(
-      `✂️ [${fairnessId}] Limited to ${limitedText.length} characters for speed`
-    );
 
-    console.log(
-      `⏰ [${fairnessId}] Creating minimal prompt - ${
-        Date.now() - fairnessStart
-      }ms`
-    );
     const promptStart = Date.now();
 
     // Enhanced prompt with strict JSON-only requirement
@@ -90,17 +71,8 @@ Required JSON format:
 }`;
 
     const promptTime = Date.now() - promptStart;
-    console.log(`✅ [${fairnessId}] Minimal prompt created in ${promptTime}ms`);
-    console.log(
-      `📏 [${fairnessId}] Prompt length: ${prompt.length} characters (vs 18,436 before)`
-    );
 
     try {
-      console.log(
-        `⏰ [${fairnessId}] Sending to Gemini API - ${
-          Date.now() - fairnessStart
-        }ms`
-      );
       const apiStart = Date.now();
 
       const result = await this.model.generateContent(prompt);
@@ -108,34 +80,18 @@ Required JSON format:
       const analysisText = response.text();
 
       const apiTime = Date.now() - apiStart;
-      console.log(
-        `✅ [${fairnessId}] Gemini API response in ${apiTime}ms (vs 23,013ms before)`
-      );
-      console.log(
-        `📊 [${fairnessId}] Response length: ${analysisText.length} characters`
-      );
 
       const totalTime = Date.now() - fairnessStart;
-      console.log(
-        `🎉 [${fairnessId}] Quick analysis completed in ${totalTime}ms`
-      );
-      console.log(
-        `⚡ [${fairnessId}] Speed improvement: ${Math.round(
-          23000 / totalTime
-        )}x faster`
-      );
-      console.groupEnd();
 
       return this.parseQuickResponse(analysisText);
     } catch (error) {
       const totalTime = Date.now() - fairnessStart;
       console.error(
-        `❌ [${fairnessId}] Quick analysis failed after ${totalTime}ms:`,
+        `âŒ [${fairnessId}] Quick analysis failed after ${totalTime}ms:`,
         error.message
       );
-      console.error(`📋 [${fairnessId}] Full error details:`, error);
-      console.error(`🔍 [${fairnessId}] Error type:`, error.constructor.name);
-      console.groupEnd();
+      console.error(`ðŸ“‹ [${fairnessId}] Full error details:`, error);
+      console.error(`ðŸ” [${fairnessId}] Error type:`, error.constructor.name);
       return this.getFallbackAnalysis();
     }
   }
@@ -145,11 +101,6 @@ Required JSON format:
    */
   parseQuickResponse(responseText) {
     try {
-      console.log(
-        `📄 Raw AI response:`,
-        responseText.substring(0, 500) + "..."
-      );
-
       // Try to extract JSON from the response
       let jsonMatch = null;
 
@@ -159,7 +110,6 @@ Required JSON format:
       );
       if (jsonBlockMatch) {
         jsonMatch = jsonBlockMatch[1].trim();
-        console.log(`🎯 Found JSON in code block`);
       }
 
       // Method 2: Look for standalone JSON object
@@ -167,7 +117,6 @@ Required JSON format:
         const jsonObjectMatch = responseText.match(/\{[\s\S]*\}/);
         if (jsonObjectMatch) {
           jsonMatch = jsonObjectMatch[0].trim();
-          console.log(`🎯 Found JSON object`);
         }
       }
 
@@ -177,7 +126,6 @@ Required JSON format:
         const endIndex = responseText.lastIndexOf("}");
         if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
           jsonMatch = responseText.substring(startIndex, endIndex + 1).trim();
-          console.log(`🎯 Extracted JSON by braces`);
         }
       }
 
@@ -185,16 +133,7 @@ Required JSON format:
         throw new Error("No JSON found in AI response");
       }
 
-      console.log(`🧹 Cleaned JSON:`, jsonMatch.substring(0, 200) + "...");
-
       const analysis = JSON.parse(jsonMatch);
-      console.log(`✅ Successfully parsed analysis:`, {
-        score: analysis.score,
-        risk: analysis.risk,
-        issuesCount: analysis.issues?.length,
-        positivesCount: analysis.positives?.length,
-        marketComparisonsCount: analysis.marketComparisons?.length,
-      });
 
       return {
         overallFairnessScore:
@@ -208,9 +147,9 @@ Required JSON format:
         analysisType: "quick",
       };
     } catch (error) {
-      console.error("❌ Error parsing quick fairness response:", error.message);
+      console.error("âŒ Error parsing quick fairness response:", error.message);
       console.error(
-        "📄 First 1000 chars of failed response:",
+        "ðŸ“„ First 1000 chars of failed response:",
         responseText.substring(0, 1000)
       );
       return this.getFallbackAnalysis();

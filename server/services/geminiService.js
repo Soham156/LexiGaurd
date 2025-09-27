@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+﻿const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 class GeminiService {
   constructor() {
@@ -176,7 +176,6 @@ Provide only the JSON response without any additional text or formatting.
       return analysis;
     } catch (error) {
       console.error("Error parsing Gemini response:", error);
-      console.log("Raw response:", responseText);
 
       // Return a fallback analysis
       return {

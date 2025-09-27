@@ -86,7 +86,6 @@ const MultilingualSummary = ({ uploadedDocument }) => {
           type: data.type
         });
       } else {
-        console.error('Failed to generate summary:', data.error);
         setSummary({
           content: `❌ **Error generating summary**: ${data.error}`,
           language: selectedLanguage,
@@ -95,7 +94,6 @@ const MultilingualSummary = ({ uploadedDocument }) => {
         });
       }
     } catch (error) {
-      console.error('Error generating summary:', error);
       setSummary({
         content: `❌ **Network error**: Failed to generate summary. Please check your connection and try again.`,
         language: selectedLanguage,

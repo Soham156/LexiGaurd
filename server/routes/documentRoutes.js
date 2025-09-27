@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const multer = require("multer");
 const cloudinary = require("../config/cloudinary");
 const {
@@ -17,27 +17,16 @@ router.post("/upload-only", upload.single("file"), async (req, res) => {
   const requestId = Math.random().toString(36).substr(2, 9);
 
   console.group(
-    `📤 [${requestId}] FIXED Upload-Only (with text extraction) Started`
-  );
-  console.log(
-    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
-  );
-  console.log(
-    `🔧 [${requestId}] NOTE: This now extracts text even for 'upload-only' to fix cached clients`
+    `ðŸ“¤ [${requestId}] FIXED Upload-Only (with text extraction) Started`
   );
 
   try {
     const { file } = req;
     const { userRole = "user", jurisdiction = "India" } = req.body;
 
-    console.log(
-      `⏰ [${requestId}] Step 1: Validating request - ${
-        Date.now() - requestStart
-      }ms`
-    );
 
     if (!file) {
-      console.error(`❌ [${requestId}] No file provided`);
+      console.error(`âŒ [${requestId}] No file provided`);
       console.groupEnd();
       return res.status(400).json({
         success: false,
@@ -45,20 +34,8 @@ router.post("/upload-only", upload.single("file"), async (req, res) => {
       });
     }
 
-    console.log(`📄 [${requestId}] File details:`, {
-      filename: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-      userRole,
-      jurisdiction,
-    });
 
     // Step 2: Upload to Cloudinary
-    console.log(
-      `⏰ [${requestId}] Step 2: Starting Cloudinary upload - ${
-        Date.now() - requestStart
-      }ms`
-    );
     const cloudinaryStart = Date.now();
 
     const result = await new Promise((resolve, reject) => {
@@ -76,30 +53,10 @@ router.post("/upload-only", upload.single("file"), async (req, res) => {
     });
 
     const cloudinaryTime = Date.now() - cloudinaryStart;
-    console.log(
-      `✅ [${requestId}] Cloudinary upload completed in ${cloudinaryTime}ms`
-    );
-    console.log(`☁️ [${requestId}] Cloudinary result:`, {
-      url: result.secure_url,
-      publicId: result.public_id,
-      format: result.format,
-    });
 
     // Step 3: NEW - Extract text and analyze (this is the fix!)
-    console.log(
-      `⏰ [${requestId}] Step 3: Starting text extraction and analysis - ${
-        Date.now() - requestStart
-      }ms`
-    );
     const analysisStart = Date.now();
 
-    console.log(`🔍 [${requestId}] Calling analyzeDocumentFromBuffer with:`, {
-      bufferSize: file.buffer.length,
-      fileName: file.originalname,
-      mimeType: file.mimetype,
-      userRole,
-      jurisdiction,
-    });
 
     const analysis = await analyzeDocumentFromBuffer(
       file.buffer,
@@ -110,27 +67,8 @@ router.post("/upload-only", upload.single("file"), async (req, res) => {
     );
 
     const analysisTime = Date.now() - analysisStart;
-    console.log(`✅ [${requestId}] Analysis completed in ${analysisTime}ms`);
-    console.log(`� [${requestId}] Analysis success:`, analysis.success);
-    console.log(
-      `🔍 [${requestId}] Has extractedText:`,
-      !!analysis.extractedText
-    );
-    console.log(
-      `🔍 [${requestId}] ExtractedText length:`,
-      analysis.extractedText?.length || 0
-    );
 
     const totalTime = Date.now() - requestStart;
-    console.log(
-      `🎉 [${requestId}] FIXED Upload completed successfully in ${totalTime}ms`
-    );
-    console.log(`📊 [${requestId}] Timing summary:`, {
-      validation: `${cloudinaryStart - requestStart}ms`,
-      cloudinaryUpload: `${cloudinaryTime}ms`,
-      textExtraction: `${analysisTime}ms`,
-      totalTime: `${totalTime}ms`,
-    });
     console.groupEnd();
 
     // Return both upload and analysis data
@@ -157,7 +95,7 @@ router.post("/upload-only", upload.single("file"), async (req, res) => {
   } catch (error) {
     const totalTime = Date.now() - requestStart;
     console.error(
-      `❌ [${requestId}] FIXED Upload failed after ${totalTime}ms:`,
+      `âŒ [${requestId}] FIXED Upload failed after ${totalTime}ms:`,
       error.message
     );
     console.groupEnd();
@@ -177,26 +115,15 @@ router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
   const requestStart = Date.now();
   const requestId = Math.random().toString(36).substr(2, 9);
 
-  console.log(
-    `🔥 [${requestId}] UPLOAD-AND-ANALYZE ENDPOINT HIT!!! This should always appear`
-  );
-  console.group(`📤 [${requestId}] Document Upload Request Started`);
-  console.log(
-    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
-  );
+  console.group(`ðŸ“¤ [${requestId}] Document Upload Request Started`);
 
   try {
     const { file } = req;
     const { userRole = "Tenant", jurisdiction = "India" } = req.body;
 
-    console.log(
-      `⏰ [${requestId}] Step 1: Validating request - ${
-        Date.now() - requestStart
-      }ms`
-    );
 
     if (!file) {
-      console.error(`❌ [${requestId}] No file provided`);
+      console.error(`âŒ [${requestId}] No file provided`);
       console.groupEnd();
       return res.status(400).json({
         success: false,
@@ -204,18 +131,8 @@ router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
       });
     }
 
-    console.log(`📄 [${requestId}] File details:`, {
-      filename: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-    });
 
     // Step 2: Upload to Cloudinary
-    console.log(
-      `⏰ [${requestId}] Step 2: Starting Cloudinary upload - ${
-        Date.now() - requestStart
-      }ms`
-    );
     const cloudinaryStart = Date.now();
 
     const result = await new Promise((resolve, reject) => {
@@ -233,30 +150,10 @@ router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
     });
 
     const cloudinaryTime = Date.now() - cloudinaryStart;
-    console.log(
-      `✅ [${requestId}] Cloudinary upload completed in ${cloudinaryTime}ms`
-    );
-    console.log(`☁️ [${requestId}] Cloudinary result:`, {
-      url: result.secure_url,
-      publicId: result.public_id,
-      format: result.format,
-    });
 
     // Step 3: Analyze document
-    console.log(
-      `⏰ [${requestId}] Step 3: Starting document analysis - ${
-        Date.now() - requestStart
-      }ms`
-    );
     const analysisStart = Date.now();
 
-    console.log(`🔍 [${requestId}] Calling analyzeDocumentFromBuffer with:`, {
-      bufferSize: file.buffer.length,
-      fileName: file.originalname,
-      mimeType: file.mimetype,
-      userRole,
-      jurisdiction,
-    });
 
     const analysis = await analyzeDocumentFromBuffer(
       file.buffer,
@@ -267,26 +164,10 @@ router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
     );
 
     const analysisTime = Date.now() - analysisStart;
-    console.log(
-      `✅ [${requestId}] Document analysis completed in ${analysisTime}ms`
-    );
-    console.log(`🔍 [${requestId}] Analysis success:`, analysis.success);
-    console.log(
-      `🔍 [${requestId}] Analysis result keys:`,
-      Object.keys(analysis)
-    );
-    console.log(
-      `🔍 [${requestId}] Has extractedText:`,
-      !!analysis.extractedText
-    );
-    console.log(
-      `🔍 [${requestId}] ExtractedText length:`,
-      analysis.extractedText?.length || 0
-    );
 
     if (!analysis.success) {
-      console.error(`❌ [${requestId}] Analysis failed:`, analysis.error);
-      console.error(`❌ [${requestId}] Analysis object:`, analysis);
+      console.error(`âŒ [${requestId}] Analysis failed:`, analysis.error);
+      console.error(`âŒ [${requestId}] Analysis object:`, analysis);
       console.groupEnd();
       return res.status(500).json({
         success: false,
@@ -302,15 +183,6 @@ router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
     }
 
     const totalTime = Date.now() - requestStart;
-    console.log(
-      `🎉 [${requestId}] Request completed successfully in ${totalTime}ms`
-    );
-    console.log(`📊 [${requestId}] Request timing summary:`, {
-      validation: `${cloudinaryStart - requestStart}ms`,
-      cloudinaryUpload: `${cloudinaryTime}ms`,
-      documentAnalysis: `${analysisTime}ms`,
-      totalTime: `${totalTime}ms`,
-    });
     console.groupEnd();
 
     res.json({
@@ -332,7 +204,7 @@ router.post("/upload-and-analyze", upload.single("file"), async (req, res) => {
   } catch (error) {
     const totalTime = Date.now() - requestStart;
     console.error(
-      `❌ [${requestId}] Request failed after ${totalTime}ms:`,
+      `âŒ [${requestId}] Request failed after ${totalTime}ms:`,
       error.message
     );
     console.groupEnd();
@@ -349,10 +221,7 @@ router.post("/reanalyze", async (req, res) => {
   const requestStart = Date.now();
   const requestId = Math.random().toString(36).substr(2, 9);
 
-  console.group(`🔄 [${requestId}] Document Reanalysis Request Started`);
-  console.log(
-    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
-  );
+  console.group(`ðŸ”„ [${requestId}] Document Reanalysis Request Started`);
 
   try {
     const {
@@ -362,14 +231,9 @@ router.post("/reanalyze", async (req, res) => {
       jurisdiction = "India",
     } = req.body;
 
-    console.log(
-      `⏰ [${requestId}] Step 1: Validating reanalysis request - ${
-        Date.now() - requestStart
-      }ms`
-    );
 
     if (!cloudinaryUrl || !fileName) {
-      console.error(`❌ [${requestId}] Missing cloudinaryUrl or fileName`);
+      console.error(`âŒ [${requestId}] Missing cloudinaryUrl or fileName`);
       console.groupEnd();
       return res.status(400).json({
         success: false,
@@ -377,19 +241,8 @@ router.post("/reanalyze", async (req, res) => {
       });
     }
 
-    console.log(`🔗 [${requestId}] Reanalyzing:`, {
-      url: cloudinaryUrl,
-      fileName,
-      userRole,
-      jurisdiction,
-    });
 
     // Analyze document from Cloudinary URL
-    console.log(
-      `⏰ [${requestId}] Step 2: Starting document analysis - ${
-        Date.now() - requestStart
-      }ms`
-    );
     const analysisStart = Date.now();
 
     const analysis = await analyzeDocumentFromCloudinaryUrl(
@@ -400,13 +253,9 @@ router.post("/reanalyze", async (req, res) => {
     );
 
     const analysisTime = Date.now() - analysisStart;
-    console.log(
-      `✅ [${requestId}] Document analysis completed in ${analysisTime}ms`
-    );
-    console.log(`🔍 [${requestId}] Analysis success:`, analysis.success);
 
     if (!analysis.success) {
-      console.error(`❌ [${requestId}] Analysis failed:`, analysis.error);
+      console.error(`âŒ [${requestId}] Analysis failed:`, analysis.error);
       console.groupEnd();
       return res.status(500).json({
         success: false,
@@ -415,13 +264,6 @@ router.post("/reanalyze", async (req, res) => {
     }
 
     const totalTime = Date.now() - requestStart;
-    console.log(
-      `🎉 [${requestId}] Reanalysis completed successfully in ${totalTime}ms`
-    );
-    console.log(`📊 [${requestId}] Reanalysis timing:`, {
-      documentAnalysis: `${analysisTime}ms`,
-      totalTime: `${totalTime}ms`,
-    });
     console.groupEnd();
 
     res.json({
@@ -440,7 +282,7 @@ router.post("/reanalyze", async (req, res) => {
   } catch (error) {
     const totalTime = Date.now() - requestStart;
     console.error(
-      `❌ [${requestId}] Reanalysis failed after ${totalTime}ms:`,
+      `âŒ [${requestId}] Reanalysis failed after ${totalTime}ms:`,
       error.message
     );
     console.groupEnd();
@@ -457,10 +299,7 @@ router.post("/analyze-base64", async (req, res) => {
   const requestStart = Date.now();
   const requestId = Math.random().toString(36).substr(2, 9);
 
-  console.group(`📄 [${requestId}] Base64 Document Analysis Request Started`);
-  console.log(
-    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
-  );
+  console.group(`ðŸ“„ [${requestId}] Base64 Document Analysis Request Started`);
 
   try {
     const {
@@ -471,14 +310,9 @@ router.post("/analyze-base64", async (req, res) => {
       jurisdiction = "India",
     } = req.body;
 
-    console.log(
-      `⏰ [${requestId}] Step 1: Validating base64 request - ${
-        Date.now() - requestStart
-      }ms`
-    );
 
     if (!base64Data || !fileName) {
-      console.error(`❌ [${requestId}] Missing base64Data or fileName`);
+      console.error(`âŒ [${requestId}] Missing base64Data or fileName`);
       console.groupEnd();
       return res.status(400).json({
         success: false,
@@ -486,36 +320,15 @@ router.post("/analyze-base64", async (req, res) => {
       });
     }
 
-    console.log(`📄 [${requestId}] Base64 analysis details:`, {
-      fileName,
-      mimeType,
-      userRole,
-      jurisdiction,
-      dataLength: base64Data.length,
-    });
 
     // Convert base64 to buffer
-    console.log(
-      `⏰ [${requestId}] Step 2: Converting base64 to buffer - ${
-        Date.now() - requestStart
-      }ms`
-    );
     const conversionStart = Date.now();
 
     const fileBuffer = Buffer.from(base64Data, "base64");
 
     const conversionTime = Date.now() - conversionStart;
-    console.log(
-      `✅ [${requestId}] Base64 conversion completed in ${conversionTime}ms`
-    );
-    console.log(`📦 [${requestId}] Buffer size: ${fileBuffer.length} bytes`);
 
     // Analyze document from buffer
-    console.log(
-      `⏰ [${requestId}] Step 3: Starting document analysis - ${
-        Date.now() - requestStart
-      }ms`
-    );
     const analysisStart = Date.now();
 
     const analysis = await analyzeDocumentFromBuffer(
@@ -527,13 +340,9 @@ router.post("/analyze-base64", async (req, res) => {
     );
 
     const analysisTime = Date.now() - analysisStart;
-    console.log(
-      `✅ [${requestId}] Document analysis completed in ${analysisTime}ms`
-    );
-    console.log(`🔍 [${requestId}] Analysis success:`, analysis.success);
 
     if (!analysis.success) {
-      console.error(`❌ [${requestId}] Analysis failed:`, analysis.error);
+      console.error(`âŒ [${requestId}] Analysis failed:`, analysis.error);
       console.groupEnd();
       return res.status(500).json({
         success: false,
@@ -542,14 +351,6 @@ router.post("/analyze-base64", async (req, res) => {
     }
 
     const totalTime = Date.now() - requestStart;
-    console.log(
-      `🎉 [${requestId}] Base64 analysis completed successfully in ${totalTime}ms`
-    );
-    console.log(`📊 [${requestId}] Base64 analysis timing:`, {
-      base64Conversion: `${conversionTime}ms`,
-      documentAnalysis: `${analysisTime}ms`,
-      totalTime: `${totalTime}ms`,
-    });
     console.groupEnd();
 
     res.json({
@@ -569,7 +370,7 @@ router.post("/analyze-base64", async (req, res) => {
   } catch (error) {
     const totalTime = Date.now() - requestStart;
     console.error(
-      `❌ [${requestId}] Base64 analysis failed after ${totalTime}ms:`,
+      `âŒ [${requestId}] Base64 analysis failed after ${totalTime}ms:`,
       error.message
     );
     console.groupEnd();
@@ -586,22 +387,14 @@ router.get("/signed-url", async (req, res) => {
   const requestStart = Date.now();
   const requestId = Math.random().toString(36).substr(2, 9);
 
-  console.group(`🔐 [${requestId}] Signed URL Request Started`);
-  console.log(
-    `⏰ [${requestId}] Request received at ${new Date().toISOString()}`
-  );
+  console.group(`ðŸ” [${requestId}] Signed URL Request Started`);
 
   try {
     const { publicId } = req.query;
 
-    console.log(
-      `⏰ [${requestId}] Step 1: Validating signed URL request - ${
-        Date.now() - requestStart
-      }ms`
-    );
 
     if (!publicId) {
-      console.error(`❌ [${requestId}] Missing publicId`);
+      console.error(`âŒ [${requestId}] Missing publicId`);
       console.groupEnd();
       return res.status(400).json({
         success: false,
@@ -609,16 +402,8 @@ router.get("/signed-url", async (req, res) => {
       });
     }
 
-    console.log(
-      `🔑 [${requestId}] Generating signed URL for publicId: ${publicId}`
-    );
 
     // Generate signed URL
-    console.log(
-      `⏰ [${requestId}] Step 2: Generating Cloudinary signed URL - ${
-        Date.now() - requestStart
-      }ms`
-    );
     const signedUrlStart = Date.now();
 
     const signedUrl = cloudinary.url(publicId, {
@@ -629,10 +414,6 @@ router.get("/signed-url", async (req, res) => {
     const signedUrlTime = Date.now() - signedUrlStart;
     const totalTime = Date.now() - requestStart;
 
-    console.log(`✅ [${requestId}] Signed URL generated in ${signedUrlTime}ms`);
-    console.log(
-      `🎉 [${requestId}] Signed URL request completed in ${totalTime}ms`
-    );
     console.groupEnd();
 
     res.json({
@@ -643,7 +424,7 @@ router.get("/signed-url", async (req, res) => {
   } catch (error) {
     const totalTime = Date.now() - requestStart;
     console.error(
-      `❌ [${requestId}] Signed URL generation failed after ${totalTime}ms:`,
+      `âŒ [${requestId}] Signed URL generation failed after ${totalTime}ms:`,
       error.message
     );
     console.groupEnd();

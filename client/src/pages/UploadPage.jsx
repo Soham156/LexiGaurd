@@ -3,8 +3,10 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { DocumentContext } from '../context/DocumentContext';
 import { documentService, handleApiError, isAuthenticated } from '../services/api';
-import { Shield, User, ArrowRight, Loader2, Upload, FileText } from 'lucide-react';
+import { Shield, User, ArrowRight, Loader2, Upload, FileText, RefreshCw } from 'lucide-react';
 import ClauseList from '../components/dashboard/ClauseList';
+import { auth } from '../firebase/firebase';
+import documentServiceFirebase from '../services/documentService';
 
 const UploadPage = () => {
   const { setDocument, setRole, setClauses } = useContext(DocumentContext);
@@ -14,6 +16,8 @@ const UploadPage = () => {
   const [error, setError] = useState(null);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [selectedClause, setSelectedClause] = useState(null);
+  const [previousDocuments, setPreviousDocuments] = useState([]);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   const navigate = useNavigate();
 
   // Check authentication on component mount
@@ -21,12 +25,40 @@ const UploadPage = () => {
     if (!isAuthenticated()) {
       navigate('/signin', { 
         state: { 
-          from: '/upload',
+          from: '/dashboard/analysis',
           message: 'Please sign in to upload documents' 
         } 
       });
     }
   }, [navigate]);
+
+  // Load previously uploaded documents
+  useEffect(() => {
+    const loadPreviousDocuments = async () => {
+      setIsLoadingDocuments(true);
+      try {
+        const result = await documentServiceFirebase.getAll();
+        if (result.success) {
+          setPreviousDocuments(result.documents);
+        } else {
+        }
+      } catch (error) {
+      } finally {
+        setIsLoadingDocuments(false);
+      }
+    };
+
+    // Listen for auth state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        loadPreviousDocuments();
+      } else {
+        setPreviousDocuments([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -62,7 +94,6 @@ const UploadPage = () => {
       setIsAnalyzing(true);
       setError(null);
 
-      console.log('Starting analysis with selectedFile:', selectedFile.name);
 
       // Call the direct file upload and analysis
       const response = await documentService.uploadAndAnalyze(
@@ -79,7 +110,6 @@ const UploadPage = () => {
         setError(response.error || 'Analysis failed');
       }
     } catch (err) {
-      console.error('Analysis error:', err);
       const errorMessage = handleApiError(err, navigate);
       setError(errorMessage);
     } finally {
@@ -413,6 +443,107 @@ const UploadPage = () => {
               </motion.button>
             </motion.div>
           </>
+        )}
+
+        {/* Previously Uploaded Documents */}
+        {previousDocuments.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mt-8"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-sky-900 dark:text-sky-100">
+                Previously Uploaded Documents
+              </h2>
+              {isLoadingDocuments && <RefreshCw className="h-5 w-5 animate-spin text-sky-500" />}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+              {previousDocuments.map((doc, index) => (
+                <motion.div
+                  key={doc.id || `${doc.name}-${doc.uploadDate}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="p-4 border border-sky-200 dark:border-sky-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer bg-sky-50 dark:bg-sky-900/20"
+                  onClick={() => {
+                    // Load previous document analysis if available
+                    if (doc.analysis) {
+                      setAnalysisResults(doc.analysis);
+                      setClauses(doc.analysis.clauses || []);
+                    }
+                  }}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <FileText className="h-8 w-8 text-sky-600 dark:text-sky-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-100 truncate" 
+                          title={doc.name || doc.fileName || doc.originalName}>
+                        {doc.name || doc.fileName || doc.originalName || 'Untitled Document'}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-sky-600 dark:text-sky-400">
+                          {doc.uploadDate instanceof Date 
+                            ? doc.uploadDate.toLocaleDateString() 
+                            : doc.uploadDate 
+                            ? new Date(doc.uploadDate).toLocaleDateString()
+                            : 'Unknown date'}
+                        </p>
+                        {doc.status && (
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            doc.status === 'analyzed' 
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                              : doc.status === 'processing'
+                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          }`}>
+                            {doc.status}
+                          </span>
+                        )}
+                      </div>
+                      {doc.analysis?.riskLevel && (
+                        <div className="mt-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            doc.analysis.riskLevel.toLowerCase() === 'high' 
+                              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                              : doc.analysis.riskLevel.toLowerCase() === 'medium'
+                              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                              : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                          }`}>
+                            {doc.analysis.riskLevel} Risk
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            
+            <div className="mt-4 text-center text-sm text-sky-600 dark:text-sky-400">
+              Click on any document to view its analysis
+            </div>
+          </motion.div>
+        )}
+
+        {/* No Documents Message */}
+        {!isLoadingDocuments && previousDocuments.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mt-8"
+          >
+            <div className="text-center text-sky-600 dark:text-sky-400">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium text-sky-900 dark:text-sky-100 mb-2">No Previous Documents</h3>
+              <p className="text-sm">Upload your first document above to get started with AI-powered analysis.</p>
+            </div>
+          </motion.div>
         )}
       </div>
     </div>

@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { auth } from '../firebase/firebase';
+import * as documentService from '../services/documentService';
 import { 
   Send, 
   Paperclip, 
@@ -144,12 +146,8 @@ const ChatPage = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null); // kept for BotMessage context
-  const [uploadedDocuments, setUploadedDocuments] = useState([
-    // Sample documents - replace with actual data from your backend
-    { id: 1, name: 'Contract_Agreement_2024.pdf', type: 'contract', uploadDate: '2024-09-20', size: '2.4 MB', status: 'analyzed' },
-    { id: 2, name: 'Risk_Assessment_Report.docx', type: 'report', uploadDate: '2024-09-19', size: '1.8 MB', status: 'analyzed' },
-    { id: 3, name: 'Compliance_Checklist.xlsx', type: 'checklist', uploadDate: '2024-09-18', size: '856 KB', status: 'processing' },
-  ]);
+  const [uploadedDocuments, setUploadedDocuments] = useState([]);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(true);
 
   // Voice recording states (kept for mic button functionality)
   const [isRecording, setIsRecording] = useState(false);
@@ -168,6 +166,113 @@ const ChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Load real documents from backend
+  useEffect(() => {
+    const loadDocuments = async () => {
+      if (!auth.currentUser) {
+        setIsLoadingDocuments(false);
+        return;
+      }
+
+      try {
+        const result = await documentService.getAll();
+        if (result.success) {
+          setUploadedDocuments(result.documents);
+        }
+      } catch {
+        // Handle error silently
+      } finally {
+        setIsLoadingDocuments(false);
+      }
+    };
+
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setIsLoadingDocuments(true);
+        loadDocuments();
+      } else {
+        setUploadedDocuments([]);
+        setIsLoadingDocuments(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Load real documents from backend when component mounts
+  useEffect(() => {
+    const loadDocuments = async () => {
+      if (!auth.currentUser) {
+        setIsLoadingDocuments(false);
+        return;
+      }
+
+      try {
+        
+        const result = await documentService.getAll();
+        if (result.success) {
+          setUploadedDocuments(result.documents);
+          // Log first document structure for debugging
+          if (result.documents.length > 0) {
+          }
+        }
+      } catch (error) {
+      } finally {
+        setIsLoadingDocuments(false);
+      }
+    };
+
+    // Listen for auth state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setIsLoadingDocuments(true);
+        loadDocuments();
+      } else {
+        setUploadedDocuments([]);
+        setIsLoadingDocuments(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Load real documents from backend when component mounts
+  useEffect(() => {
+    const loadDocuments = async () => {
+      if (!auth.currentUser) {
+        setIsLoadingDocuments(false);
+        return;
+      }
+
+      try {
+        
+        const result = await documentService.getAll();
+        if (result.success) {
+          setUploadedDocuments(result.documents);
+          // Log first document structure for debugging
+          if (result.documents.length > 0) {
+          }
+        }
+      } catch (error) {
+      } finally {
+        setIsLoadingDocuments(false);
+      }
+    };
+
+    // Listen for auth state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setIsLoadingDocuments(true);
+        loadDocuments();
+      } else {
+        setUploadedDocuments([]);
+        setIsLoadingDocuments(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Intelligent response generation
   const generateIntelligentResponse = (input, document) => {
     const lowerInput = input.toLowerCase();
@@ -180,7 +285,7 @@ const ChatPage = () => {
 📊 **Document Overview:**
 - Type: ${document.type.charAt(0).toUpperCase() + document.type.slice(1)} document
 - Size: ${document.size}
-- Upload Date: ${document.uploadDate}
+- Upload Date: ${document.uploadDate instanceof Date ? document.uploadDate.toLocaleDateString() : document.uploadDate}
 - Status: ${document.status}
 
 🔍 **Key Analysis Areas:**
@@ -370,6 +475,7 @@ What would you like me to help you with today?`;
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isTyping) return;
 
+
     const userMessage = {
       id: Date.now() + Math.random(), // Use timestamp + random for unique ID
       type: 'user',
@@ -383,24 +489,66 @@ What would you like me to help you with today?`;
     setIsTyping(true);
 
     try {
-      // Simulate AI response delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call real backend API for document-aware responses
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+      let response;
+      
+      // Check for different possible URL properties
+      const documentUrl = selectedDocument?.cloudinaryUrl || selectedDocument?.url || selectedDocument?.fileUrl;
+      const extractedText = selectedDocument?.extractedText;
+      const documentAnalysis = selectedDocument?.analysis;
+      
+      if (selectedDocument && (documentUrl || extractedText)) {
+        
+        // Use document-aware chat endpoint with local data if available
+        const requestBody = {
+          message: currentInputMessage,
+          fileName: selectedDocument.name || selectedDocument.fileName || selectedDocument.originalName,
+          jurisdiction: 'India',
+          userRole: selectedDocument.selectedRole || 'user'
+        };
+
+        // If we have extracted text locally, use it instead of trying to fetch from Cloudinary
+        if (extractedText) {
+          requestBody.documentContent = extractedText;
+          requestBody.documentAnalysis = documentAnalysis;
+        } else if (documentUrl) {
+          requestBody.documentUrl = documentUrl;
+        }
+
+        response = await fetch(`${apiUrl}/chat/message-with-document`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+      } else {
+        // Use regular chat endpoint
+        response = await fetch(`${apiUrl}/chat/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: currentInputMessage,
+            context: 'General legal assistance'
+          })
+        });
+      }
+      
+      const result = await response.json();
       
       const botResponse = {
         id: Date.now() + Math.random() + 1, // Use timestamp + random + 1 for unique ID
         type: 'bot',
-        content: generateIntelligentResponse(currentInputMessage, selectedDocument),
+        content: result.success ? result.response : `Error: ${result.error || 'Failed to get response'}`,
         timestamp: new Date(),
         documentContext: selectedDocument
       };
 
       setMessages(prev => [...prev, botResponse]);
     } catch (error) {
-      console.error('Error sending message:', error);
       const errorResponse = {
         id: Date.now() + Math.random() + 2, // Use timestamp + random + 2 for unique ID
         type: 'bot',
-        content: 'I apologize, but I encountered an error while processing your request. Please try again.',
+        content: `I apologize, but I encountered an error: ${error.message}. Please check if the server is running and try again.`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
@@ -449,7 +597,6 @@ What would you like me to help you with today?`;
       recorder.timer = timer;
 
     } catch (error) {
-      console.error('Error accessing microphone:', error);
       alert('Unable to access microphone. Please check your browser permissions.');
     }
   };
@@ -494,7 +641,6 @@ What would you like me to help you with today?`;
         };
 
         recognition.onerror = (event) => {
-          console.error('Speech recognition error:', event.error);
           let errorMessage = 'Error processing voice input. ';
           
           switch(event.error) {
@@ -527,7 +673,6 @@ What would you like me to help you with today?`;
       }
       
     } catch (error) {
-      console.error('Error with speech recognition:', error);
       alert('Error accessing speech recognition. Please try again.');
       setIsProcessingAudio(false);
     }
@@ -680,7 +825,12 @@ The document is now ready for detailed analysis. What would you like to know?`,
               <span className="text-xs text-gray-400 dark:text-gray-500">{uploadedDocuments.length}</span>
             </div>
             <div className="space-y-2">
-              {uploadedDocuments.length === 0 ? (
+              {isLoadingDocuments ? (
+                <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                  <RefreshCw className="h-8 w-8 mx-auto mb-2 opacity-50 animate-spin" />
+                  <p className="text-xs">Loading your documents...</p>
+                </div>
+              ) : uploadedDocuments.length === 0 ? (
                 <div className="text-center py-6 text-gray-500 dark:text-gray-400">
                   <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p className="text-xs">No documents uploaded yet</p>
@@ -689,65 +839,74 @@ The document is now ready for detailed analysis. What would you like to know?`,
                 uploadedDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    className={`w-full flex items-center space-x-3 p-3 rounded-lg group transition-colors relative ${
+                    className={`group relative overflow-hidden rounded-2xl transition-all duration-300 border backdrop-blur-sm ${
                       selectedDocument?.id === doc.id 
-                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
-                        : 'bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700 border border-transparent'
+                        ? 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/30 dark:via-indigo-900/20 dark:to-purple-900/10 border-blue-300 dark:border-blue-600 shadow-lg shadow-blue-100 dark:shadow-blue-900/20' 
+                        : 'bg-gradient-to-br from-white via-gray-50 to-blue-50/30 dark:from-gray-800 dark:via-gray-800/80 dark:to-gray-700 border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-xl hover:shadow-blue-50 dark:hover:shadow-blue-900/10 hover:-translate-y-0.5'
                     }`}
                   >
                     <Motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
                       onClick={() => {
                         setSelectedDocument(doc);
-                        setInputMessage(`Tell me about the document: ${doc.name}`);
                       }}
-                      className="flex items-center space-x-3 flex-1 text-left"
+                      className="w-full flex items-center space-x-4 p-4 text-left relative z-10"
                     >
-                      <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                      <div className="flex-shrink-0 relative">
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg relative overflow-hidden ${
                           doc.status === 'analyzed' 
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                            ? 'bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100 dark:from-emerald-900/40 dark:via-green-900/30 dark:to-teal-900/20 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-800 shadow-emerald-100 dark:shadow-emerald-900/20'
                             : doc.status === 'processing'
-                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                            ? 'bg-gradient-to-br from-amber-100 via-yellow-50 to-orange-100 dark:from-amber-900/40 dark:via-yellow-900/30 dark:to-orange-900/20 text-amber-600 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-800 shadow-amber-100 dark:shadow-amber-900/20'
+                            : 'bg-gradient-to-br from-slate-100 via-gray-50 to-blue-100 dark:from-slate-700 dark:via-gray-700 dark:to-slate-600 text-slate-600 dark:text-slate-300 border-2 border-slate-200 dark:border-slate-600 shadow-slate-100 dark:shadow-slate-900/20'
                         }`}>
+                          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent dark:via-white/5 opacity-60"></div>
                           {doc.status === 'processing' ? (
-                            <Motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
-                              <RefreshCw className="h-3 w-3" />
+                            <Motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} className="relative z-10">
+                              <RefreshCw className="h-6 w-6" />
                             </Motion.div>
                           ) : (
-                            <FileText className="h-3 w-3" />
+                            <FileText className="h-6 w-6 relative z-10" />
                           )}
                         </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{doc.name}</p>
-                        <div className="flex items-center justify-between">
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400">{doc.size} • {doc.uploadDate}</p>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      <div className="min-w-0 flex-1 space-y-2">
+                        {/* Title at the top */}
+                        <div className="w-full">
+                          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug" 
+                              title={doc.name || doc.fileName || doc.originalName || 'Document'}>
+                            {doc.name || doc.fileName || doc.originalName || 'Document'}
+                          </h3>
+                        </div>
+                        {/* Status and Date in one line with smaller size */}
+                        <div className="flex items-center justify-between gap-3">
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium border transition-all duration-200 ${
                             doc.status === 'analyzed' 
-                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                              ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                               : doc.status === 'processing'
-                              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                              ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                              : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                           }`}>
-                            {doc.status}
+                            {doc.status === 'processing' ? 'Processing...' : doc.status === 'analyzed' ? 'Ready' : doc.status}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {doc.uploadDate instanceof Date ? doc.uploadDate.toLocaleDateString() : doc.uploadDate || new Date().toLocaleDateString()}
                           </span>
                         </div>
                       </div>
                     </Motion.button>
                     <Motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={(e) => {
                         e.stopPropagation();
                         setUploadedDocuments(prev => prev.filter(d => d.id !== doc.id));
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded text-gray-400 hover:text-red-500 transition-all absolute top-2 right-2"
+                      className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 p-2 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
                       title="Remove document"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-4 w-4" />
                     </Motion.button>
                   </div>
                 ))

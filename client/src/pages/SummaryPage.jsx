@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload,
@@ -16,14 +16,45 @@ import {
   Star
 } from 'lucide-react';
 import MultilingualSummary from '../components/dashboard/MultilingualSummary';
+import { auth } from '../firebase/firebase';
+import documentService from '../services/documentService';
 
 const SummaryPage = () => {
   const [uploadedDocument, setUploadedDocument] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
-  const [uploadHistory, setUploadHistory] = useState([]);
+  const [previousDocuments, setPreviousDocuments] = useState([]);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Load previously uploaded documents
+  useEffect(() => {
+    const loadPreviousDocuments = async () => {
+      setIsLoadingDocuments(true);
+      try {
+        const result = await documentService.getAll();
+        if (result.success) {
+          setPreviousDocuments(result.documents);
+        } else {
+        }
+      } catch (error) {
+      } finally {
+        setIsLoadingDocuments(false);
+      }
+    };
+
+    // Listen for auth state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        loadPreviousDocuments();
+      } else {
+        setPreviousDocuments([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleFileSelect = () => {
     fileInputRef.current?.click();
@@ -91,14 +122,16 @@ const SummaryPage = () => {
 
       setUploadedDocument(documentData);
 
-      // Add to upload history
-      setUploadHistory(prev => [
-        documentData,
-        ...prev.filter(doc => doc.fileName !== file.name).slice(0, 4) // Keep only 5 most recent
-      ]);
+      // Refresh the previous documents list to include the new upload
+      try {
+        const result = await documentService.getAll();
+        if (result.success) {
+          setPreviousDocuments(result.documents);
+        }
+      } catch (refreshError) {
+      }
 
     } catch (error) {
-      console.error('Error uploading document:', error);
       setUploadError(error.message);
     } finally {
       setIsUploading(false);
@@ -135,11 +168,6 @@ const SummaryPage = () => {
 
   const clearDocument = () => {
     setUploadedDocument(null);
-    setUploadError(null);
-  };
-
-  const loadFromHistory = (document) => {
-    setUploadedDocument(document);
     setUploadError(null);
   };
 
@@ -277,8 +305,8 @@ const SummaryPage = () => {
               )}
             </motion.div>
 
-            {/* Upload History */}
-            {uploadHistory.length > 0 && (
+            {/* Previously Uploaded Documents */}
+            {previousDocuments.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -287,35 +315,80 @@ const SummaryPage = () => {
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FileText className="h-5 w-5 mr-2" />
-                  Recent Documents
+                  Previously Uploaded Documents
+                  {isLoadingDocuments && <RefreshCw className="h-4 w-4 ml-2 animate-spin" />}
                 </h3>
-                <div className="space-y-3">
-                  {uploadHistory.map((doc, index) => (
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                  {previousDocuments.map((doc, index) => (
                     <motion.button
-                      key={`${doc.fileName}-${doc.uploadTime}`}
+                      key={doc.id || `${doc.name}-${doc.uploadDate}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      onClick={() => loadFromHistory(doc)}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => {
+                        const documentData = {
+                          fileName: doc.name || doc.fileName || doc.originalName,
+                          content: doc.extractedText,
+                          analysis: doc.analysis,
+                          fileSize: doc.fileSize || doc.size,
+                          uploadTime: doc.uploadDate instanceof Date ? doc.uploadDate.toISOString() : doc.uploadDate,
+                          fileUrl: doc.cloudinaryUrl || doc.url
+                        };
+                        setUploadedDocument(documentData);
+                        setUploadError(null);
+                      }}
                       className={`w-full text-left p-3 rounded-xl transition-all ${
-                        uploadedDocument?.fileName === doc.fileName
+                        uploadedDocument?.fileName === (doc.name || doc.fileName || doc.originalName)
                           ? 'bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700'
                           : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white text-sm">
-                            {doc.fileName}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                            {doc.name || doc.fileName || doc.originalName || 'Untitled Document'}
                           </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            {new Date(doc.uploadTime).toLocaleDateString()}
-                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                              {doc.uploadDate instanceof Date 
+                                ? doc.uploadDate.toLocaleDateString() 
+                                : doc.uploadDate 
+                                ? new Date(doc.uploadDate).toLocaleDateString()
+                                : 'Unknown date'}
+                            </p>
+                            {doc.status && (
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                doc.status === 'analyzed' 
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                  : doc.status === 'processing'
+                                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                              }`}>
+                                {doc.status}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <FileText className="h-4 w-4 text-gray-400" />
+                        <FileText className="h-4 w-4 text-gray-400 ml-3" />
                       </div>
                     </motion.button>
                   ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* No Documents Message */}
+            {!isLoadingDocuments && previousDocuments.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
+              >
+                <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                  <FileText className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Documents Yet</h3>
+                  <p className="text-sm">Upload your first document to get started with multilingual summaries.</p>
                 </div>
               </motion.div>
             )}

@@ -72,10 +72,10 @@ function Layout() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route
-            path="/upload"
+            path="/dashboard/analysis"
             element={
               <ProtectedRoute>
-                <UploadPage />
+                <DashboardPage />
               </ProtectedRoute>
             }
           />

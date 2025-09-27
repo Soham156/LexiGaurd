@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+﻿const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 class FairnessBenchmarkService {
   constructor() {
@@ -29,25 +29,12 @@ class FairnessBenchmarkService {
     const fairnessStart = Date.now();
     const fairnessId = Math.random().toString(36).substr(2, 9);
 
-    console.group(`⚖️ [${fairnessId}] Market Benchmark Analysis Started`);
-    console.log(`📄 [${fairnessId}] Contract type: ${contractType}`);
-    console.log(`🌍 [${fairnessId}] Jurisdiction: ${jurisdiction}`);
-    console.log(`👤 [${fairnessId}] User role: ${userRole}`);
-    console.log(
-      `📝 [${fairnessId}] Contract text length: ${contractText.length} characters`
-    );
 
     if (!this.model) {
-      console.error(`❌ [${fairnessId}] Gemini AI not properly initialized`);
-      console.groupEnd();
+      console.error(`âŒ [${fairnessId}] Gemini AI not properly initialized`);
       throw new Error("Gemini AI not properly initialized");
     }
 
-    console.log(
-      `⏰ [${fairnessId}] Step 1: Creating fairness prompt - ${
-        Date.now() - fairnessStart
-      }ms`
-    );
     const promptStart = Date.now();
 
     const prompt = this.createFairnessPrompt(
@@ -58,49 +45,21 @@ class FairnessBenchmarkService {
     );
 
     const promptTime = Date.now() - promptStart;
-    console.log(`✅ [${fairnessId}] Prompt created in ${promptTime}ms`);
-    console.log(
-      `📐 [${fairnessId}] Prompt length: ${prompt.length} characters`
-    );
 
     try {
-      console.log(
-        `⏰ [${fairnessId}] Step 2: Sending request to Gemini API - ${
-          Date.now() - fairnessStart
-        }ms`
-      );
       const geminiApiStart = Date.now();
 
       const result = await this.model.generateContent(prompt);
 
       const geminiApiTime = Date.now() - geminiApiStart;
-      console.log(
-        `✅ [${fairnessId}] Gemini API response received in ${geminiApiTime}ms`
-      );
 
-      console.log(
-        `⏰ [${fairnessId}] Step 3: Processing Gemini response - ${
-          Date.now() - fairnessStart
-        }ms`
-      );
       const responseProcessStart = Date.now();
 
       const response = await result.response;
       const analysisText = response.text();
 
       const responseProcessTime = Date.now() - responseProcessStart;
-      console.log(
-        `✅ [${fairnessId}] Response processed in ${responseProcessTime}ms`
-      );
-      console.log(
-        `📊 [${fairnessId}] Response length: ${analysisText.length} characters`
-      );
 
-      console.log(
-        `⏰ [${fairnessId}] Step 4: Parsing fairness analysis - ${
-          Date.now() - fairnessStart
-        }ms`
-      );
       const parseStart = Date.now();
 
       const parsedResult = this.parseFairnessResponse(analysisText);
@@ -108,33 +67,14 @@ class FairnessBenchmarkService {
       const parseTime = Date.now() - parseStart;
       const totalTime = Date.now() - fairnessStart;
 
-      console.log(`✅ [${fairnessId}] Analysis parsed in ${parseTime}ms`);
-      console.log(
-        `🎉 [${fairnessId}] Market benchmark analysis completed in ${totalTime}ms`
-      );
-      console.log(`📊 [${fairnessId}] Timing breakdown:`, {
-        promptCreation: `${promptTime}ms`,
-        geminiApiCall: `${geminiApiTime}ms`,
-        responseProcessing: `${responseProcessTime}ms`,
-        resultParsing: `${parseTime}ms`,
-        totalTime: `${totalTime}ms`,
-      });
-      console.log(`⚖️ [${fairnessId}] Analysis result:`, {
-        overallScore: parsedResult.overallFairnessScore,
-        marketPosition: parsedResult.marketPosition,
-        keyFindingsCount: parsedResult.keyFindings?.length || 0,
-        redFlagsCount: parsedResult.redFlags?.length || 0,
-      });
-      console.groupEnd();
 
       return parsedResult;
     } catch (error) {
       const totalTime = Date.now() - fairnessStart;
       console.error(
-        `❌ [${fairnessId}] Market benchmark analysis failed after ${totalTime}ms:`,
+        `âŒ [${fairnessId}] Market benchmark analysis failed after ${totalTime}ms:`,
         error.message
       );
-      console.groupEnd();
       throw new Error("Failed to analyze contract fairness: " + error.message);
     }
   }
@@ -260,18 +200,9 @@ Provide only the JSON response without any additional text or formatting.
     const parseStart = Date.now();
     const parseId = Math.random().toString(36).substr(2, 6);
 
-    console.log(`🔍 [${parseId}] Starting response parsing...`);
-    console.log(
-      `📏 [${parseId}] Response text length: ${responseText.length} characters`
-    );
 
     try {
       // Clean the response text to extract JSON
-      console.log(
-        `⏰ [${parseId}] Step 1: Cleaning response text - ${
-          Date.now() - parseStart
-        }ms`
-      );
       const cleanStart = Date.now();
 
       let cleanedResponse = responseText.trim();
@@ -282,26 +213,13 @@ Provide only the JSON response without any additional text or formatting.
         .replace(/```\n?$/, "");
 
       const cleanTime = Date.now() - cleanStart;
-      console.log(`✅ [${parseId}] Text cleaned in ${cleanTime}ms`);
-      console.log(
-        `📝 [${parseId}] Cleaned response length: ${cleanedResponse.length} characters`
-      );
 
-      console.log(
-        `⏰ [${parseId}] Step 2: JSON parsing - ${Date.now() - parseStart}ms`
-      );
       const jsonParseStart = Date.now();
 
       const analysis = JSON.parse(cleanedResponse);
 
       const jsonParseTime = Date.now() - jsonParseStart;
-      console.log(`✅ [${parseId}] JSON parsed in ${jsonParseTime}ms`);
 
-      console.log(
-        `⏰ [${parseId}] Step 3: Validating and setting defaults - ${
-          Date.now() - parseStart
-        }ms`
-      );
       const validationStart = Date.now();
 
       // Validate and set defaults for required fields
@@ -341,36 +259,13 @@ Provide only the JSON response without any additional text or formatting.
       const validationTime = Date.now() - validationStart;
       const totalParseTime = Date.now() - parseStart;
 
-      console.log(
-        `✅ [${parseId}] Validation completed in ${validationTime}ms`
-      );
-      console.log(
-        `🎉 [${parseId}] Response parsing completed in ${totalParseTime}ms`
-      );
-      console.log(`📊 [${parseId}] Parse timing breakdown:`, {
-        textCleaning: `${cleanTime}ms`,
-        jsonParsing: `${jsonParseTime}ms`,
-        validation: `${validationTime}ms`,
-        totalTime: `${totalParseTime}ms`,
-      });
-      console.log(`📋 [${parseId}] Parsed analysis structure:`, {
-        overallScore: analysis.overallFairnessScore,
-        keyFindings: analysis.keyFindings.length,
-        benchmarkMetrics: Object.keys(analysis.benchmarkMetrics).length,
-        redFlags: analysis.redFlags.length,
-        negotiationOpps: analysis.negotiationOpportunities.length,
-      });
 
       return analysis;
     } catch (error) {
       const totalParseTime = Date.now() - parseStart;
       console.error(
-        `❌ [${parseId}] Response parsing failed after ${totalParseTime}ms:`,
+        `âŒ [${parseId}] Response parsing failed after ${totalParseTime}ms:`,
         error.message
-      );
-      console.log(
-        `🔍 [${parseId}] Raw response sample:`,
-        responseText.substring(0, 500) + "..."
       );
 
       // Return a fallback analysis
@@ -409,24 +304,12 @@ Provide only the JSON response without any additional text or formatting.
     const clauseStart = Date.now();
     const clauseId = Math.random().toString(36).substr(2, 6);
 
-    console.group(`🔍 [${clauseId}] Quick Clause Analysis Started`);
-    console.log(
-      `📝 [${clauseId}] Clause text length: ${clauseText.length} characters`
-    );
-    console.log(`📄 [${clauseId}] Contract type: ${contractType}`);
-    console.log(`🌍 [${clauseId}] Jurisdiction: ${jurisdiction}`);
 
     if (!this.model) {
-      console.error(`❌ [${clauseId}] Gemini AI not properly initialized`);
-      console.groupEnd();
+      console.error(`âŒ [${clauseId}] Gemini AI not properly initialized`);
       throw new Error("Gemini AI not properly initialized");
     }
 
-    console.log(
-      `⏰ [${clauseId}] Creating clause analysis prompt - ${
-        Date.now() - clauseStart
-      }ms`
-    );
     const promptStart = Date.now();
 
     const prompt = `
@@ -444,14 +327,8 @@ Provide a quick fairness assessment in JSON format:
     `;
 
     const promptTime = Date.now() - promptStart;
-    console.log(`✅ [${clauseId}] Clause prompt created in ${promptTime}ms`);
 
     try {
-      console.log(
-        `⏰ [${clauseId}] Sending clause analysis to Gemini API - ${
-          Date.now() - clauseStart
-        }ms`
-      );
       const apiStart = Date.now();
 
       const result = await this.model.generateContent(prompt);
@@ -461,12 +338,6 @@ Provide a quick fairness assessment in JSON format:
       const apiTime = Date.now() - apiStart;
       const totalTime = Date.now() - clauseStart;
 
-      console.log(
-        `✅ [${clauseId}] Clause API response received in ${apiTime}ms`
-      );
-      console.log(
-        `🎉 [${clauseId}] Clause analysis completed in ${totalTime}ms`
-      );
 
       let cleanedResponse = analysisText
         .trim()
@@ -475,20 +346,14 @@ Provide a quick fairness assessment in JSON format:
 
       const parsedResult = JSON.parse(cleanedResponse);
 
-      console.log(`📊 [${clauseId}] Clause result:`, {
-        riskLevel: parsedResult.riskLevel,
-        hasMarketComparison: !!parsedResult.marketComparison,
-      });
-      console.groupEnd();
 
       return parsedResult;
     } catch (error) {
       const totalTime = Date.now() - clauseStart;
       console.error(
-        `❌ [${clauseId}] Clause analysis failed after ${totalTime}ms:`,
+        `âŒ [${clauseId}] Clause analysis failed after ${totalTime}ms:`,
         error.message
       );
-      console.groupEnd();
 
       return {
         riskLevel: "STANDARD",

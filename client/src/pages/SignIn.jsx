@@ -18,10 +18,8 @@ const SignIn = () => {
     try {
       const result = await doSignInWithGoogle();
       if (result) {
-        console.log("Google sign-in successful:", result.user);
       }
     } catch (err) {
-      console.error("Google sign-in error:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);

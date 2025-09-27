@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 const SimpleFairnessService = require("../services/simpleFairnessService");
 
@@ -20,10 +20,6 @@ router.post("/analyze-fairness", async (req, res) => {
         error: "Contract text is required",
       });
     }
-
-    console.log(
-      `Quick fairness analysis for ${contractType} in ${jurisdiction} for ${userRole}`
-    );
 
     const fairnessAnalysis = await simpleFairnessService.quickFairnessAnalysis(
       contractText,
@@ -78,10 +74,6 @@ router.post("/analyze-document/:id", async (req, res) => {
       });
     }
 
-    console.log(
-      `Analyzing fairness for document ${documentId} (${documentDetails.fileName}) in ${jurisdiction} for ${userRole}`
-    );
-
     // Import document analysis service
     const {
       analyzeDocumentFromCloudinaryUrl,
@@ -121,7 +113,6 @@ router.post("/analyze-document/:id", async (req, res) => {
 
       // Try Cloudinary analysis first
       try {
-        console.log(`🔄 [${documentId}] Attempting Cloudinary analysis...`);
         analysisResult = await analyzeDocumentFromCloudinaryUrl(
           documentDetails.cloudinaryUrl,
           documentDetails.fileName,
@@ -131,21 +122,16 @@ router.post("/analyze-document/:id", async (req, res) => {
 
         if (analysisResult.success) {
           extractedText = analysisResult.extractedText;
-          console.log(`✅ [${documentId}] Cloudinary analysis successful`);
         }
       } catch (cloudinaryError) {
         console.warn(
-          `⚠️ [${documentId}] Cloudinary analysis failed:`,
+          `âš ï¸ [${documentId}] Cloudinary analysis failed:`,
           cloudinaryError.message
         );
-        console.log(`🔄 [${documentId}] Will attempt fallback analysis...`);
       }
 
       // If Cloudinary failed and we have cached text, use that for fresh analysis
       if (!analysisResult?.success && documentDetails.extractedText) {
-        console.log(
-          `📋 [${documentId}] Using cached extracted text for fresh analysis`
-        );
         extractedText = documentDetails.extractedText;
 
         // Create a minimal successful result for consistency
@@ -159,16 +145,6 @@ router.post("/analyze-document/:id", async (req, res) => {
 
       // Debug what's available in documentDetails
       if (!extractedText) {
-        console.log(
-          `📋 [${documentId}] No cached text found. Document details:`,
-          {
-            fileName: documentDetails?.fileName,
-            hasCloudinaryUrl: !!documentDetails?.cloudinaryUrl,
-            hasExtractedText: !!documentDetails?.extractedText,
-            availableFields: Object.keys(documentDetails || {}),
-          }
-        );
-
         // Return a proper error response instead of throwing
         return res.status(400).json({
           success: false,
@@ -183,13 +159,6 @@ router.post("/analyze-document/:id", async (req, res) => {
         });
       }
 
-      console.log(
-        `📝 [${documentId}] Text length: ${extractedText.length} characters`
-      );
-      console.log(
-        `⚡ [${documentId}] Performing FRESH SimpleFairnessService analysis...`
-      );
-
       // ALWAYS perform fresh fairness analysis regardless of source
       const fairnessAnalysis =
         await simpleFairnessService.quickFairnessAnalysis(
@@ -203,25 +172,6 @@ router.post("/analyze-document/:id", async (req, res) => {
       if (!fairnessAnalysis) {
         throw new Error("SimpleFairnessService returned no analysis");
       }
-
-      console.log(`✅ [${documentId}] Fresh fairness analysis completed:`, {
-        score: fairnessAnalysis.overallFairnessScore,
-        riskLevel: fairnessAnalysis.riskLevel,
-        analysisType: fairnessAnalysis.analysisType,
-        marketComparisons: fairnessAnalysis.marketComparisons?.length || 0,
-      });
-
-      console.log(
-        `✅ Document analysis completed successfully for ${documentId}`
-      );
-      console.log(`📊 Fairness analysis result:`, {
-        hasAnalysis: !!fairnessAnalysis,
-        overallScore: fairnessAnalysis?.overallFairnessScore,
-        riskLevel: fairnessAnalysis?.riskLevel,
-        analysisType: fairnessAnalysis?.analysisType,
-        marketComparisons: fairnessAnalysis?.marketComparisons?.length || 0,
-        isFreshAnalysis: true,
-      });
 
       const responseData = {
         success: true,
@@ -238,13 +188,6 @@ router.post("/analyze-document/:id", async (req, res) => {
         analysisSource: analysisResult?.success ? "cloudinary" : "cached",
         hasFairnessAnalysis: true,
       };
-
-      console.log(`📤 Sending response for ${documentId}:`, {
-        success: responseData.success,
-        hasFramingAnalysis: !!responseData.fairnessAnalysis,
-        documentId: responseData.documentId,
-        contractType: responseData.contractType,
-      });
 
       res.json(responseData);
     } catch (analysisError) {
@@ -401,10 +344,6 @@ router.post("/analyze-clause", async (req, res) => {
       });
     }
 
-    console.log(
-      `Analyzing clause fairness for ${contractType} in ${jurisdiction}`
-    );
-
     const clauseAnalysis = await fairnessBenchmarkService.analyzeClause(
       clauseText,
       contractType,
@@ -430,10 +369,6 @@ router.get("/market-insights", async (req, res) => {
   try {
     const { contractType = "rental agreement", jurisdiction = "India" } =
       req.query;
-
-    console.log(
-      `Getting market insights for ${contractType} in ${jurisdiction}`
-    );
 
     const marketInsights = await fairnessBenchmarkService.getMarketInsights(
       contractType,

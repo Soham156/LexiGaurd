@@ -1,4 +1,4 @@
-const { extractText } = require("../utils/textExtractor");
+﻿const { extractText } = require("../utils/textExtractor");
 const GeminiService = require("./geminiService");
 const SimpleFairnessService = require("./simpleFairnessService");
 
@@ -13,8 +13,6 @@ async function analyzeDocumentFromBase64(
   jurisdiction = "India"
 ) {
   try {
-    console.log(`Analyzing document from Base64: ${fileName} (${mimeType})`);
-
     // Decode Base64 to a Buffer
     const fileBuffer = Buffer.from(base64Content, "base64");
 
@@ -79,19 +77,8 @@ async function analyzeDocumentFromBuffer(
   const analysisStart = Date.now();
   const analysisId = Math.random().toString(36).substr(2, 9);
 
-  console.group(`🔍 [${analysisId}] Document Analysis Started`);
-  console.log(`📄 [${analysisId}] File: ${fileName} (${mimeType})`);
-  console.log(
-    `👤 [${analysisId}] User role: ${userRole}, Jurisdiction: ${jurisdiction}`
-  );
-
   try {
     // Extract text from the buffer
-    console.log(
-      `⏰ [${analysisId}] Step 1: Starting text extraction - ${
-        Date.now() - analysisStart
-      }ms`
-    );
     const textExtractionStart = Date.now();
 
     let extractedText;
@@ -100,10 +87,9 @@ async function analyzeDocumentFromBuffer(
     } catch (extractionError) {
       const textExtractionTime = Date.now() - textExtractionStart;
       console.error(
-        `❌ [${analysisId}] Text extraction failed in ${textExtractionTime}ms:`,
+        `âŒ [${analysisId}] Text extraction failed in ${textExtractionTime}ms:`,
         extractionError.message
       );
-      console.groupEnd();
       return {
         success: false,
         error: `Text extraction failed: ${extractionError.message}`,
@@ -116,20 +102,11 @@ async function analyzeDocumentFromBuffer(
     }
 
     const textExtractionTime = Date.now() - textExtractionStart;
-    console.log(
-      `✅ [${analysisId}] Text extraction completed in ${textExtractionTime}ms`
-    );
-    console.log(
-      `📝 [${analysisId}] Extracted text length: ${
-        extractedText ? extractedText.length : 0
-      } characters`
-    );
 
     if (!extractedText || extractedText.trim() === "") {
       console.error(
-        `❌ [${analysisId}] No text could be extracted from the document`
+        `âŒ [${analysisId}] No text could be extracted from the document`
       );
-      console.groupEnd();
       return {
         success: false,
         error: "No text could be extracted from the document.",
@@ -138,11 +115,6 @@ async function analyzeDocumentFromBuffer(
     }
 
     // Get AI analysis from Gemini
-    console.log(
-      `⏰ [${analysisId}] Step 2: Starting Gemini AI analysis - ${
-        Date.now() - analysisStart
-      }ms`
-    );
     const geminiStart = Date.now();
 
     const analysis = await geminiService.analyzeDocument(
@@ -151,26 +123,13 @@ async function analyzeDocumentFromBuffer(
     );
 
     const geminiTime = Date.now() - geminiStart;
-    console.log(
-      `✅ [${analysisId}] Gemini analysis completed in ${geminiTime}ms`
-    );
-    console.log(`🤖 [${analysisId}] Analysis result:`, {
-      hasAnalysis: !!analysis,
-      riskLevel: analysis?.riskLevel || "unknown",
-    });
 
     // Get quick fairness analysis (much faster!)
-    console.log(
-      `⏰ [${analysisId}] Step 3: Starting quick fairness analysis - ${
-        Date.now() - analysisStart
-      }ms`
-    );
     const fairnessStart = Date.now();
 
     let fairnessBenchmark = null;
     try {
       const contractType = determineContractType(fileName, extractedText);
-      console.log(`📊 [${analysisId}] Detected contract type: ${contractType}`);
 
       fairnessBenchmark = await simpleFairnessService.quickFairnessAnalysis(
         extractedText,
@@ -180,35 +139,15 @@ async function analyzeDocumentFromBuffer(
       );
 
       const fairnessTime = Date.now() - fairnessStart;
-      console.log(
-        `✅ [${analysisId}] Quick fairness analysis completed in ${fairnessTime}ms`
-      );
-      console.log(`⚡ [${analysisId}] Quick fairness result:`, {
-        hasBenchmark: !!fairnessBenchmark,
-        overallScore: fairnessBenchmark?.overallFairnessScore || "none",
-        riskLevel: fairnessBenchmark?.riskLevel || "unknown",
-      });
     } catch (fairnessError) {
       const fairnessTime = Date.now() - fairnessStart;
       console.warn(
-        `⚠️ [${analysisId}] Quick fairness analysis failed after ${fairnessTime}ms:`,
+        `âš ï¸ [${analysisId}] Quick fairness analysis failed after ${fairnessTime}ms:`,
         fairnessError.message
       );
     }
 
     const totalTime = Date.now() - analysisStart;
-    console.log(
-      `🎉 [${analysisId}] Document analysis completed successfully in ${totalTime}ms`
-    );
-    console.log(`📊 [${analysisId}] Analysis Summary:`, {
-      textExtraction: `${textExtractionTime}ms`,
-      geminiAnalysis: `${geminiTime}ms`,
-      quickFairnessAnalysis: fairnessBenchmark
-        ? `${Date.now() - fairnessStart}ms`
-        : "skipped",
-      totalTime: `${totalTime}ms`,
-    });
-    console.groupEnd();
 
     return {
       success: true,
@@ -229,10 +168,9 @@ async function analyzeDocumentFromBuffer(
   } catch (error) {
     const totalTime = Date.now() - analysisStart;
     console.error(
-      `❌ [${analysisId}] Document analysis failed after ${totalTime}ms:`,
+      `âŒ [${analysisId}] Document analysis failed after ${totalTime}ms:`,
       error.message
     );
-    console.groupEnd();
 
     return {
       success: false,
@@ -251,32 +189,11 @@ async function analyzeDocumentFromCloudinaryUrl(
   const analysisStart = Date.now();
   const analysisId = Math.random().toString(36).substr(2, 9);
 
-  console.group(`🔍 [${analysisId}] Cloudinary Document Analysis Started`);
-  console.log(`📄 [${analysisId}] File: ${fileName}`);
-  console.log(`🔗 [${analysisId}] Cloudinary URL: ${cloudinaryUrl}`);
-  console.log(
-    `👤 [${analysisId}] User role: ${userRole}, Jurisdiction: ${jurisdiction}`
-  );
-
   try {
     // Fetch the file from Cloudinary
-    console.log(
-      `⏰ [${analysisId}] Step 1: Fetching from Cloudinary - ${
-        Date.now() - analysisStart
-      }ms`
-    );
     const fetchStart = Date.now();
 
     const response = await fetch(cloudinaryUrl);
-    console.log(
-      `🔍 [${analysisId}] Cloudinary response status:`,
-      response.status,
-      response.statusText
-    );
-    console.log(
-      `🔍 [${analysisId}] Response headers:`,
-      Object.fromEntries(response.headers.entries())
-    );
 
     if (!response.ok) {
       throw new Error(
@@ -285,18 +202,11 @@ async function analyzeDocumentFromCloudinaryUrl(
     }
 
     const fileBuffer = Buffer.from(await response.arrayBuffer());
-    console.log(`🔍 [${analysisId}] File buffer length:`, fileBuffer.length);
 
     if (fileBuffer.length === 0) {
       throw new Error(`Cloudinary returned empty file buffer`);
     }
     const fetchTime = Date.now() - fetchStart;
-    console.log(
-      `✅ [${analysisId}] Cloudinary fetch completed in ${fetchTime}ms`
-    );
-    console.log(
-      `📦 [${analysisId}] File buffer size: ${fileBuffer.length} bytes`
-    );
 
     // Determine MIME type from URL or filename
     let mimeType = "application/octet-stream";
@@ -322,14 +232,7 @@ async function analyzeDocumentFromCloudinaryUrl(
       mimeType = "text/plain";
     }
 
-    console.log(`📋 [${analysisId}] Detected MIME type: ${mimeType}`);
-
     // Extract text from the buffer using the previously analyzed function
-    console.log(
-      `⏰ [${analysisId}] Step 2: Delegating to buffer analysis - ${
-        Date.now() - analysisStart
-      }ms`
-    );
     const delegationStart = Date.now();
 
     const result = await analyzeDocumentFromBuffer(
@@ -342,19 +245,6 @@ async function analyzeDocumentFromCloudinaryUrl(
 
     const delegationTime = Date.now() - delegationStart;
     const totalTime = Date.now() - analysisStart;
-
-    console.log(
-      `✅ [${analysisId}] Buffer analysis delegation completed in ${delegationTime}ms`
-    );
-    console.log(
-      `🎉 [${analysisId}] Cloudinary analysis completed in ${totalTime}ms`
-    );
-    console.log(`📊 [${analysisId}] Total timing:`, {
-      cloudinaryFetch: `${fetchTime}ms`,
-      bufferAnalysis: `${delegationTime}ms`,
-      totalTime: `${totalTime}ms`,
-    });
-    console.groupEnd();
 
     // Add Cloudinary-specific metadata
     if (result.success && result.metadata) {
@@ -371,10 +261,9 @@ async function analyzeDocumentFromCloudinaryUrl(
   } catch (error) {
     const totalTime = Date.now() - analysisStart;
     console.error(
-      `❌ [${analysisId}] Cloudinary analysis failed after ${totalTime}ms:`,
+      `âŒ [${analysisId}] Cloudinary analysis failed after ${totalTime}ms:`,
       error.message
     );
-    console.groupEnd();
 
     return {
       success: false,

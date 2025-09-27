@@ -28,7 +28,6 @@ export const doSignInWithGoogle = async () => {
     const result = await signInWithPopup(auth, provider);
     return result;
   } catch (error) {
-    console.error("Google Sign-In Error:", error);
     throw error;
   }
 };

@@ -1,4 +1,4 @@
-const fs = require("fs");
+﻿const fs = require("fs");
 const path = require("path");
 const pdf = require("pdf-parse");
 const mammoth = require("mammoth");
@@ -111,7 +111,6 @@ class TextExtractor {
     let lastError = null;
 
     try {
-      console.log("🔍 Attempting PDF extraction - Method 1: pdf-parse default");
       const data = await pdf(buffer);
 
       // Clean up the extracted text
@@ -125,17 +124,13 @@ class TextExtractor {
         throw new Error("No readable text found in PDF buffer");
       }
 
-      console.log("✅ PDF extraction successful with default method");
       return text;
     } catch (error) {
-      console.warn("📄 PDF default extraction failed:", error.message);
+      console.warn("ðŸ“„ PDF default extraction failed:", error.message);
       lastError = error;
 
       // Try fallback method with different options
       try {
-        console.log(
-          "🔍 Attempting PDF extraction - Method 2: pdf-parse with recovery options"
-        );
         const data = await pdf(buffer, {
           // Use recovery mode for corrupted PDFs
           verbosity: 0,
@@ -154,33 +149,26 @@ class TextExtractor {
           throw new Error("Fallback method also returned no readable text");
         }
 
-        console.log("✅ PDF extraction successful with fallback method");
         return text;
       } catch (fallbackError) {
         console.warn(
-          "📄 PDF fallback extraction also failed:",
+          "ðŸ“„ PDF fallback extraction also failed:",
           fallbackError.message
         );
 
         // Final attempt - try to extract any available info
         try {
-          console.log(
-            "🔍 Attempting PDF extraction - Method 3: basic info extraction"
-          );
           const data = await pdf(buffer, { max: 1 }); // Try just first page
 
           let text = data.text || data.info?.Title || data.info?.Subject || "";
 
           if (text && text.length >= 3) {
-            console.log(
-              "⚠️ PDF extraction with minimal content - using basic info"
-            );
             return `PDF Content (partial): ${text}`;
           }
 
           throw new Error("No extractable content found");
         } catch (finalError) {
-          console.error("❌ All PDF extraction methods failed");
+          console.error("âŒ All PDF extraction methods failed");
           throw new Error(
             `Failed to extract text from PDF buffer: ${
               lastError?.message || finalError.message
@@ -211,10 +199,6 @@ class TextExtractor {
 
       // Log any messages from mammoth (warnings about unsupported elements)
       if (result.messages && result.messages.length > 0) {
-        console.log(
-          "Word extraction messages:",
-          result.messages.map((m) => m.message)
-        );
       }
 
       return text;
@@ -281,10 +265,6 @@ class TextExtractor {
 
       // Log any messages from mammoth (warnings about unsupported elements)
       if (result.messages && result.messages.length > 0) {
-        console.log(
-          "Word extraction messages:",
-          result.messages.map((m) => m.message)
-        );
       }
 
       return text;

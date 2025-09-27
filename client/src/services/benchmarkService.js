@@ -19,10 +19,8 @@ export const analyzeFairnessById = async (
   }
 
   try {
-    console.log(`🔍 Starting fairness analysis for document ${documentId}`);
-    console.log(
-      `🌐 API URL: ${API_BASE_URL}/benchmark/analyze-document/${documentId}`
-    );
+    const API_BASE_URL =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
     // First, get the document details from Firebase
     const documentService = await import("./documentService.js");
@@ -33,11 +31,6 @@ export const analyzeFairnessById = async (
     }
 
     const document = docResult.document;
-    console.log(`📄 Document details:`, {
-      fileName: document.fileName,
-      hasCloudinaryUrl: !!document.cloudinaryUrl,
-      selectedRole: document.selectedRole,
-    });
 
     // Check if document has a Cloudinary URL for text extraction
     if (!document.cloudinaryUrl) {
@@ -59,20 +52,6 @@ export const analyzeFairnessById = async (
       },
     };
 
-    console.log(`📤 Sending request to:`, url);
-    console.log(`📋 Request body:`, {
-      userId: requestBody.userId,
-      jurisdiction: requestBody.jurisdiction,
-      userRole: requestBody.userRole,
-      hasDocumentDetails: !!requestBody.documentDetails,
-      hasExtractedText: !!requestBody.documentDetails?.extractedText,
-      extractedTextLength:
-        requestBody.documentDetails?.extractedText?.length || 0,
-    });
-
-    console.log(`⏰ Starting fetch request at ${new Date().toISOString()}`);
-    const fetchStart = Date.now();
-
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -81,20 +60,13 @@ export const analyzeFairnessById = async (
       body: JSON.stringify(requestBody),
     });
 
-    const fetchTime = Date.now() - fetchStart;
-    console.log(
-      `✅ Fetch completed in ${fetchTime}ms with status: ${response.status}`
-    );
-
     if (!response.ok) {
       // For 400 errors, try to parse JSON response first to get detailed error info
       if (response.status === 400) {
         try {
           const errorResult = await response.json();
-          console.error(`❌ Server returned 400 with details:`, errorResult);
 
           if (errorResult.needsReupload) {
-            console.log(`📋 Document needs re-upload:`, errorResult.error);
             return {
               success: false,
               error: errorResult.error,
@@ -107,32 +79,18 @@ export const analyzeFairnessById = async (
           }
 
           throw new Error(errorResult.error || "Analysis failed");
-        } catch (jsonParseError) {
+        } catch {
           // If JSON parsing fails, fall back to text response
-          console.error(
-            `❌ Failed to parse JSON error response:`,
-            jsonParseError.message
-          );
           const errorText = await response.text();
-          console.error(`❌ Server error response:`, errorText);
           throw new Error(`Analysis failed: ${response.status} - ${errorText}`);
         }
       } else {
         const errorText = await response.text();
-        console.error(`❌ Server error response:`, errorText);
         throw new Error(`Analysis failed: ${response.status} - ${errorText}`);
       }
     }
 
-    console.log(`⏰ Parsing response...`);
     const result = await response.json();
-    console.log(`📊 Response received:`, {
-      success: result.success,
-      hasFairnessAnalysis: !!result.fairnessAnalysis,
-      documentId: result.documentId,
-      fullResult: result,
-    });
-    console.log(`📋 Full response data:`, result);
 
     if (result.success) {
       const returnData = {
@@ -146,20 +104,11 @@ export const analyzeFairnessById = async (
         analysisType: result.fairnessAnalysis?.analysisType,
       };
 
-      console.log(`✅ Returning analysis data:`, {
-        success: returnData.success,
-        hasFairnessAnalysis: returnData.hasFairnessAnalysis,
-        documentId: returnData.documentId,
-        analysisType: returnData.analysisType,
-      });
-
       return returnData;
     } else {
       // Handle server-side errors (like missing extracted text)
-      console.error(`❌ Server returned error:`, result);
 
       if (result.needsReupload) {
-        console.log(`📋 Document needs re-upload:`, result.error);
         return {
           success: false,
           error: result.error,
@@ -173,7 +122,6 @@ export const analyzeFairnessById = async (
       throw new Error(result.error || "Analysis failed");
     }
   } catch (error) {
-    console.error("Fairness analysis error:", error);
     throw new Error(`Fairness analysis failed: ${error.message}`);
   }
 };
@@ -221,7 +169,6 @@ export const analyzeFairnessText = async (
       throw new Error(result.error || "Fairness analysis failed");
     }
   } catch (error) {
-    console.error("Fairness analysis error:", error);
     throw new Error(`Fairness analysis failed: ${error.message}`);
   }
 };
@@ -237,8 +184,6 @@ export const uploadAndAnalyzeFairness = async (
   }
 
   try {
-    console.log("Starting file upload and fairness analysis...");
-
     // Create FormData for file upload
     const formData = new FormData();
     formData.append("file", file);
@@ -262,7 +207,6 @@ export const uploadAndAnalyzeFairness = async (
     }
 
     const result = await response.json();
-    console.log("Backend analysis completed:", result);
 
     if (result.success) {
       return {
@@ -277,7 +221,6 @@ export const uploadAndAnalyzeFairness = async (
       throw new Error(result.error || "Analysis failed");
     }
   } catch (error) {
-    console.error("Upload and analyze fairness error:", error);
     throw new Error(`Upload failed: ${error.message}`);
   }
 };
@@ -315,7 +258,6 @@ export const getBenchmarkStats = async (
       throw new Error(result.error || "Failed to get benchmark statistics");
     }
   } catch (error) {
-    console.error("Benchmark stats error:", error);
     throw new Error(`Failed to get benchmark statistics: ${error.message}`);
   }
 };
@@ -353,7 +295,6 @@ export const getMarketInsights = async (
       throw new Error(result.error || "Failed to get market insights");
     }
   } catch (error) {
-    console.error("Market insights error:", error);
     throw new Error(`Failed to get market insights: ${error.message}`);
   }
 };
@@ -399,7 +340,6 @@ export const analyzeClauseFairness = async (
       throw new Error(result.error || "Clause analysis failed");
     }
   } catch (error) {
-    console.error("Clause analysis error:", error);
     throw new Error(`Clause analysis failed: ${error.message}`);
   }
 };

@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 const GeminiService = require("../services/geminiService");
 const WhatIfSimulatorService = require("../services/whatIfSimulatorService");
@@ -25,7 +25,6 @@ router.post("/message", async (req, res) => {
       });
     }
 
-    console.log(`Processing chat message: ${message.substring(0, 50)}...`);
 
     // Create a chat-optimized prompt
     const chatPrompt = `
@@ -83,7 +82,6 @@ router.post("/analyze-document", async (req, res) => {
       });
     }
 
-    console.log(`Analyzing document in chat: ${fileName || "Unknown"}`);
 
     // Use the existing analyzeDocument method but format for chat
     const analysis = await geminiService.analyzeDocument(
@@ -107,10 +105,10 @@ router.post("/analyze-document", async (req, res) => {
     if (analysis.riskLevel) {
       const riskEmoji =
         analysis.riskLevel.toLowerCase() === "high"
-          ? "🔴"
+          ? "ðŸ”´"
           : analysis.riskLevel.toLowerCase() === "medium"
-          ? "🟡"
-          : "🟢";
+          ? "ðŸŸ¡"
+          : "ðŸŸ¢";
       chatResponse += `### Risk Level: ${riskEmoji} ${analysis.riskLevel.toUpperCase()}\n\n`;
     }
 
@@ -167,7 +165,6 @@ router.get("/documents/:userId", async (req, res) => {
     const { userId } = req.params;
     const { max_results = 50 } = req.query;
 
-    console.log(`Fetching documents for user: ${userId}`);
 
     try {
       // Search for documents in Cloudinary by user ID
@@ -182,10 +179,6 @@ router.get("/documents/:userId", async (req, res) => {
           .max_results(parseInt(max_results))
           .execute();
 
-        console.log(
-          "Cloudinary search result (all documents):",
-          JSON.stringify(searchResult, null, 2)
-        );
 
         // Filter by userId from the results
         const userDocuments = searchResult.resources.filter((resource) => {
@@ -193,16 +186,8 @@ router.get("/documents/:userId", async (req, res) => {
           return publicIdParts.startsWith(`${userId}_`);
         });
 
-        console.log(
-          `Filtered documents for user ${userId}:`,
-          userDocuments.length
-        );
         allDocuments = [...allDocuments, ...userDocuments];
       } catch (searchError) {
-        console.log(
-          "Search API failed, trying resources API...",
-          searchError.message
-        );
       }
 
       // Also try resources API with raw type (for PDFs)
@@ -214,10 +199,8 @@ router.get("/documents/:userId", async (req, res) => {
           resource_type: "raw",
         });
 
-        console.log("Raw resources found:", rawResources.resources.length);
         allDocuments = [...allDocuments, ...(rawResources.resources || [])];
       } catch (rawError) {
-        console.log("Raw resources API failed:", rawError.message);
       }
 
       // Try with image resources too
@@ -229,10 +212,8 @@ router.get("/documents/:userId", async (req, res) => {
           resource_type: "image",
         });
 
-        console.log("Image resources found:", imageResources.resources.length);
         allDocuments = [...allDocuments, ...(imageResources.resources || [])];
       } catch (imageError) {
-        console.log("Image resources API failed:", imageError.message);
       }
 
       // Remove duplicates based on public_id
@@ -266,10 +247,6 @@ router.get("/documents/:userId", async (req, res) => {
         total: documents.length,
       });
     } catch (searchError) {
-      console.log(
-        "Search API failed, trying resources API...",
-        searchError.message
-      );
 
       // Fallback to resources API if search fails
       const searchResult = await cloudinary.api.resources({
@@ -279,10 +256,6 @@ router.get("/documents/:userId", async (req, res) => {
         resource_type: "auto",
       });
 
-      console.log(
-        "Resources API result:",
-        JSON.stringify(searchResult, null, 2)
-      );
 
       const documents = searchResult.resources.map((resource) => {
         // Extract filename from public_id format: lexiguard-documents/userId_timestamp_filename
@@ -323,21 +296,11 @@ router.get("/documents/:userId", async (req, res) => {
 // @access  Public
 router.get("/debug/all-documents", async (req, res) => {
   try {
-    console.log("Fetching all documents from Cloudinary...");
-    console.log("Cloudinary config:", {
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY ? "***configured***" : "missing",
-      api_secret: process.env.CLOUDINARY_API_SECRET
-        ? "***configured***"
-        : "missing",
-    });
 
     // Try to get basic cloud info first
     try {
       const cloudInfo = await cloudinary.api.usage();
-      console.log("Cloudinary usage info:", cloudInfo);
     } catch (usageError) {
-      console.log("Could not get usage info:", usageError.message);
     }
 
     // Get all resources without prefix first to see if API works
@@ -348,10 +311,6 @@ router.get("/debug/all-documents", async (req, res) => {
         resource_type: "image", // Try with specific resource type first
       });
 
-      console.log(
-        "Basic API test - resources count:",
-        allResources.resources.length
-      );
 
       // Now try with all resource types
       const allResourcesAuto = await cloudinary.api.resources({
@@ -360,10 +319,6 @@ router.get("/debug/all-documents", async (req, res) => {
         resource_type: "auto",
       });
 
-      console.log(
-        "Auto resource type test - resources count:",
-        allResourcesAuto.resources.length
-      );
 
       // Now try with prefix
       const filteredResources = await cloudinary.api.resources({
@@ -381,11 +336,6 @@ router.get("/debug/all-documents", async (req, res) => {
         resource_type: "raw",
       });
 
-      console.log(
-        "Image resources with prefix:",
-        filteredResources.resources.length
-      );
-      console.log("Raw resources with prefix:", rawResources.resources.length);
 
       // Combine both resource types
       const allDocuments = [
@@ -460,16 +410,12 @@ router.get("/debug/all-documents", async (req, res) => {
 // @access  Public
 router.get("/test/all-docs", async (req, res) => {
   try {
-    console.log(
-      "Testing: Fetching all documents from lexiguard-documents folder..."
-    );
 
     const searchResult = await cloudinary.search
       .expression("folder:lexiguard-documents")
       .max_results(20)
       .execute();
 
-    console.log(`Found ${searchResult.total_count} documents total`);
 
     const documents = searchResult.resources.map((resource) => ({
       public_id: resource.public_id,
@@ -500,7 +446,6 @@ router.get("/test/all-docs", async (req, res) => {
 // @access  Public
 router.get("/test-cloudinary", async (req, res) => {
   try {
-    console.log("Testing Cloudinary connection...");
 
     // Simple ping test
     const result = await cloudinary.api.ping();
@@ -538,9 +483,6 @@ router.post("/analyze-cloudinary-document", async (req, res) => {
       });
     }
 
-    console.log(
-      `Analyzing Cloudinary document: ${fileName} for user ${userId}`
-    );
 
     // Use the existing service to analyze document from Cloudinary URL
     const analysisResult = await analyzeDocumentFromCloudinaryUrl(
@@ -556,28 +498,28 @@ router.post("/analyze-cloudinary-document", async (req, res) => {
     const analysis = analysisResult.analysis;
 
     // Format the analysis for chat display
-    let chatResponse = `## 📄 Analysis Complete: ${fileName}\n\n`;
+    let chatResponse = `## ðŸ“„ Analysis Complete: ${fileName}\n\n`;
 
     if (analysis.summary) {
-      chatResponse += `### 📋 Summary\n${analysis.summary}\n\n`;
+      chatResponse += `### ðŸ“‹ Summary\n${analysis.summary}\n\n`;
     }
 
     if (analysis.documentType) {
-      chatResponse += `**📑 Document Type**: ${analysis.documentType}\n\n`;
+      chatResponse += `**ðŸ“‘ Document Type**: ${analysis.documentType}\n\n`;
     }
 
     if (analysis.riskLevel) {
       const riskEmoji =
         analysis.riskLevel.toLowerCase() === "high"
-          ? "🔴"
+          ? "ðŸ”´"
           : analysis.riskLevel.toLowerCase() === "medium"
-          ? "🟡"
-          : "🟢";
-      chatResponse += `### ⚠️ Risk Assessment: ${riskEmoji} ${analysis.riskLevel.toUpperCase()}\n\n`;
+          ? "ðŸŸ¡"
+          : "ðŸŸ¢";
+      chatResponse += `### âš ï¸ Risk Assessment: ${riskEmoji} ${analysis.riskLevel.toUpperCase()}\n\n`;
     }
 
     if (analysis.keyPoints && analysis.keyPoints.length > 0) {
-      chatResponse += `### 🔍 Key Points\n`;
+      chatResponse += `### ðŸ” Key Points\n`;
       analysis.keyPoints.forEach((point, index) => {
         chatResponse += `${index + 1}. ${point}\n`;
       });
@@ -585,14 +527,14 @@ router.post("/analyze-cloudinary-document", async (req, res) => {
     }
 
     if (analysis.clauses && analysis.clauses.length > 0) {
-      chatResponse += `### 📜 Key Clauses Analysis (${analysis.clauses.length} total)\n`;
+      chatResponse += `### ðŸ“œ Key Clauses Analysis (${analysis.clauses.length} total)\n`;
       analysis.clauses.slice(0, 5).forEach((clause, index) => {
         const riskColor =
           clause.riskLevel?.toLowerCase() === "high"
-            ? "🔴"
+            ? "ðŸ”´"
             : clause.riskLevel?.toLowerCase() === "medium"
-            ? "🟡"
-            : "🟢";
+            ? "ðŸŸ¡"
+            : "ðŸŸ¢";
         chatResponse += `**${index + 1}. ${
           clause.type?.replace("_", " ").toUpperCase() || "GENERAL"
         } CLAUSE** ${riskColor}\n`;
@@ -602,7 +544,7 @@ router.post("/analyze-cloudinary-document", async (req, res) => {
             : clause.text
         }"\n`;
         if (clause.explanation) {
-          chatResponse += `💡 *${clause.explanation}*\n`;
+          chatResponse += `ðŸ’¡ *${clause.explanation}*\n`;
         }
         chatResponse += `\n`;
       });
@@ -615,7 +557,7 @@ router.post("/analyze-cloudinary-document", async (req, res) => {
     }
 
     if (analysis.recommendations && analysis.recommendations.length > 0) {
-      chatResponse += `### 💡 Recommendations\n`;
+      chatResponse += `### ðŸ’¡ Recommendations\n`;
       analysis.recommendations.forEach((rec, index) => {
         chatResponse += `${index + 1}. ${rec}\n`;
       });
@@ -623,9 +565,9 @@ router.post("/analyze-cloudinary-document", async (req, res) => {
     }
 
     if (analysis.riskFactors && analysis.riskFactors.length > 0) {
-      chatResponse += `### ⚠️ Risk Factors\n`;
+      chatResponse += `### âš ï¸ Risk Factors\n`;
       analysis.riskFactors.forEach((risk, index) => {
-        chatResponse += `• ${risk}\n`;
+        chatResponse += `â€¢ ${risk}\n`;
       });
       chatResponse += `\n`;
     }
@@ -633,11 +575,11 @@ router.post("/analyze-cloudinary-document", async (req, res) => {
     if (analysis.overallScore) {
       const scoreEmoji =
         analysis.overallScore >= 80
-          ? "🟢"
+          ? "ðŸŸ¢"
           : analysis.overallScore >= 60
-          ? "🟡"
-          : "🔴";
-      chatResponse += `### 📊 Overall Score: ${scoreEmoji} ${analysis.overallScore}/100\n\n`;
+          ? "ðŸŸ¡"
+          : "ðŸ”´";
+      chatResponse += `### ðŸ“Š Overall Score: ${scoreEmoji} ${analysis.overallScore}/100\n\n`;
     }
 
     // Add contextual response based on user message
@@ -668,7 +610,7 @@ Provide a specific, actionable response to their question based on this document
       }
     }
 
-    chatResponse += `\n**💬 Feel free to ask me specific questions about any aspect of this document!**`;
+    chatResponse += `\n**ðŸ’¬ Feel free to ask me specific questions about any aspect of this document!**`;
 
     res.json({
       success: true,
@@ -711,9 +653,6 @@ router.post("/message-with-document", async (req, res) => {
       });
     }
 
-    console.log(`Processing chat message with document context: ${fileName}`);
-    console.log(`Document URL: ${documentUrl}`);
-    console.log(`User ID: ${userId}`);
 
     let documentContent = "";
     let documentAnalysis = null;
@@ -721,7 +660,6 @@ router.post("/message-with-document", async (req, res) => {
     // If document URL is provided, fetch and analyze it
     if (documentUrl && fileName) {
       try {
-        console.log(`Fetching document from: ${documentUrl}`);
 
         const analysisResult = await analyzeDocumentFromCloudinaryUrl(
           documentUrl,
@@ -733,14 +671,6 @@ router.post("/message-with-document", async (req, res) => {
           documentAnalysis = analysisResult.analysis;
           documentContent = analysisResult.extractedText || "";
 
-          console.log(
-            `Document text extracted: ${documentContent.length} characters`
-          );
-          console.log(
-            `Document analysis summary: ${
-              documentAnalysis?.summary || "No summary"
-            }`
-          );
         } else {
           console.error("Failed to analyze document:", analysisResult.error);
           documentContent = `[Error extracting document content: ${analysisResult.error}]`;
@@ -750,16 +680,12 @@ router.post("/message-with-document", async (req, res) => {
         documentContent = `[Error accessing document: ${error.message}]`;
       }
     } else {
-      console.log("No document URL provided - using regular chat mode");
     }
 
     // Check if this is a "What If" scenario question
     const isScenarioQuestion = whatIfSimulator.isScenarioQuestion(message);
 
     if (isScenarioQuestion && documentContent && documentAnalysis) {
-      console.log(
-        "Detected What-If scenario question - using scenario simulator"
-      );
 
       try {
         // Use the What-If Scenario Simulator
@@ -915,7 +841,6 @@ router.post("/extract-text", async (req, res) => {
       });
     }
 
-    console.log(`Extracting text from: ${fileName}`);
 
     const analysisResult = await analyzeDocumentFromCloudinaryUrl(
       documentUrl,
@@ -976,8 +901,6 @@ router.post("/what-if-scenario", async (req, res) => {
       });
     }
 
-    console.log(`Analyzing What-If scenario for document: ${fileName}`);
-    console.log(`Scenario: ${scenarioQuestion}`);
 
     // First, extract document content and get analysis
     const analysisResult = await analyzeDocumentFromCloudinaryUrl(
@@ -1038,9 +961,6 @@ router.get("/what-if-examples", async (req, res) => {
   try {
     const { documentType = "contract", jurisdiction = "India" } = req.query;
 
-    console.log(
-      `Getting What-If examples for ${documentType} in ${jurisdiction}`
-    );
 
     const examples = whatIfSimulator.generateExampleScenarios(
       documentType,
@@ -1102,31 +1022,30 @@ router.post("/multilingual-summary", async (req, res) => {
       });
     }
 
-    console.log(`Generating ${language} summary for: ${fileName || 'document'}`);
 
     // Language-specific instructions
     const languageInstructions = {
       english: "Provide the summary in clear, professional English",
-      spanish: "Proporciona el resumen en español claro y profesional",
-      french: "Fournissez le résumé en français clair et professionnel", 
+      spanish: "Proporciona el resumen en espaÃ±ol claro y profesional",
+      french: "Fournissez le rÃ©sumÃ© en franÃ§ais clair et professionnel", 
       german: "Erstellen Sie die Zusammenfassung auf klarem, professionellem Deutsch",
-      hindi: "स्पष्ट और व्यावसायिक हिंदी में सारांश प्रदान करें",
-      marathi: "स्पष्ट आणि व्यावसायिक मराठीत सारांश द्या",
-      gujarati: "સ્પષ્ટ અને વ્યાવસાયિક ગુજરાતીમાં સારાંશ આપો",
-      tamil: "தெளிவான மற்றும் தொழில்முறை தமிழில் சுருக்கம் வழங்கவும்",
-      telugu: "స్పష్టమైన మరియు వృత్తిపరమైన తెలుగులో సారాంశం అందించండి",
-      kannada: "ಸ್ಪಷ್ಟ ಮತ್ತು ವೃತ್ತಿಪರ ಕನ್ನಡದಲ್ಲಿ ಸಾರಾಂಶವನ್ನು ಒದಗಿಸಿ",
-      bengali: "স্পষ্ট এবং পেশাদার বাংলায় সারসংক্ষেপ প্রদান করুন",
-      punjabi: "ਸਪਸ਼ਟ ਅਤੇ ਪੇਸ਼ੇਵਰ ਪੰਜਾਬੀ ਵਿੱਚ ਸਾਰ ਪ੍ਰਦਾਨ ਕਰੋ",
-      urdu: "واضح اور پیشہ ورانہ اردو میں خلاصہ فراہم کریں",
-      chinese: "请用清晰专业的中文提供摘要",
-      japanese: "明確で専門的な日本語で要約を提供してください",
-      korean: "명확하고 전문적인 한국어로 요약을 제공해주세요",
-      arabic: "قدم الملخص باللغة العربية الواضحة والمهنية",
-      portuguese: "Forneça o resumo em português claro e profissional",
+      hindi: "à¤¸à¥à¤ªà¤·à¥à¤Ÿ à¤”à¤° à¤µà¥à¤¯à¤¾à¤µà¤¸à¤¾à¤¯à¤¿à¤• à¤¹à¤¿à¤‚à¤¦à¥€ à¤®à¥‡à¤‚ à¤¸à¤¾à¤°à¤¾à¤‚à¤¶ à¤ªà¥à¤°à¤¦à¤¾à¤¨ à¤•à¤°à¥‡à¤‚",
+      marathi: "à¤¸à¥à¤ªà¤·à¥à¤Ÿ à¤†à¤£à¤¿ à¤µà¥à¤¯à¤¾à¤µà¤¸à¤¾à¤¯à¤¿à¤• à¤®à¤°à¤¾à¤ à¥€à¤¤ à¤¸à¤¾à¤°à¤¾à¤‚à¤¶ à¤¦à¥à¤¯à¤¾",
+      gujarati: "àª¸à«àªªàª·à«àªŸ àª…àª¨à«‡ àªµà«àª¯àª¾àªµàª¸àª¾àª¯àª¿àª• àª—à«àªœàª°àª¾àª¤à«€àª®àª¾àª‚ àª¸àª¾àª°àª¾àª‚àª¶ àª†àªªà«‹",
+      tamil: "à®¤à¯†à®³à®¿à®µà®¾à®© à®®à®±à¯à®±à¯à®®à¯ à®¤à¯Šà®´à®¿à®²à¯à®®à¯à®±à¯ˆ à®¤à®®à®¿à®´à®¿à®²à¯ à®šà¯à®°à¯à®•à¯à®•à®®à¯ à®µà®´à®™à¯à®•à®µà¯à®®à¯",
+      telugu: "à°¸à±à°ªà°·à±à°Ÿà°®à±ˆà°¨ à°®à°°à°¿à°¯à± à°µà±ƒà°¤à±à°¤à°¿à°ªà°°à°®à±ˆà°¨ à°¤à±†à°²à±à°—à±à°²à±‹ à°¸à°¾à°°à°¾à°‚à°¶à°‚ à°…à°‚à°¦à°¿à°‚à°šà°‚à°¡à°¿",
+      kannada: "à²¸à³à²ªà²·à³à²Ÿ à²®à²¤à³à²¤à³ à²µà³ƒà²¤à³à²¤à²¿à²ªà²° à²•à²¨à³à²¨à²¡à²¦à²²à³à²²à²¿ à²¸à²¾à²°à²¾à²‚à²¶à²µà²¨à³à²¨à³ à²’à²¦à²—à²¿à²¸à²¿",
+      bengali: "à¦¸à§à¦ªà¦·à§à¦Ÿ à¦à¦¬à¦‚ à¦ªà§‡à¦¶à¦¾à¦¦à¦¾à¦° à¦¬à¦¾à¦‚à¦²à¦¾à¦¯à¦¼ à¦¸à¦¾à¦°à¦¸à¦‚à¦•à§à¦·à§‡à¦ª à¦ªà§à¦°à¦¦à¦¾à¦¨ à¦•à¦°à§à¦¨",
+      punjabi: "à¨¸à¨ªà¨¸à¨¼à¨Ÿ à¨…à¨¤à©‡ à¨ªà©‡à¨¸à¨¼à©‡à¨µà¨° à¨ªà©°à¨œà¨¾à¨¬à©€ à¨µà¨¿à©±à¨š à¨¸à¨¾à¨° à¨ªà©à¨°à¨¦à¨¾à¨¨ à¨•à¨°à©‹",
+      urdu: "ÙˆØ§Ø¶Ø­ Ø§ÙˆØ± Ù¾ÛŒØ´Û ÙˆØ±Ø§Ù†Û Ø§Ø±Ø¯Ùˆ Ù…ÛŒÚº Ø®Ù„Ø§ØµÛ ÙØ±Ø§ÛÙ… Ú©Ø±ÛŒÚº",
+      chinese: "è¯·ç”¨æ¸…æ™°ä¸“ä¸šçš„ä¸­æ–‡æä¾›æ‘˜è¦",
+      japanese: "æ˜Žç¢ºã§å°‚é–€çš„ãªæ—¥æœ¬èªžã§è¦ç´„ã‚’æä¾›ã—ã¦ãã ã•ã„",
+      korean: "ëª…í™•í•˜ê³  ì „ë¬¸ì ì¸ í•œêµ­ì–´ë¡œ ìš”ì•½ì„ ì œê³µí•´ì£¼ì„¸ìš”",
+      arabic: "Ù‚Ø¯Ù… Ø§Ù„Ù…Ù„Ø®Øµ Ø¨Ø§Ù„Ù„ØºØ© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© Ø§Ù„ÙˆØ§Ø¶Ø­Ø© ÙˆØ§Ù„Ù…Ù‡Ù†ÙŠØ©",
+      portuguese: "ForneÃ§a o resumo em portuguÃªs claro e profissional",
       italian: "Fornisci il riassunto in italiano chiaro e professionale",
       dutch: "Geef de samenvatting in duidelijk, professioneel Nederlands",
-      russian: "Предоставьте краткое изложение на ясном профессиональном русском языке"
+      russian: "ÐŸÑ€ÐµÐ´Ð¾ÑÑ‚Ð°Ð²ÑŒÑ‚Ðµ ÐºÑ€Ð°Ñ‚ÐºÐ¾Ðµ Ð¸Ð·Ð»Ð¾Ð¶ÐµÐ½Ð¸Ðµ Ð½Ð° ÑÑÐ½Ð¾Ð¼ Ð¿Ñ€Ð¾Ñ„ÐµÑÑÐ¸Ð¾Ð½Ð°Ð»ÑŒÐ½Ð¾Ð¼ Ñ€ÑƒÑÑÐºÐ¾Ð¼ ÑÐ·Ñ‹ÐºÐµ"
     };
 
     // Summary type templates

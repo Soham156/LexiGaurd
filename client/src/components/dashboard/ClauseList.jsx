@@ -40,7 +40,6 @@ export default function ClauseList({ clauses = [], selectedId, onSelect, isAnaly
   const [expandedClauses, setExpandedClauses] = useState(new Set());
 
   // Debug: log the incoming clauses to see their structure
-  console.log('ClauseList received clauses:', clauses);
 
   const toggleExpand = (id, e) => {
     e.stopPropagation();

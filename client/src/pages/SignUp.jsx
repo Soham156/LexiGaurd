@@ -18,10 +18,8 @@ const SignUp = () => {
     try {
       const result = await doSignInWithGoogle();
       if (result) {
-        console.log("Google sign-up successful:", result.user);
       }
     } catch (err) {
-      console.error("Google sign-up error:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);

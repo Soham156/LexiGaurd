@@ -618,7 +618,7 @@ export default function BenchmarkPage() {
         setDocuments(result.documents);
       }
     } catch (error) {
-      console.error('Failed to load documents:', error);
+      setAnalysisError(`Failed to load documents: ${error.message}`);
     } finally {
       setLoadingDocuments(false);
     }
@@ -658,7 +658,6 @@ export default function BenchmarkPage() {
         setSelectedDocument(newDoc);
       }
     } catch (error) {
-      console.error('Upload failed:', error);
       setAnalysisError(`Upload failed: ${error.message}`);
     } finally {
       setIsUploading(false);
@@ -668,42 +667,26 @@ export default function BenchmarkPage() {
   };
 
   const handleAnalyzeDocument = async (document) => {
-    console.log(`🚀 [UI] Starting analysis for document:`, document.id);
     setIsAnalyzing(true);
     setAnalysisError(null);
     setFairnessAnalysis(null);
 
     try {
-      console.log(`⏰ [UI] Calling benchmarkService.analyzeFairnessById...`);
       const result = await benchmarkService.analyzeFairnessById(
         document.id,
         selectedJurisdiction
       );
 
-      console.log(`📊 [UI] Analysis result received:`, {
-        success: result.success,
-        hasFairnessAnalysis: !!result.fairnessAnalysis,
-        analysisType: result.fairnessAnalysis?.analysisType,
-        overallScore: result.fairnessAnalysis?.overallFairnessScore,
-        riskLevel: result.fairnessAnalysis?.riskLevel
-      });
-
       if (result.success && result.fairnessAnalysis) {
-        console.log(`✅ [UI] Setting fairness analysis state...`);
         setFairnessAnalysis(result.fairnessAnalysis);
-        console.log(`🎉 [UI] State should be updated with fairness analysis`);
       } else if (result.needsReupload) {
-        console.log(`📋 [UI] Document needs re-upload:`, result.error);
         setAnalysisError(`${result.error} ${result.suggestion || ''}`);
       } else {
-        console.error(`❌ [UI] Analysis result not successful:`, result);
         setAnalysisError(result.error || 'Analysis failed');
       }
     } catch (error) {
-      console.error('❌ [UI] Analysis failed:', error);
       setAnalysisError(`Analysis failed: ${error.message}`);
     } finally {
-      console.log(`🏁 [UI] Setting isAnalyzing to false`);
       setIsAnalyzing(false);
     }
   };
@@ -1004,37 +987,8 @@ export default function BenchmarkPage() {
 
                 {/* Analysis Results */}
                 {fairnessAnalysis && (
-                  <>
-                    {console.log('🎨 [RENDER] Rendering FairnessResultCard with:', fairnessAnalysis)}
-                    <FairnessResultCard analysis={fairnessAnalysis} />
-                  </>
+                  <FairnessResultCard analysis={fairnessAnalysis} />
                 )}
-                
-                {/* Debug: Show if fairnessAnalysis exists */}
-                {console.log('🔍 [RENDER DEBUG] fairnessAnalysis state:', {
-                  hasFairnessAnalysis: !!fairnessAnalysis,
-                  analysisType: fairnessAnalysis?.analysisType,
-                  overallScore: fairnessAnalysis?.overallFairnessScore,
-                  isAnalyzing,
-                  analysisError
-                })}
-                
-                {/* Debug Panel - Remove this after fixing */}
-                <div className="mt-4 p-4 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                  <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Debug Info</h4>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    Has Analysis: {fairnessAnalysis ? 'YES' : 'NO'} | 
-                    Is Analyzing: {isAnalyzing ? 'YES' : 'NO'} | 
-                    Has Error: {analysisError ? 'YES' : 'NO'}
-                  </p>
-                  {fairnessAnalysis && (
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      Score: {fairnessAnalysis.overallFairnessScore} | 
-                      Risk: {fairnessAnalysis.riskLevel} |
-                      Type: {fairnessAnalysis.analysisType}
-                    </p>
-                  )}
-                </div>
               </motion.div>
             </motion.div>
           )}

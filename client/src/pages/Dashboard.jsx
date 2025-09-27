@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   FileText,
   Users,
@@ -17,6 +18,8 @@ import {
   Brain,
   TrendingUp,
 } from 'lucide-react';
+import { auth } from '../firebase/firebase';
+import documentService from '../services/documentService';
 
 const MetricCard = ({ title, value, change, changeType, icon: Icon, color }) => (
   <motion.div
@@ -92,93 +95,252 @@ const ActivityItem = ({ title, description, time, status, icon: Icon }) => {
 };
 
 const Dashboard = () => {
-  const metrics = [
+  const navigate = useNavigate();
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [metrics, setMetrics] = useState({
+    totalDocuments: 0,
+    processedToday: 0,
+    pendingReview: 0,
+    riskAlerts: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load user data and activity
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      setIsLoading(true);
+      try {
+        const result = await documentService.getAll();
+        if (result.success) {
+          const documents = result.documents;
+          
+          // Calculate metrics
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          const processedToday = documents.filter(doc => {
+            const uploadDate = doc.uploadDate instanceof Date ? doc.uploadDate : new Date(doc.uploadDate);
+            return uploadDate >= today;
+          }).length;
+
+          const pendingReview = documents.filter(doc => doc.status === 'processing').length;
+          const riskAlerts = documents.filter(doc => 
+            doc.analysis?.riskLevel?.toLowerCase() === 'high' ||
+            doc.riskLevel?.toLowerCase() === 'high'
+          ).length;
+
+          setMetrics({
+            totalDocuments: documents.length,
+            processedToday,
+            pendingReview,
+            riskAlerts
+          });
+
+          // Generate comprehensive recent activity from documents
+          const activity = [];
+          
+          documents
+            .sort((a, b) => {
+              const dateA = a.uploadDate instanceof Date ? a.uploadDate : new Date(a.uploadDate);
+              const dateB = b.uploadDate instanceof Date ? b.uploadDate : new Date(b.uploadDate);
+              return dateB - dateA;
+            })
+            .slice(0, 10)
+            .forEach(doc => {
+              const uploadDate = doc.uploadDate instanceof Date ? doc.uploadDate : new Date(doc.uploadDate);
+              const timeDiff = Date.now() - uploadDate.getTime();
+              
+              const getTimeString = (timeDiff) => {
+                const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+                const minutesAgo = Math.floor(timeDiff / (1000 * 60));
+                
+                if (hoursAgo > 24) {
+                  return `${Math.floor(hoursAgo / 24)} day${Math.floor(hoursAgo / 24) > 1 ? 's' : ''} ago`;
+                } else if (hoursAgo > 0) {
+                  return `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`;
+                } else if (minutesAgo > 0) {
+                  return `${minutesAgo} minute${minutesAgo > 1 ? 's' : ''} ago`;
+                } else {
+                  return 'Just now';
+                }
+              };
+
+              const docName = doc.name || doc.fileName || doc.originalName || 'Untitled Document';
+              const docType = doc.analysis?.documentType || 'Document';
+              
+              // 1. Document Upload Activity
+              activity.push({
+                title: "Document Uploaded",
+                description: `${docName} uploaded for analysis`,
+                time: getTimeString(timeDiff),
+                status: "info",
+                icon: Upload,
+              });
+
+              // 2. Analysis Summary Activity (if available)
+              if (doc.analysis && doc.analysis.summary) {
+                activity.push({
+                  title: "Analysis Summary Generated",
+                  description: `${docType}: ${doc.analysis.summary.substring(0, 80)}${doc.analysis.summary.length > 80 ? '...' : ''}`,
+                  time: getTimeString(timeDiff - 30000), // Slightly after upload
+                  status: "success",
+                  icon: Brain,
+                });
+              }
+
+              // 3. Market Benchmark Activity (if available)
+              if (doc.fairnessBenchmark && doc.fairnessBenchmark.marketComparisons) {
+                const benchmarkCount = doc.fairnessBenchmark.marketComparisons.length || 0;
+                activity.push({
+                  title: "Market Benchmark Complete",
+                  description: `${docName}: ${benchmarkCount} market comparisons analyzed - ${doc.fairnessBenchmark.riskLevel || 'Unknown'} risk level`,
+                  time: getTimeString(timeDiff - 60000), // After analysis
+                  status: doc.fairnessBenchmark.riskLevel?.toLowerCase() === 'high' ? 'warning' : 
+                         doc.fairnessBenchmark.riskLevel?.toLowerCase() === 'medium' ? 'info' : 'success',
+                  icon: BarChart3,
+                });
+              }
+
+              // 4. Risk Assessment Activity (if high risk detected)
+              const riskLevel = doc.analysis?.riskLevel || doc.riskLevel || doc.fairnessBenchmark?.riskLevel;
+              if (riskLevel && riskLevel.toLowerCase() === 'high') {
+                activity.push({
+                  title: "High Risk Alert",
+                  description: `${docName}: High-risk clauses detected requiring attention`,
+                  time: getTimeString(timeDiff - 45000),
+                  status: "warning",
+                  icon: AlertTriangle,
+                });
+              }
+
+              // 5. Clause Analysis Activity (if clauses available)
+              if (doc.analysis && doc.analysis.clauses && doc.analysis.clauses.length > 0) {
+                const clauseCount = doc.analysis.clauses.length;
+                activity.push({
+                  title: "Clause Analysis Complete",
+                  description: `${docName}: ${clauseCount} clause${clauseCount > 1 ? 's' : ''} analyzed and categorized`,
+                  time: getTimeString(timeDiff - 75000),
+                  status: "success",
+                  icon: CheckCircle,
+                });
+              }
+
+              // 6. Document Processing Complete Activity
+              if (doc.status === 'analyzed' || doc.analysisCompleted) {
+                activity.push({
+                  title: "Document Processing Complete",
+                  description: `${docName}: Full legal analysis completed successfully`,
+                  time: getTimeString(timeDiff - 90000),
+                  status: "success",
+                  icon: Zap,
+                });
+              }
+            });
+
+          // Sort all activities by time and take the most recent 8
+          const sortedActivity = activity
+            .sort((a, b) => {
+              // Extract time values for sorting (more recent first)
+              const getTimeValue = (timeStr) => {
+                if (timeStr === 'Just now') return 0;
+                const match = timeStr.match(/(\d+)\s+(minute|hour|day)/);
+                if (!match) return 0;
+                const value = parseInt(match[1]);
+                const unit = match[2];
+                return unit === 'minute' ? value : unit === 'hour' ? value * 60 : value * 60 * 24;
+              };
+              return getTimeValue(a.time) - getTimeValue(b.time);
+            })
+            .slice(0, 8);
+
+          setRecentActivity(sortedActivity);
+        }
+      } catch (error) {
+        // Set default activity if loading fails
+        setRecentActivity([
+          {
+            title: "Welcome to LexiGuard",
+            description: "Upload your first document to get started",
+            time: "Now",
+            status: "info",
+            icon: FileText,
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Listen for auth state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        loadDashboardData();
+      } else {
+        setRecentActivity([]);
+        setMetrics({ totalDocuments: 0, processedToday: 0, pendingReview: 0, riskAlerts: 0 });
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const metricsData = [
     {
       title: "Total Documents",
-      value: "1,247",
-      change: "+12%",
+      value: metrics.totalDocuments.toString(),
+      change: metrics.totalDocuments > 0 ? "+12%" : null,
       changeType: "positive",
       icon: FileText,
       color: "bg-blue-500",
     },
     {
-      title: "Active Users",
-      value: "89",
-      change: "+5%",
+      title: "Processed Today",
+      value: metrics.processedToday.toString(),
+      change: metrics.processedToday > 0 ? "+5%" : null,
       changeType: "positive",
-      icon: Users,
+      icon: Zap,
       color: "bg-green-500",
     },
     {
       title: "Risk Alerts",
-      value: "23",
-      change: "-8%",
+      value: metrics.riskAlerts.toString(),
+      change: metrics.riskAlerts > 0 ? "-8%" : null,
       changeType: "positive",
       icon: AlertTriangle,
       color: "bg-orange-500",
     },
     {
-      title: "Processing Speed",
-      value: "1.2s",
-      change: "-15%",
+      title: "Pending Review",
+      value: metrics.pendingReview.toString(),
+      change: metrics.pendingReview > 0 ? "+3%" : null,
       changeType: "positive",
-      icon: Zap,
+      icon: Clock,
       color: "bg-purple-500",
     },
   ];
 
   const quickActions = [
     {
-      title: "Upload Document",
-      description: "Analyze a new contract or legal document",
+      title: "Analyze Document",
+      description: "Upload and analyze a new legal document",
       icon: Upload,
       color: "bg-blue-500",
-      onClick: () => console.log("Upload clicked"),
+      onClick: () => navigate('/dashboard/analysis'),
     },
     {
       title: "AI Chat",
       description: "Ask questions about your documents",
       icon: MessageSquare,
       color: "bg-green-500",
-      onClick: () => console.log("Chat clicked"),
+      onClick: () => navigate('/dashboard/chat'),
     },
     {
-      title: "View Reports",
-      description: "See detailed analytics and insights",
-      icon: BarChart3,
+      title: "View Documents",
+      description: "Manage your uploaded documents",
+      icon: FileText,
       color: "bg-purple-500",
-      onClick: () => console.log("Reports clicked"),
-    },
-  ];
-
-  const recentActivity = [
-    {
-      title: "Document Analysis Complete",
-      description: "Employment agreement processed successfully",
-      time: "2 minutes ago",
-      status: "success",
-      icon: CheckCircle,
-    },
-    {
-      title: "AI Recommendation Generated",
-      description: "New suggestions for liability clause",
-      time: "15 minutes ago",
-      status: "info",
-      icon: Brain,
-    },
-    {
-      title: "Risk Alert",
-      description: "High-risk clause detected in vendor contract",
-      time: "1 hour ago",
-      status: "warning",
-      icon: AlertTriangle,
-    },
-    {
-      title: "Team Member Added",
-      description: "Sarah Chen joined the legal team",
-      time: "3 hours ago",
-      status: "info",
-      icon: Users,
+      onClick: () => navigate('/dashboard/documents'),
     },
   ];
 
@@ -192,7 +354,10 @@ const Dashboard = () => {
             Welcome back! Here's your legal document overview.
           </p>
         </div>
-        <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button 
+          onClick={() => navigate('/dashboard/analysis')}
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus className="w-4 h-4 mr-2" />
           New Document
         </button>
@@ -200,7 +365,7 @@ const Dashboard = () => {
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric, index) => (
+        {metricsData.map((metric, index) => (
           <MetricCard key={index} {...metric} />
         ))}
       </div>
@@ -223,13 +388,30 @@ const Dashboard = () => {
             <div className="p-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Activity</h2>
-                <button className="text-sm text-blue-600 hover:text-blue-700">View all</button>
+                <button 
+                  onClick={() => navigate('/dashboard/documents')}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  View all
+                </button>
               </div>
             </div>
             <div className="p-2">
-              {recentActivity.map((activity, index) => (
-                <ActivityItem key={index} {...activity} />
-              ))}
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">Loading activity...</span>
+                </div>
+              ) : recentActivity.length > 0 ? (
+                recentActivity.map((activity, index) => (
+                  <ActivityItem key={index} {...activity} />
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No recent activity. Upload your first document to get started!</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -243,15 +425,15 @@ const Dashboard = () => {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">847</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">{metrics.totalDocuments}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Total Documents</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">23</div>
+              <div className="text-3xl font-bold text-green-600 mb-2">{metrics.processedToday}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Processed Today</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600 mb-2">5</div>
+              <div className="text-3xl font-bold text-orange-600 mb-2">{metrics.pendingReview}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Pending Review</div>
             </div>
           </div>

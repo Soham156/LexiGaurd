@@ -23,7 +23,6 @@ const limiter = rateLimit({
 // Middleware
 app.use(limiter);
 app.use(helmet());
-app.use(morgan("combined"));
 app.use(
   cors({
     origin: [
@@ -68,7 +67,6 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
 module.exports = app;

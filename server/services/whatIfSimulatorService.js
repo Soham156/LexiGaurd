@@ -1,4 +1,4 @@
-const GeminiService = require("./geminiService");
+﻿const GeminiService = require("./geminiService");
 
 class WhatIfSimulatorService {
   constructor() {
@@ -206,7 +206,6 @@ KEEP IT CONCISE - Maximum 2-3 items per array. Focus on the most important point
       return formattedAnalysis;
     } catch (error) {
       console.error("Error parsing scenario response:", error);
-      console.log("Raw response:", responseText);
 
       // Return a concise fallback analysis
       return {
@@ -308,15 +307,15 @@ KEEP IT CONCISE - Maximum 2-3 items per array. Focus on the most important point
    * @returns {string} Formatted markdown response
    */
   formatScenarioForChat(analysis) {
-    let response = `## 🔮 What-If Analysis\n\n`;
+    let response = `## ðŸ”® What-If Analysis\n\n`;
     response += `**Q:** ${analysis.originalQuestion}\n\n`;
 
     // Direct Answer
-    response += `### 🎯 Answer\n${analysis.directAnswer}\n\n`;
+    response += `### ðŸŽ¯ Answer\n${analysis.directAnswer}\n\n`;
 
     // Governing Clauses (limit to 2)
     if (analysis.governingClauses && analysis.governingClauses.length > 0) {
-      response += `### 📜 Key Clauses\n`;
+      response += `### ðŸ“œ Key Clauses\n`;
       analysis.governingClauses.slice(0, 2).forEach((clause, index) => {
         response += `**${index + 1}.** "${clause.clauseText}"\n`;
         response += `*${clause.relevance}*\n\n`;
@@ -328,7 +327,7 @@ KEEP IT CONCISE - Maximum 2-3 items per array. Focus on the most important point
       analysis.stepByStepBreakdown &&
       analysis.stepByStepBreakdown.length > 0
     ) {
-      response += `### 📋 What Happens\n`;
+      response += `### ðŸ“‹ What Happens\n`;
       analysis.stepByStepBreakdown.slice(0, 3).forEach((step) => {
         response += `**${step.step}.** ${step.event} (${step.timeframe})\n`;
         response += `${step.consequences}\n\n`;
@@ -337,7 +336,7 @@ KEEP IT CONCISE - Maximum 2-3 items per array. Focus on the most important point
 
     // Financial Implications (condensed)
     if (analysis.financialImplications) {
-      response += `### 💰 Financial Impact\n`;
+      response += `### ðŸ’° Financial Impact\n`;
       if (analysis.financialImplications.potentialCosts) {
         response += `**Costs:** ${analysis.financialImplications.potentialCosts}\n`;
       }
@@ -349,14 +348,14 @@ KEEP IT CONCISE - Maximum 2-3 items per array. Focus on the most important point
 
     // Strategic Advice (condensed)
     if (analysis.strategicAdvice) {
-      response += `### 💡 Action Items\n`;
+      response += `### ðŸ’¡ Action Items\n`;
 
       if (analysis.strategicAdvice.immediateActions?.length > 0) {
         response += `**Do Now:**\n`;
         analysis.strategicAdvice.immediateActions
           .slice(0, 2)
           .forEach((action) => {
-            response += `• ${action}\n`;
+            response += `â€¢ ${action}\n`;
           });
         response += `\n`;
       }
@@ -364,7 +363,7 @@ KEEP IT CONCISE - Maximum 2-3 items per array. Focus on the most important point
       if (analysis.strategicAdvice.riskMitigation?.length > 0) {
         response += `**To Minimize Risk:**\n`;
         analysis.strategicAdvice.riskMitigation.slice(0, 2).forEach((step) => {
-          response += `• ${step}\n`;
+          response += `â€¢ ${step}\n`;
         });
         response += `\n`;
       }
@@ -374,11 +373,11 @@ KEEP IT CONCISE - Maximum 2-3 items per array. Focus on the most important point
     if (analysis.riskAssessment) {
       const riskEmoji =
         analysis.riskAssessment.overallRisk === "high"
-          ? "🔴"
+          ? "ðŸ”´"
           : analysis.riskAssessment.overallRisk === "medium"
-          ? "🟡"
-          : "🟢";
-      response += `### 📊 Risk Level: ${riskEmoji} ${analysis.riskAssessment.overallRisk.toUpperCase()}\n`;
+          ? "ðŸŸ¡"
+          : "ðŸŸ¢";
+      response += `### ðŸ“Š Risk Level: ${riskEmoji} ${analysis.riskAssessment.overallRisk.toUpperCase()}\n`;
 
       if (analysis.riskAssessment.primaryConcerns?.length > 0) {
         response += `**Main Concerns:** ${analysis.riskAssessment.primaryConcerns
@@ -388,7 +387,7 @@ KEEP IT CONCISE - Maximum 2-3 items per array. Focus on the most important point
       response += `\n`;
     }
 
-    response += `💬 Need details on any specific aspect? Just ask!`;
+    response += `ðŸ’¬ Need details on any specific aspect? Just ask!`;
     return response;
   }
 

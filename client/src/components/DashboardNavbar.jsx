@@ -12,7 +12,6 @@ const DashboardNavbar = () => {
     try {
       await doSignOut();
     } catch (error) {
-      console.error('Error signing out:', error);
     }
   };
 
