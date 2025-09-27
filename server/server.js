@@ -30,6 +30,7 @@ app.use(
       "http://localhost:5173", // Vite default port
       "http://localhost:5174", // Alternative Vite port
       "http://localhost:3000", // Create React App default port
+      "https://lexigaurd.vercel.app", // Production frontend URL
     ],
     credentials: true,
   })
