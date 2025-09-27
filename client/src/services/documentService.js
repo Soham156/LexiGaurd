@@ -13,7 +13,7 @@ import {
 } from "firebase/firestore";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+  import.meta.env.VITE_API_BASE_URL || "https://lexi-gaurd.vercel.app/api";
 
 // Check if user is authenticated
 export const isAuthenticated = () => {
