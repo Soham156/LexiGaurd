@@ -19,6 +19,9 @@ import {
   Sparkles
 } from 'lucide-react';
 
+// API Configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lexi-gaurd.vercel.app/api';
+
 const MultilingualSummary = ({ uploadedDocument }) => {
   const [selectedLanguage, setSelectedLanguage] = useState('english');
   const [summary, setSummary] = useState(null);
@@ -63,7 +66,7 @@ const MultilingualSummary = ({ uploadedDocument }) => {
 
     setIsGenerating(true);
     try {
-      const response = await fetch('http://localhost:8080/api/chat/multilingual-summary', {
+      const response = await fetch(`${API_BASE_URL}/chat/multilingual-summary`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

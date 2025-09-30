@@ -4,6 +4,9 @@ import { motion } from 'framer-motion';
 import { DocumentContext } from '../context/DocumentContext';
 import { documentService } from '../services/api';
 import { auth } from '../firebase/firebase';
+
+// API Configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lexi-gaurd.vercel.app/api';
 import {
   FileText,
   Upload,
@@ -257,7 +260,7 @@ const DocumentsPage = () => {
           
           
           // Get signed URL from backend
-          const signedUrlEndpoint = `http://localhost:8080/api/document/signed-url?publicId=${encodeURIComponent(publicId)}&userId=${encodeURIComponent(auth.currentUser?.uid || '')}`;
+          const signedUrlEndpoint = `${API_BASE_URL}/document/signed-url?publicId=${encodeURIComponent(publicId)}&userId=${encodeURIComponent(auth.currentUser?.uid || '')}`;
           
           const signedUrlResponse = await fetch(signedUrlEndpoint);
           
@@ -470,7 +473,7 @@ const DocumentsPage = () => {
           try {
             const user = auth.currentUser;
             const idToken = await user.getIdToken();
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'}/user/documents`, {
+            const response = await fetch(`${API_BASE_URL}/user/documents`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${idToken}`,
