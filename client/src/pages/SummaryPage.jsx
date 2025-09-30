@@ -19,6 +19,9 @@ import MultilingualSummary from '../components/dashboard/MultilingualSummary';
 import { auth } from '../firebase/firebase';
 import documentService from '../services/documentService';
 
+// API Configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lexi-gaurd.vercel.app/api';
+
 const SummaryPage = () => {
   const [uploadedDocument, setUploadedDocument] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -90,7 +93,7 @@ const SummaryPage = () => {
       formData.append('userId', 'summary-user');
       formData.append('userEmail', 'summary@lexiguard.com');
 
-      const uploadResponse = await fetch('http://localhost:8080/api/document/upload-and-analyze', {
+      const uploadResponse = await fetch(`${API_BASE_URL}/document/upload-and-analyze`, {
         method: 'POST',
         body: formData
       });

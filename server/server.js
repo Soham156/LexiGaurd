@@ -31,8 +31,12 @@ app.use(
       "http://localhost:5174", // Alternative Vite port
       "http://localhost:3000", // Create React App default port
       "https://lexigaurd.vercel.app", // Production frontend URL
+      "https://lexi-gaurd.vercel.app", // Alternative frontend URL
+      /^https:\/\/.*\.vercel\.app$/, // Allow all Vercel apps
     ],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-requested-with"],
   })
 );
 app.use(express.json({ limit: "10mb" }));
